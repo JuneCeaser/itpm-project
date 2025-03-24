@@ -35,7 +35,7 @@ const BottomTabNavigator = () => {
             </View>
           );
         },
-        tabBarActiveTintColor: "#00c89c",
+        tabBarActiveTintColor: "#00a8ff",
         tabBarInactiveTintColor: "#95a5a6",
         headerShown: false,
         tabBarShowLabel: true,
@@ -101,7 +101,7 @@ const BottomTabNavigator = () => {
               <Ionicons
                 name={focused ? "add-circle" : "add-circle-outline"}
                 size={32}
-                color={focused ? "#00D09E" : "#00D09E"}
+                color={focused ? "#00a8ff" : "#00a8ff"}
               />
             </View>
           ),

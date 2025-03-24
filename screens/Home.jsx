@@ -199,7 +199,7 @@ const Home = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#00c89c",
+    backgroundColor: "#00a8ff",
   },
   header: {
     flexDirection: "row",
@@ -212,11 +212,11 @@ const styles = StyleSheet.create({
   welcomeText: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "#000",
+    color: "#f5f6fa",
   },
   greetingText: {
     fontSize: 14,
-    color: "#333",
+    color: "#f5f6fa",
   },
   notificationIcon: {
     width: 36,
@@ -291,12 +291,12 @@ const styles = StyleSheet.create({
   },
   checkIcon: {
     fontSize: 16,
-    color: "#00796b",
+    color: "#f5f6fa",
     marginRight: 5,
   },
   expenseNoteText: {
     fontSize: 14,
-    color: "#333",
+    color: "#f5f6fa",
   },
   summaryCard: {
     backgroundColor: "#ffffff",
@@ -382,7 +382,7 @@ const styles = StyleSheet.create({
     borderRadius: 15,
   },
   activeTimeOption: {
-    backgroundColor: "#00c89c",
+    backgroundColor: "#00a8ff",
   },
   timeOptionText: {
     color: "#555",

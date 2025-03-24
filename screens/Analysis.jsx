@@ -248,10 +248,10 @@ const Analysis = () => {
             <Text style={styles.chartTitle}>Income & Expenses</Text>
             <View style={styles.chartActions}>
               <TouchableOpacity style={styles.chartActionButton}>
-                <Ionicons name="search" size={22} color="#00cba0" />
+                <Ionicons name="search" size={22} color="#00a8ff" />
               </TouchableOpacity>
               <TouchableOpacity style={styles.chartActionButton}>
-                <Ionicons name="calendar-outline" size={22} color="#00cba0" />
+                <Ionicons name="calendar-outline" size={22} color="#00a8ff" />
               </TouchableOpacity>
             </View>
           </View>
@@ -265,7 +265,7 @@ const Analysis = () => {
             <Ionicons
               name="arrow-up-circle-outline"
               size={24}
-              color="#00cba0"
+              color="#00a8ff"
             />
             <Text style={styles.summaryBoxTitle}>Income</Text>
             <Text style={styles.summaryBoxAmount}>
@@ -277,7 +277,7 @@ const Analysis = () => {
             <Ionicons
               name="arrow-down-circle-outline"
               size={24}
-              color="#2196f3"
+              color="#00a8ff"
             />
             <Text style={styles.summaryBoxTitle}>Expense</Text>
             <Text style={styles.summaryBoxAmountBlue}>
@@ -296,7 +296,7 @@ const Analysis = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#00cba0",
+    backgroundColor: "#00a8ff",
   },
   header: {
     flexDirection: "row",
@@ -425,7 +425,7 @@ const styles = StyleSheet.create({
     borderRadius: 30,
   },
   activeButton: {
-    backgroundColor: "#00cba0",
+    backgroundColor: "#00a8ff",
   },
   periodText: {
     color: "#666",
