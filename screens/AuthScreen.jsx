@@ -20,6 +20,7 @@ const AuthScreen = ({ navigation }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false); // New loading state
 
   // Signup specific states
   const [name, setName] = useState("");
@@ -30,6 +31,7 @@ const AuthScreen = ({ navigation }) => {
   const { login } = useContext(AuthContext);
 
   const handleLogin = async () => {
+    setLoading(true); // Disable the button
     try {
       const response = await axios.post(
         "https://mobile-backend-news.vercel.app/api/users/login",
@@ -44,10 +46,13 @@ const AuthScreen = ({ navigation }) => {
         "Login Failed",
         err.response ? err.response.data.error : "Invalid credentials"
       );
+    } finally {
+      setLoading(false); // Re-enable the button
     }
   };
 
   const handleSignup = async () => {
+    setLoading(true); // Disable the button
     try {
       if (password !== confirmPassword) {
         Alert.alert("Error", "Passwords do not match");
@@ -73,6 +78,8 @@ const AuthScreen = ({ navigation }) => {
         "Error",
         err.response ? err.response.data.error : "Signup failed"
       );
+    } finally {
+      setLoading(false); // Re-enable the button
     }
   };
 
@@ -115,8 +122,14 @@ const AuthScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Sign in</Text>
+      <TouchableOpacity
+        style={[styles.button, loading && styles.disabledButton]}
+        onPress={handleLogin}
+        disabled={loading} // Disable the button when loading
+      >
+        <Text style={styles.buttonText}>
+          {loading ? "Signing in..." : "Sign in"}
+        </Text>
       </TouchableOpacity>
 
       <Text style={styles.dividerText}>Or continue with</Text>
@@ -206,8 +219,14 @@ const AuthScreen = ({ navigation }) => {
         </Text>
       </View>
 
-      <TouchableOpacity style={styles.button} onPress={handleSignup}>
-        <Text style={styles.buttonText}>Create account</Text>
+      <TouchableOpacity
+        style={[styles.button, loading && styles.disabledButton]}
+        onPress={handleSignup}
+        disabled={loading} // Disable the button when loading
+      >
+        <Text style={styles.buttonText}>
+          {loading ? "Creating account..." : "Create account"}
+        </Text>
       </TouchableOpacity>
     </>
   );
@@ -405,6 +424,9 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     alignItems: "center",
     marginBottom: 20,
+  },
+  disabledButton: {
+    backgroundColor: "#9ca3af",
   },
   buttonText: {
     color: "#fff",
