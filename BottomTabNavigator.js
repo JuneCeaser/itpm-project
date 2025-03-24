@@ -90,7 +90,7 @@ const BottomTabNavigator = () => {
         name="Add"
         component={Add}
         options={{
-          tabBarLabel: "", // Empty label to hide the text
+          tabBarLabel: "",
           tabBarIcon: ({ focused, color, size }) => (
             <View
               style={[
@@ -100,8 +100,8 @@ const BottomTabNavigator = () => {
             >
               <Ionicons
                 name={focused ? "add-circle" : "add-circle-outline"}
-                size={32} // Larger size for the add button
-                color={focused ? "#6366f1" : "#95a5a6"}
+                size={32}
+                color={focused ? "#00D09E" : "#00D09E"}
               />
             </View>
           ),

@@ -11,13 +11,10 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 
 const Home = () => {
-  // State to track the selected time period
-  const [selectedPeriod, setSelectedPeriod] = useState("monthly"); // Default to "monthly"
+  const [selectedPeriod, setSelectedPeriod] = useState("monthly");
 
-  // Handler for time period selection
   const handlePeriodChange = (period) => {
     setSelectedPeriod(period);
-    // Here you would typically fetch or filter data based on the selected period
   };
 
   return (
@@ -65,35 +62,6 @@ const Home = () => {
           <Text style={styles.expenseNoteText}>
             30% Of Your Expenses, Looks Good.
           </Text>
-        </View>
-      </View>
-
-      {/* Summary Card */}
-      <View style={styles.summaryCard}>
-        <View style={styles.summaryRow}>
-          <View style={styles.savingsGoal}>
-            <View style={styles.savingsCircle}>
-              <Text style={styles.carIcon}>🚗</Text>
-            </View>
-            <Text style={styles.savingsText}>Savings</Text>
-            <Text style={styles.goalText}>On Goals</Text>
-          </View>
-
-          <View style={styles.verticalDivider} />
-
-          <View style={styles.summaryDetails}>
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryLabel}>Revenue Last Week</Text>
-              <Text style={styles.summaryAmount}>$4,000.00</Text>
-            </View>
-
-            <View style={styles.summaryDivider} />
-
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryLabel}>Food Last Week</Text>
-              <Text style={styles.summaryExpense}>-$100.00</Text>
-            </View>
-          </View>
         </View>
       </View>
 

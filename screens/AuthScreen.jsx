@@ -419,7 +419,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   button: {
-    backgroundColor: "#3b82f6",
+    backgroundColor: "#00D09E",
     padding: 14,
     borderRadius: 6,
     alignItems: "center",

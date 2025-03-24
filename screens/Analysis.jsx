@@ -14,9 +14,7 @@ import {
   Feather,
 } from "@expo/vector-icons";
 
-// Bar Chart component for Income & Expenses visualization
 const BarChart = ({ period }) => {
-  // Different data sets based on selected period
   const chartData = {
     daily: {
       labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
@@ -117,7 +115,10 @@ const Analysis = () => {
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.content}>
+      <ScrollView
+        style={styles.content}
+        contentContainerStyle={styles.scrollContent}
+      >
         {/* Balance and Expense Summary */}
         <View style={styles.summaryContainer}>
           <View style={styles.balanceSection}>
@@ -285,42 +286,8 @@ const Analysis = () => {
           </View>
         </View>
 
-        {/* My Targets */}
-        <View style={styles.targetsSection}>
-          <Text style={styles.targetsTitle}>My Targets</Text>
-
-          <View style={styles.targetsIcons}>
-            <TouchableOpacity style={styles.targetIconButton}>
-              <FontAwesome5 name="home" size={24} color="#777" />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.targetIconButton, styles.activeTargetButton]}
-            >
-              <MaterialCommunityIcons
-                name="chart-line"
-                size={24}
-                color="white"
-              />
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.targetIconButton}>
-              <MaterialCommunityIcons
-                name="swap-horizontal"
-                size={24}
-                color="#777"
-              />
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.targetIconButton}>
-              <Feather name="layers" size={24} color="#777" />
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.targetIconButton}>
-              <FontAwesome5 name="user" size={24} color="#777" />
-            </TouchableOpacity>
-          </View>
-        </View>
+        {/* Empty space for bottom navigation */}
+        <View style={styles.bottomSpace} />
       </ScrollView>
     </View>
   );
@@ -356,6 +323,9 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     marginTop: 10,
+  },
+  scrollContent: {
+    paddingBottom: 80,
   },
   summaryContainer: {
     backgroundColor: "white",
@@ -544,7 +514,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginHorizontal: 16,
-    marginBottom: 16,
+    marginBottom: 30,
   },
   summaryBox: {
     flex: 1,
@@ -569,32 +539,8 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#2196f3",
   },
-  targetsSection: {
-    margin: 16,
-    marginTop: 8,
-  },
-  targetsTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#444",
-    marginBottom: 12,
-  },
-  targetsIcons: {
-    flexDirection: "row",
-    backgroundColor: "#f0f8f5",
-    borderRadius: 20,
-    padding: 16,
-    justifyContent: "space-between",
-  },
-  targetIconButton: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  activeTargetButton: {
-    backgroundColor: "#00cba0",
+  bottomSpace: {
+    height: 40,
   },
 });
 
