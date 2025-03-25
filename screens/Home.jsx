@@ -24,7 +24,7 @@ const Home = () => {
       {/* Header Section */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.welcomeText}>Hi, Welcome Back</Text>
+          <Text style={styles.welcomeText}>Hi,Hello</Text>
           <Text style={styles.greetingText}>Good Morning</Text>
         </View>
         <TouchableOpacity style={styles.notificationIcon}>
