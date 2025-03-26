@@ -3141,6 +3141,11 @@ expo-modules-core@2.2.3:
   dependencies:
     invariant "^2.2.4"
 
+expo-speech-recognition@^1.1.1:
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/expo-speech-recognition/-/expo-speech-recognition-1.1.1.tgz#e6172b16898d47983116cff058ee806de91680d5"
+  integrity sha512-snQ1rsmQOXUIkkvwW3eCxSZ1FHYQ0lNLeguDTGX0Xg0xOug7zhQDk0/HppAvagfennQBYvQfAHvzUe936aK2LQ==
+
 expo-speech@^13.0.1:
   version "13.0.1"
   resolved "https://registry.yarnpkg.com/expo-speech/-/expo-speech-13.0.1.tgz#f49fc2c8a73f9bada030e52fc86a235cd3963f4a"
