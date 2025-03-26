@@ -19,7 +19,7 @@ import {
 const Home = () => {
   const [activeTab, setActiveTab] = useState("Daily");
 
-  // Transaction data for different time periods
+
   const transactionData = {
     Daily: [
       { id: 1, title: "Coffee", amount: -400.50, category: "Food", time: "08:15 - Today", icon: "☕" },
@@ -71,9 +71,9 @@ const Home = () => {
   };
 
   const handleVoiceInput = () => {
-    // Placeholder for voice input functionality
+   
     console.log("Voice input activated");
-    // You would typically integrate a voice recognition service here
+   
   };
 
   return (
