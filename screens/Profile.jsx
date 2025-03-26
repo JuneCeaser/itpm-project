@@ -88,14 +88,14 @@ const Profile = ({ navigation }) => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#6366f1" />
+        <ActivityIndicator size="large" color="#00D09E" />
       </View>
     );
   }
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#6366f1" />
+      <StatusBar barStyle="light-content" backgroundColor="#00D09E" />
 
       {/* Header with gradient effect */}
       <View style={styles.header}>
@@ -159,7 +159,7 @@ const Profile = ({ navigation }) => {
               <Ionicons
                 name="person-outline"
                 size={22}
-                color="#6366f1"
+                color="#00D09E"
                 style={styles.buttonIcon}
               />
               <Text style={styles.actionButtonText}>Edit Profile</Text>
@@ -173,7 +173,7 @@ const Profile = ({ navigation }) => {
               <Ionicons
                 name="settings-outline"
                 size={22}
-                color="#6366f1"
+                color="#00D09E"
                 style={styles.buttonIcon}
               />
               <Text style={styles.actionButtonText}>Settings</Text>

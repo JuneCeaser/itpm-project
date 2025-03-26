@@ -87,26 +87,26 @@ const BottomTabNavigator = () => {
         }}
       />
       <Tab.Screen
-  name="Add"
-  component={Add}
-  options={{
-    tabBarLabel: "",
-    tabBarIcon: ({ focused }) => (
-      <View
-        style={[
-          styles.addButtonContainer,
-          focused && styles.activeAddButton,
-        ]}
-      >
-        <Ionicons
-          name={focused ? "add-circle" : "add-circle-outline"}
-          size={32}
-          color="white" 
-        />
-      </View>
-    ),
-  }}
-/>
+        name="Add"
+        component={Add}
+        options={{
+          tabBarLabel: "",
+          tabBarIcon: ({ focused }) => (
+            <View
+              style={[
+                styles.addButtonContainer,
+                focused && styles.activeAddButton,
+              ]}
+            >
+              <Ionicons
+                name={focused ? "add-circle" : "add-circle-outline"}
+                size={32}
+                color={focused ? "white" : "#00D09E"}
+              />
+            </View>
+          ),
+        }}
+      />
 
       <Tab.Screen
         name="Category"
