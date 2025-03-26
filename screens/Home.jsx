@@ -122,14 +122,7 @@ const Home = () => {
         </View>
 
         {/* Progress Status */}
-        <View style={styles.progressStatus}>
-          <View style={styles.checkboxIcon}>
-            <Ionicons name="checkmark" size={16} color="white" />
-          </View>
-          <Text style={styles.progressStatusText}>
-            30% Of Your Expenses, Looks Good.
-          </Text>
-        </View>
+      
       </View>
 
       {/* Time Period Selector */}
