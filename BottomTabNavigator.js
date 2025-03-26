@@ -7,10 +7,10 @@ import Analysis from "./screens/Analysis";
 import Add from "./screens/Add";
 import Category from "./screens/Category";
 import { Ionicons } from "@expo/vector-icons";
-
+                                                                          
 const Tab = createBottomTabNavigator();
 
-const BottomTabNavigator = () => {
+const BottomTabNavigator = () => {     
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -33,7 +33,7 @@ const BottomTabNavigator = () => {
             <View style={focused ? styles.activeIconContainer : null}>
               <Ionicons name={iconName} size={size} color={color} />
             </View>
-          );
+          );                                                           
         },
         tabBarActiveTintColor: "#00c89c",
         tabBarInactiveTintColor: "#95a5a6",
@@ -87,26 +87,27 @@ const BottomTabNavigator = () => {
         }}
       />
       <Tab.Screen
-        name="Add"
-        component={Add}
-        options={{
-          tabBarLabel: "",
-          tabBarIcon: ({ focused, color, size }) => (
-            <View
-              style={[
-                styles.addButtonContainer,
-                focused && styles.activeAddButton,
-              ]}
-            >
-              <Ionicons
-                name={focused ? "add-circle" : "add-circle-outline"}
-                size={32}
-                color={focused ? "#00D09E" : "#00D09E"}
-              />
-            </View>
-          ),
-        }}
-      />
+  name="Add"
+  component={Add}
+  options={{
+    tabBarLabel: "",
+    tabBarIcon: ({ focused }) => (
+      <View
+        style={[
+          styles.addButtonContainer,
+          focused && styles.activeAddButton,
+        ]}
+      >
+        <Ionicons
+          name={focused ? "add-circle" : "add-circle-outline"}
+          size={32}
+          color="white" 
+        />
+      </View>
+    ),
+  }}
+/>
+
       <Tab.Screen
         name="Category"
         component={Category}
@@ -148,7 +149,7 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   activeAddButton: {
-    backgroundColor: "#6366f1",
+    backgroundColor: "#00D09E",
   },
 });
 
