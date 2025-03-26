@@ -3069,6 +3069,11 @@ expo-modules-core@2.2.3:
   dependencies:
     invariant "^2.2.4"
 
+expo-speech@^13.0.1:
+  version "13.0.1"
+  resolved "https://registry.yarnpkg.com/expo-speech/-/expo-speech-13.0.1.tgz#f49fc2c8a73f9bada030e52fc86a235cd3963f4a"
+  integrity sha512-J7tvFzORsFpIKihMnayeY5lCPc15giDrlN+ws2uUNo0MvLv1HCYEu/5p3+aMmZXXsY5I1QlconD4CwRWw3JFig==
+
 expo-status-bar@~2.0.1:
   version "2.0.1"
   resolved "https://registry.npmjs.org/expo-status-bar/-/expo-status-bar-2.0.1.tgz"

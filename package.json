@@ -19,6 +19,7 @@
     "axios": "^1.8.3",
     "expo": "~52.0.38",
     "expo-linear-gradient": "^14.0.2",
+    "expo-speech": "^13.0.1",
     "expo-status-bar": "~2.0.1",
     "jwt-decode": "^4.0.0",
     "lucide-react": "^0.483.0",
