@@ -13,6 +13,7 @@ import {
   MaterialCommunityIcons,
   FontAwesome5,
   Feather,
+  MaterialIcons,
 } from "@expo/vector-icons";
 
 const Home = () => {
@@ -69,6 +70,12 @@ const Home = () => {
     return colors[Math.floor(Math.random() * colors.length)];
   };
 
+  const handleVoiceInput = () => {
+    // Placeholder for voice input functionality
+    console.log("Voice input activated");
+    // You would typically integrate a voice recognition service here
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#00c89c" />
@@ -120,9 +127,6 @@ const Home = () => {
             <Text style={styles.progressMaxAmount}>$20,000.00</Text>
           </View>
         </View>
-
-        {/* Progress Status */}
-      
       </View>
 
       {/* Time Period Selector */}
@@ -197,6 +201,14 @@ const Home = () => {
           </View>
         ))}
       </ScrollView>
+
+      {/* Voice Input Floating Button */}
+      <TouchableOpacity 
+        style={styles.voiceInputButton} 
+        onPress={handleVoiceInput}
+      >
+        <MaterialIcons name="keyboard-voice" size={28} color="white" />
+      </TouchableOpacity>
 
       {/* Bottom Navigation */}
       <View style={styles.bottomNav}>
@@ -320,15 +332,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#666",
   },
-  progressStatus: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 12,
-  },
-  progressStatusText: {
-    fontSize: 14,
-    color: "#444",
-  },
   timeSelector: {
     flexDirection: "row",
     backgroundColor: "white",
@@ -379,21 +382,6 @@ const styles = StyleSheet.create({
   },
   transactionIconText: {
     fontSize: 24,
-  },
-  salaryIcon: {
-    backgroundColor: "#e3f2fd",
-  },
-  groceryIcon: {
-    backgroundColor: "#e3f2fd",
-  },
-  rentIcon: {
-    backgroundColor: "#e1f5fe",
-  },
-  transportIcon: {
-    backgroundColor: "#e8eaf6",
-  },
-  entertainmentIcon: {
-    backgroundColor: "#f3e5f5",
   },
   transactionDetails: {
     flex: 1,
@@ -465,6 +453,23 @@ const styles = StyleSheet.create({
     fontSize: 28,
     color: "white",
     fontWeight: "bold",
+  },
+  // New style for Voice Input Floating Button
+  voiceInputButton: {
+    position: 'absolute',
+    bottom: 90, // Positioned above the bottom navigation
+    right: 20,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#00c89c',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 5,
   },
 });
 
