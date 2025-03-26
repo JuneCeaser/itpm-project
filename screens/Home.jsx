@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   StyleSheet,
   Text,
@@ -16,6 +16,59 @@ import {
 } from "@expo/vector-icons";
 
 const Home = () => {
+  const [activeTab, setActiveTab] = useState("Daily");
+
+  // Transaction data for different time periods
+  const transactionData = {
+    Daily: [
+      { id: 1, title: "Coffee", amount: -4.50, category: "Food", time: "08:15 - Today", icon: "☕" },
+      { id: 2, title: "Lunch", amount: -12.75, category: "Food", time: "12:30 - Today", icon: "🍔" },
+      { id: 3, title: "Gas", amount: -35.20, category: "Transport", time: "17:45 - Today", icon: "⛽" },
+      { id: 4, title: "Grocery", amount: -28.90, category: "Shopping", time: "18:20 - Today", icon: "🛒" },
+      { id: 5, title: "Movie", amount: -15.00, category: "Entertainment", time: "20:00 - Today", icon: "🎬" },
+      { id: 6, title: "Freelance", amount: 120.00, category: "Income", time: "09:00 - Today", icon: "💻" },
+      { id: 7, title: "Parking", amount: -8.00, category: "Transport", time: "10:15 - Today", icon: "🅿️" },
+      { id: 8, title: "Snacks", amount: -5.25, category: "Food", time: "15:30 - Today", icon: "🍫" },
+      { id: 9, title: "Book", amount: -22.40, category: "Education", time: "16:45 - Today", icon: "📚" },
+      { id: 10, title: "Donation", amount: -10.00, category: "Other", time: "19:00 - Today", icon: "❤️" }
+    ],
+    Weekly: [
+      { id: 1, title: "Weekly Grocery", amount: -85.60, category: "Shopping", time: "Mon - 10:30", icon: "🛒" },
+      { id: 2, title: "Electric Bill", amount: -45.75, category: "Utilities", time: "Tue - 08:00", icon: "💡" },
+      { id: 3, title: "Salary", amount: 1200.00, category: "Income", time: "Wed - 09:00", icon: "💰" },
+      { id: 4, title: "Dinner Out", amount: -32.50, category: "Food", time: "Wed - 19:30", icon: "🍽️" },
+      { id: 5, title: "Gym Membership", amount: -25.00, category: "Health", time: "Thu - 07:00", icon: "🏋️" },
+      { id: 6, title: "Uber Rides", amount: -42.30, category: "Transport", time: "Thu - 18:15", icon: "🚖" },
+      { id: 7, title: "Phone Bill", amount: -35.99, category: "Utilities", time: "Fri - 10:00", icon: "📱" },
+      { id: 8, title: "Weekend Trip", amount: -150.00, category: "Travel", time: "Sat - 08:00", icon: "✈️" },
+      { id: 9, title: "Gifts", amount: -45.25, category: "Shopping", time: "Sun - 14:00", icon: "🎁" },
+      { id: 10, title: "Freelance Work", amount: 350.00, category: "Income", time: "Sun - 20:00", icon: "💼" }
+    ],
+    Monthly: [
+      { id: 1, title: "Rent", amount: -1200.00, category: "Housing", time: "1st - 00:00", icon: "🏠" },
+      { id: 2, title: "Salary", amount: 4500.00, category: "Income", time: "1st - 09:00", icon: "💰" },
+      { id: 3, title: "Car Payment", amount: -350.00, category: "Transport", time: "5th - 00:00", icon: "🚗" },
+      { id: 4, title: "Internet", amount: -65.99, category: "Utilities", time: "10th - 00:00", icon: "🌐" },
+      { id: 5, title: "Health Insurance", amount: -280.00, category: "Health", time: "15th - 00:00", icon: "🏥" },
+      { id: 6, title: "Credit Card", amount: -420.50, category: "Finance", time: "20th - 00:00", icon: "💳" },
+      { id: 7, title: "Investment", amount: -500.00, category: "Savings", time: "22nd - 10:00", icon: "📈" },
+      { id: 8, title: "Side Project", amount: 800.00, category: "Income", time: "25th - 15:00", icon: "🛠️" },
+      { id: 9, title: "Student Loan", amount: -300.00, category: "Education", time: "28th - 00:00", icon: "🎓" },
+      { id: 10, title: "Savings Deposit", amount: -1000.00, category: "Savings", time: "30th - 00:00", icon: "💰" }
+    ]
+  };
+
+  const renderTransactionIcon = (icon) => (
+    <View style={[styles.transactionIcon, { backgroundColor: getRandomColor() }]}>
+      <Text style={styles.transactionIconText}>{icon}</Text>
+    </View>
+  );
+
+  const getRandomColor = () => {
+    const colors = ["#e3f2fd", "#e1f5fe", "#e8eaf6", "#f3e5f5", "#e0f7fa", "#f1f8e9", "#fff3e0"];
+    return colors[Math.floor(Math.random() * colors.length)];
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#00c89c" />
@@ -31,44 +84,99 @@ const Home = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Balance Section */}
-      <View style={styles.balanceContainer}>
+      {/* Summary Container */}
+      <View style={styles.summaryContainer}>
         <View style={styles.balanceSection}>
-          <View style={styles.balanceBox}>
-            <Text style={styles.balanceLabel}>Total Balance</Text>
+          <View style={styles.summaryItem}>
+            <View style={styles.labelContainer}>
+              <View style={styles.checkboxIcon}>
+                <Ionicons name="checkmark" size={16} color="white" />
+              </View>
+              <Text style={styles.summaryLabel}>Total Balance</Text>
+            </View>
             <Text style={styles.balanceAmount}>$7,783.00</Text>
           </View>
+
           <View style={styles.divider} />
-          <View style={styles.balanceBox}>
-            <Text style={styles.balanceLabel}>Total Expense</Text>
+
+          <View style={styles.summaryItem}>
+            <View style={styles.labelContainer}>
+              <View style={styles.checkboxIcon}>
+                <Ionicons name="checkmark" size={16} color="white" />
+              </View>
+              <Text style={styles.summaryLabel}>Total Expense</Text>
+            </View>
             <Text style={styles.expenseAmount}>-$1,187.40</Text>
           </View>
         </View>
 
         {/* Progress Bar */}
-        <View style={styles.progressBarContainer}>
+        <View style={styles.progressContainer}>
           <View style={styles.progressBar}>
             <View style={[styles.progress, { width: "30%" }]} />
           </View>
           <View style={styles.progressLabels}>
             <Text style={styles.progressPercentage}>30%</Text>
-            <Text style={styles.progressMax}>$20,000.00</Text>
+            <Text style={styles.progressMaxAmount}>$20,000.00</Text>
           </View>
+        </View>
+
+        {/* Progress Status */}
+        <View style={styles.progressStatus}>
+          <View style={styles.checkboxIcon}>
+            <Ionicons name="checkmark" size={16} color="white" />
+          </View>
+          <Text style={styles.progressStatusText}>
+            30% Of Your Expenses, Looks Good.
+          </Text>
         </View>
       </View>
 
       {/* Time Period Selector */}
       <View style={styles.timeSelector}>
-        <TouchableOpacity style={[styles.timeOption, styles.activeTimeOption]}>
-          <Text style={styles.activeTimeOptionText}>Daily</Text>
+        <TouchableOpacity 
+          style={[
+            styles.timeOption, 
+            activeTab === "Daily" && styles.activeTimeOption
+          ]}
+          onPress={() => setActiveTab("Daily")}
+        >
+          <Text style={[
+            styles.timeOptionText,
+            activeTab === "Daily" && styles.activeTimeOptionText
+          ]}>
+            Daily
+          </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.timeOption}>
-          <Text style={styles.timeOptionText}>Weekly</Text>
+        <TouchableOpacity 
+          style={[
+            styles.timeOption, 
+            activeTab === "Weekly" && styles.activeTimeOption
+          ]}
+          onPress={() => setActiveTab("Weekly")}
+        >
+          <Text style={[
+            styles.timeOptionText,
+            activeTab === "Weekly" && styles.activeTimeOptionText
+          ]}>
+            Weekly
+          </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.timeOption}>
-          <Text style={styles.timeOptionText}>Monthly</Text>
+        <TouchableOpacity 
+          style={[
+            styles.timeOption, 
+            activeTab === "Monthly" && styles.activeTimeOption
+          ]}
+          onPress={() => setActiveTab("Monthly")}
+        >
+          <Text style={[
+            styles.timeOptionText,
+            activeTab === "Monthly" && styles.activeTimeOptionText
+          ]}>
+            Monthly
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -77,79 +185,24 @@ const Home = () => {
         style={styles.transactionsContainer}
         showsVerticalScrollIndicator={false}
       >
-        {/* Salary Transaction */}
-        <View style={styles.transaction}>
-          <View style={[styles.transactionIcon, styles.salaryIcon]}>
-            <Text style={styles.transactionIconText}>💵</Text>
+        {transactionData[activeTab].map((transaction) => (
+          <View key={transaction.id} style={styles.transaction}>
+            {renderTransactionIcon(transaction.icon)}
+            <View style={styles.transactionDetails}>
+              <Text style={styles.transactionTitle}>{transaction.title}</Text>
+              <Text style={styles.transactionTime}>{transaction.time}</Text>
+            </View>
+            <View style={styles.transactionCategory}>
+              <Text style={styles.categoryText}>{transaction.category}</Text>
+            </View>
+            <Text style={[
+              styles.transactionAmount,
+              transaction.amount < 0 && styles.transactionExpense
+            ]}>
+              {transaction.amount < 0 ? `-$${Math.abs(transaction.amount).toFixed(2)}` : `$${transaction.amount.toFixed(2)}`}
+            </Text>
           </View>
-          <View style={styles.transactionDetails}>
-            <Text style={styles.transactionTitle}>Salary</Text>
-            <Text style={styles.transactionTime}>18:27 - April 30</Text>
-          </View>
-          <View style={styles.transactionCategory}>
-            <Text style={styles.categoryText}>Monthly</Text>
-          </View>
-          <Text style={styles.transactionAmount}>$4,000.00</Text>
-        </View>
-
-        {/* Groceries Transaction */}
-        <View style={styles.transaction}>
-          <View style={[styles.transactionIcon, styles.groceryIcon]}>
-            <Text style={styles.transactionIconText}>🛒</Text>
-          </View>
-          <View style={styles.transactionDetails}>
-            <Text style={styles.transactionTitle}>Groceries</Text>
-            <Text style={styles.transactionTime}>17:00 - April 24</Text>
-          </View>
-          <View style={styles.transactionCategory}>
-            <Text style={styles.categoryText}>Pantry</Text>
-          </View>
-          <Text style={styles.transactionExpense}>-$100.00</Text>
-        </View>
-
-        {/* Rent Transaction */}
-        <View style={styles.transaction}>
-          <View style={[styles.transactionIcon, styles.rentIcon]}>
-            <Text style={styles.transactionIconText}>🏠</Text>
-          </View>
-          <View style={styles.transactionDetails}>
-            <Text style={styles.transactionTitle}>Rent</Text>
-            <Text style={styles.transactionTime}>8:30 - April 15</Text>
-          </View>
-          <View style={styles.transactionCategory}>
-            <Text style={styles.categoryText}>Rent</Text>
-          </View>
-          <Text style={styles.transactionExpense}>-$674.40</Text>
-        </View>
-
-        {/* Additional Transactions */}
-        <View style={styles.transaction}>
-          <View style={[styles.transactionIcon, styles.transportIcon]}>
-            <Text style={styles.transactionIconText}>🚗</Text>
-          </View>
-          <View style={styles.transactionDetails}>
-            <Text style={styles.transactionTitle}>Fuel</Text>
-            <Text style={styles.transactionTime}>12:45 - April 10</Text>
-          </View>
-          <View style={styles.transactionCategory}>
-            <Text style={styles.categoryText}>Transport</Text>
-          </View>
-          <Text style={styles.transactionExpense}>-$50.00</Text>
-        </View>
-
-        <View style={styles.transaction}>
-          <View style={[styles.transactionIcon, styles.entertainmentIcon]}>
-            <Text style={styles.transactionIconText}>🍿</Text>
-          </View>
-          <View style={styles.transactionDetails}>
-            <Text style={styles.transactionTitle}>Cinema</Text>
-            <Text style={styles.transactionTime}>19:30 - April 5</Text>
-          </View>
-          <View style={styles.transactionCategory}>
-            <Text style={styles.categoryText}>Entertainment</Text>
-          </View>
-          <Text style={styles.transactionExpense}>-$25.50</Text>
-        </View>
+        ))}
       </ScrollView>
 
       {/* Bottom Navigation */}
@@ -199,68 +252,89 @@ const styles = StyleSheet.create({
   notificationButton: {
     padding: 8,
   },
-  balanceContainer: {
-    paddingHorizontal: 20,
-    marginBottom: 20,
-    backgroundColor: "#00c89c",
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    paddingBottom: 20,
+  summaryContainer: {
+    backgroundColor: "white",
+    borderRadius: 20,
+    margin: 16,
+    padding: 16,
   },
   balanceSection: {
     flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 15,
   },
-  balanceBox: {
+  summaryItem: {
     flex: 1,
   },
-  balanceLabel: {
-    fontSize: 12,
-    color: "white",
-    marginBottom: 4,
+  labelContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  checkboxIcon: {
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    backgroundColor: "#00c89c",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 8,
+  },
+  summaryLabel: {
+    fontSize: 14,
+    color: "#666",
   },
   balanceAmount: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: "bold",
-    color: "white",
+    color: "#00c89c",
   },
   expenseAmount: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: "bold",
-    color: "#ff6b6b",
+    color: "#2196f3",
   },
   divider: {
     width: 1,
-    height: 40,
-    backgroundColor: "white",
-    marginHorizontal: 10,
+    height: "80%",
+    backgroundColor: "#eee",
+    marginHorizontal: 8,
   },
-  progressBarContainer: {
-    marginTop: 10,
+  progressContainer: {
+    marginTop: 16,
   },
   progressBar: {
     height: 10,
-    backgroundColor: "rgba(255,255,255,0.3)",
-    borderRadius: 5,
-    marginBottom: 4,
+    backgroundColor: "#f0f0f0",
+    borderRadius: 10,
+    overflow: "hidden",
   },
   progress: {
     height: "100%",
-    backgroundColor: "white",
-    borderRadius: 5,
+    backgroundColor: "#00c89c",
+    borderRadius: 10,
   },
   progressLabels: {
     flexDirection: "row",
     justifyContent: "space-between",
+    marginTop: 4,
   },
   progressPercentage: {
     fontSize: 12,
-    color: "white",
+    color: "#666",
   },
-  progressMax: {
+  progressMaxAmount: {
     fontSize: 12,
-    color: "white",
+    color: "#666",
+  },
+  progressStatus: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 12,
+  },
+  progressStatusText: {
+    fontSize: 14,
+    color: "#444",
   },
   timeSelector: {
     flexDirection: "row",

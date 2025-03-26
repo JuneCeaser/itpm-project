@@ -7,9 +7,50 @@ import {
   SafeAreaView,
   StatusBar,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons, FontAwesome5, Feather } from "@expo/vector-icons";
 
 const Category = () => {
+  // Categories data
+  const categories = [
+    [
+      { name: "Food", icon: "restaurant-outline", color: "#FF6B6B" },
+      { name: "Transport", icon: "car-outline", color: "#4ECDC4" },
+      { name: "Shopping", icon: "cart-outline", color: "#FFD166" }
+    ],
+    [
+      { name: "Bills", icon: "receipt-outline", color: "#06D6A0" },
+      { name: "Entertainment", icon: "film-outline", color: "#118AB2" },
+      { name: "Health", icon: "medkit-outline", color: "#EF476F" }
+    ],
+    [
+      { name: "Education", icon: "school-outline", color: "#7209B7" },
+      { name: "Gifts", icon: "gift-outline", color: "#F15BB5" },
+      { name: "Investments", icon: "trending-up-outline", color: "#00BBF9" }
+    ],
+    [
+      { name: "Travel", icon: "airplane-outline", color: "#9B5DE5" },
+      { name: "Personal", icon: "person-outline", color: "#00F5D4" },
+      { name: "Others", icon: "ellipsis-horizontal", color: "#FEE440" }
+    ]
+  ];
+
+  const renderIcon = (iconName) => {
+    switch(iconName) {
+      case 'car-outline':
+        return <Ionicons name={iconName} size={24} color="#fff" />;
+      case 'cart-outline':
+        return <Ionicons name={iconName} size={24} color="#fff" />;
+      case 'trending-up-outline':
+        return <Ionicons name={iconName} size={24} color="#fff" />;
+      case 'airplane-outline':
+        return <Ionicons name={iconName} size={24} color="#fff" />;
+      case 'ellipsis-horizontal':
+        return <Ionicons name={iconName} size={24} color="#fff" />;
+      default:
+        return <Ionicons name={iconName} size={24} color="#fff" />;
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar backgroundColor="#00C49A" barStyle="light-content" />
@@ -71,74 +112,18 @@ const Category = () => {
 
       {/* Categories Grid */}
       <View style={styles.categoriesContainer}>
-        <View style={styles.categoriesRow}>
-          <TouchableOpacity style={styles.categoryItem}>
-            <View style={[styles.categoryIcon, styles.foodIcon]}>
-              <Ionicons name="restaurant-outline" size={24} color="#fff" />
-            </View>
-            <Text style={styles.categoryText}>Food</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.categoryItem}>
-            <View style={[styles.categoryIcon, styles.transportIcon]}>
-              <Ionicons name="bus-outline" size={24} color="#fff" />
-            </View>
-            <Text style={styles.categoryText}>Transport</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.categoryItem}>
-            <View style={[styles.categoryIcon, styles.medicineIcon]}>
-              <Ionicons name="medkit-outline" size={24} color="#fff" />
-            </View>
-            <Text style={styles.categoryText}>Medicine</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.categoriesRow}>
-          <TouchableOpacity style={styles.categoryItem}>
-            <View style={[styles.categoryIcon, styles.groceriesIcon]}>
-              <Ionicons name="basket-outline" size={24} color="#fff" />
-            </View>
-            <Text style={styles.categoryText}>Groceries</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.categoryItem}>
-            <View style={[styles.categoryIcon, styles.rentIcon]}>
-              <Ionicons name="key-outline" size={24} color="#fff" />
-            </View>
-            <Text style={styles.categoryText}>Rent</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.categoryItem}>
-            <View style={[styles.categoryIcon, styles.giftsIcon]}>
-              <Ionicons name="gift-outline" size={24} color="#fff" />
-            </View>
-            <Text style={styles.categoryText}>Gifts</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.categoriesRow}>
-          <TouchableOpacity style={styles.categoryItem}>
-            <View style={[styles.categoryIcon, styles.savingsIcon]}>
-              <Ionicons name="cash-outline" size={24} color="#fff" />
-            </View>
-            <Text style={styles.categoryText}>Savings</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.categoryItem}>
-            <View style={[styles.categoryIcon, styles.entertainmentIcon]}>
-              <Ionicons name="film-outline" size={24} color="#fff" />
-            </View>
-            <Text style={styles.categoryText}>Entertainment</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.categoryItem}>
-            <View style={[styles.categoryIcon, styles.moreIcon]}>
-              <Ionicons name="add" size={24} color="#fff" />
-            </View>
-            <Text style={styles.categoryText}>More</Text>
-          </TouchableOpacity>
-        </View>
+        {categories.map((row, rowIndex) => (
+          <View key={rowIndex} style={styles.categoriesRow}>
+            {row.map((category, index) => (
+              <TouchableOpacity key={index} style={styles.categoryItem}>
+                <View style={[styles.categoryIcon, { backgroundColor: category.color }]}>
+                  {renderIcon(category.icon)}
+                </View>
+                <Text style={styles.categoryText}>{category.name}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        ))}
       </View>
 
       {/* Bottom Navigation */}
@@ -148,15 +133,15 @@ const Category = () => {
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="stats-chart-outline" size={24} color="#333" />
+          <MaterialCommunityIcons name="chart-bar" size={24} color="#333" />
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="swap-horizontal-outline" size={24} color="#333" />
+          <FontAwesome5 name="credit-card" size={20} color="#333" />
         </TouchableOpacity>
 
         <TouchableOpacity style={[styles.navItem, styles.activeNavItem]}>
-          <Ionicons name="layers-outline" size={24} color="#fff" />
+          <Feather name="grid" size={24} color="#fff" />
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.navItem}>
@@ -281,36 +266,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 8,
   },
-  foodIcon: {
-    backgroundColor: "#2F7CF6",
-  },
-  transportIcon: {
-    backgroundColor: "#90CAF9",
-  },
-  medicineIcon: {
-    backgroundColor: "#90CAF9",
-  },
-  groceriesIcon: {
-    backgroundColor: "#90CAF9",
-  },
-  rentIcon: {
-    backgroundColor: "#90CAF9",
-  },
-  giftsIcon: {
-    backgroundColor: "#90CAF9",
-  },
-  savingsIcon: {
-    backgroundColor: "#90CAF9",
-  },
-  entertainmentIcon: {
-    backgroundColor: "#90CAF9",
-  },
-  moreIcon: {
-    backgroundColor: "#90CAF9",
-  },
   categoryText: {
     fontSize: 14,
     color: "#333",
+    fontWeight: "500",
+    textAlign: "center",
   },
   bottomNav: {
     flexDirection: "row",
