@@ -242,25 +242,8 @@ const Analysis = () => {
           </TouchableOpacity>
         </View>
 
-        {/* Income & Expenses Chart */}
-        <View style={styles.chartSection}>
-          <View style={styles.chartHeader}>
-            <Text style={styles.chartTitle}>Income & Expenses</Text>
-            <View style={styles.chartActions}>
-              <TouchableOpacity style={styles.chartActionButton}>
-                <Ionicons name="search" size={22} color="#00cba0" />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.chartActionButton}>
-                <Ionicons name="calendar-outline" size={22} color="#00cba0" />
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          <BarChart period={selectedPeriod} />
-        </View>
-
-        {/* Income and Expense Summary */}
-        <View style={styles.financialSummary}>
+         {/* Income and Expense Summary */}
+         <View style={styles.financialSummary}>
           <View style={styles.summaryBox}>
             <Ionicons
               name="arrow-up-circle-outline"
@@ -286,6 +269,25 @@ const Analysis = () => {
           </View>
         </View>
 
+
+        {/* Income & Expenses Chart */}
+        <View style={styles.chartSection}>
+          <View style={styles.chartHeader}>
+            <Text style={styles.chartTitle}>Income & Expenses</Text>
+            <View style={styles.chartActions}>
+              <TouchableOpacity style={styles.chartActionButton}>
+                <Ionicons name="search" size={22} color="#00cba0" />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.chartActionButton}>
+                <Ionicons name="calendar-outline" size={22} color="#00cba0" />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <BarChart period={selectedPeriod} />
+        </View>
+
+       
         {/* Empty space for bottom navigation */}
         <View style={styles.bottomSpace} />
       </ScrollView>
