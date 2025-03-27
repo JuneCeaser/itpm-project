@@ -93,6 +93,11 @@ const AuthScreen = ({ navigation }) => {
     setShowConfirmPassword(!showConfirmPassword);
   };
 
+  const handleForgotPassword = () => {
+    // Placeholder function - does nothing when pressed
+    console.log("Forgot password pressed");
+  };
+
   const renderLoginForm = () => (
     <>
       <TextInput
@@ -123,6 +128,13 @@ const AuthScreen = ({ navigation }) => {
           />
         </TouchableOpacity>
       </View>
+
+      <TouchableOpacity 
+        style={styles.forgotPassword} 
+        onPress={handleForgotPassword}
+      >
+        <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+      </TouchableOpacity>
 
       <TouchableOpacity
         style={[styles.button, loading && styles.disabledButton]}
@@ -302,16 +314,16 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: "center",
-    paddingTop: 30,
-    paddingBottom: 20,
+    paddingTop: 20,
+    paddingBottom: 10,
   },
   logo: {
-    width: 200,
-    height: 200,
-    marginBottom: 20,
+    width: 240,
+    height: 240,
+    marginBottom: 10,
   },
   welcomeText: {
-    fontSize: 24,
+    fontSize: 30,
     fontWeight: "bold",
     color: "white",
     textAlign: "center",
@@ -321,8 +333,8 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
     paddingHorizontal: 25,
-    paddingTop: 30,
-    paddingBottom: 40,
+    paddingTop: 25,
+    paddingBottom: 30,
     width: "100%",
     flex: 1,
   },
@@ -330,14 +342,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     backgroundColor: "white",
     borderRadius: 20,
-    marginBottom: 25,
+    marginBottom: 20,
     padding: 6,
     borderWidth: 1,
     borderColor: "#e0e0e0",
   },
   tabButton: {
     flex: 1,
-    paddingVertical: 12,
+    paddingVertical: 10,
     alignItems: "center",
     borderRadius: 15,
   },
@@ -355,12 +367,13 @@ const styles = StyleSheet.create({
   },
   input: {
     backgroundColor: "#f9fafb",
-    padding: 15,
+    padding: 14,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: "#e5e7eb",
-    marginBottom: 20,
+    marginBottom: 15,
     fontSize: 16,
+    height: 50,
   },
   passwordContainer: {
     flexDirection: "row",
@@ -368,21 +381,31 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     borderWidth: 1,
     borderColor: "#e5e7eb",
-    marginBottom: 20,
+    marginBottom: 15,
     alignItems: "center",
+    height: 50,
   },
   passwordInput: {
     flex: 1,
-    padding: 15,
+    padding: 14,
     fontSize: 16,
   },
   eyeIcon: {
     paddingRight: 15,
   },
+  forgotPassword: {
+    alignSelf: "flex-end",
+    marginBottom: 15,
+  },
+  forgotPasswordText: {
+    color: "#00c89c",
+    fontSize: 14,
+    fontWeight: "500",
+  },
   termsContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: 15,
   },
   checkBox: {
     width: 20,
@@ -412,15 +435,17 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: "#00c89c",
-    padding: 16,
+    padding: 14,
     borderRadius: 10,
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: 15,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    height: 50,
+    justifyContent: 'center',
   },
   disabledButton: {
     backgroundColor: "#9ca3af",
@@ -433,7 +458,7 @@ const styles = StyleSheet.create({
   dividerText: {
     textAlign: "center",
     color: "#6b7280",
-    marginBottom: 20,
+    marginBottom: 15,
     fontSize: 14,
     fontWeight: "500",
   },
@@ -443,9 +468,9 @@ const styles = StyleSheet.create({
     gap: 15,
   },
   socialButton: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 45,
+    height: 45,
+    borderRadius: 22.5,
     backgroundColor: "#00c89c",
     justifyContent: "center",
     alignItems: "center",
