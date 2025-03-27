@@ -115,12 +115,8 @@ const Analysis = () => {
         </TouchableOpacity>
       </View>
 
-      <ScrollView
-        style={styles.content}
-        contentContainerStyle={styles.scrollContent}
-      >
-        {/* Balance and Expense Summary */}
-        <View style={styles.summaryContainer}>
+              {/* Balance and Expense Summary */}
+              <View style={styles.summaryContainer}>
           <View style={styles.balanceSection}>
             <View style={styles.summaryItem}>
               <View style={styles.labelContainer}>
@@ -167,8 +163,8 @@ const Analysis = () => {
           </View>
         </View>
 
-        {/* Time Period Selector */}
-        <View style={styles.periodSelector}>
+          {/* Time Period Selector */}
+          <View style={styles.periodSelector}>
           <TouchableOpacity
             style={[
               styles.periodButton,
@@ -241,6 +237,11 @@ const Analysis = () => {
             </Text>
           </TouchableOpacity>
         </View>
+
+      <ScrollView
+        style={styles.content}
+        contentContainerStyle={styles.scrollContent}
+      >
 
          {/* Income and Expense Summary */}
          <View style={styles.financialSummary}>
@@ -416,15 +417,15 @@ const styles = StyleSheet.create({
   periodSelector: {
     flexDirection: "row",
     backgroundColor: "white",
-    borderRadius: 30,
+    borderRadius: 10,
     margin: 16,
-    padding: 4,
+    padding: 7,
   },
   periodButton: {
     flex: 1,
     paddingVertical: 10,
     alignItems: "center",
-    borderRadius: 30,
+    borderRadius: 10,
   },
   activeButton: {
     backgroundColor: "#00cba0",

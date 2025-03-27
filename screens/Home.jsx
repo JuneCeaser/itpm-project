@@ -218,25 +218,6 @@ const Home = () => {
       >
         <MaterialIcons name="keyboard-voice" size={28} color="white" />
       </TouchableOpacity>
-
-      {/* Bottom Navigation */}
-      <View style={styles.bottomNav}>
-        <TouchableOpacity style={[styles.navButton, styles.activeNavButton]}>
-          <Ionicons name="home-outline" size={24} color="white" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navButton}>
-          <MaterialCommunityIcons name="chart-bar" size={24} color="#666" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.addButton}>
-          <Text style={styles.addIcon}>+</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navButton}>
-          <FontAwesome5 name="credit-card" size={20} color="#666" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navButton}>
-          <Feather name="user" size={24} color="#666" />
-        </TouchableOpacity>
-      </View>
     </SafeAreaView>
   );
 };
@@ -353,7 +334,7 @@ const styles = StyleSheet.create({
   timeSelector: {
     flexDirection: "row",
     backgroundColor: "white",
-    borderRadius: 20,
+    borderRadius: 10,
     marginHorizontal: 20,
     marginBottom: 15,
     padding: 6,
@@ -362,7 +343,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 10,
     alignItems: "center",
-    borderRadius: 15,
+    borderRadius: 10,
   },
   activeTimeOption: {
     backgroundColor: "#00c89c",
@@ -434,44 +415,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#f44336",
   },
-  bottomNav: {
-    flexDirection: "row",
-    height: 70,
-    backgroundColor: "white",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    borderTopWidth: 1,
-    borderTopColor: "#f0f0f0",
-  },
-  navButton: {
-    flex: 1,
-    alignItems: "center",
-  },
-  activeNavButton: {
-    backgroundColor: "#00c89c",
-    borderRadius: 20,
-    paddingVertical: 8,
-    paddingHorizontal: 15,
-    margin: 5,
-  },
-  addButton: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: "#00c89c",
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 3,
-    elevation: 4,
-  },
-  addIcon: {
-    fontSize: 28,
-    color: "white",
-    fontWeight: "bold",
-  },
+  
   voiceInputButton: {
     position: 'absolute',
     bottom: 90, 
