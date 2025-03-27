@@ -48,12 +48,18 @@ const Profile = ({ navigation }) => {
 
       Alert.alert("Success", response.data.msg);
       logout();
-      navigation.navigate("Auth");
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "Auth" }],
+      });
     } catch (error) {
       if (error.response && error.response.status === 401) {
         Alert.alert("Session Expired", "Please log in again.");
         logout(); // Clear the token and user data
-        navigation.navigate("Auth"); // Redirect to the login screen
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "Auth" }],
+        });
       } else {
         console.error("Error deleting account:", error);
         Alert.alert("Error", "Failed to delete account. Please try again.");
@@ -88,7 +94,7 @@ const Profile = ({ navigation }) => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#00D09E" />
+        <ActivityIndicator size="large" color="#6366f1" />
       </View>
     );
   }
@@ -159,7 +165,7 @@ const Profile = ({ navigation }) => {
               <Ionicons
                 name="person-outline"
                 size={22}
-                color="#00D09E"
+                color="#6366f1"
                 style={styles.buttonIcon}
               />
               <Text style={styles.actionButtonText}>Edit Profile</Text>
@@ -173,7 +179,7 @@ const Profile = ({ navigation }) => {
               <Ionicons
                 name="settings-outline"
                 size={22}
-                color="#00D09E"
+                color="#6366f1"
                 style={styles.buttonIcon}
               />
               <Text style={styles.actionButtonText}>Settings</Text>
