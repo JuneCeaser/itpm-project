@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -6,10 +6,90 @@ import {
   TouchableOpacity,
   SafeAreaView,
   StatusBar,
+  Modal,
+  TextInput,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { Ionicons, MaterialCommunityIcons, FontAwesome5, Feather } from "@expo/vector-icons";
 
 const Category = () => {
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [categoryName, setCategoryName] = useState("");
+  const [selectedIcon, setSelectedIcon] = useState(null);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [nameError, setNameError] = useState("");
+  const [iconError, setIconError] = useState("");
+
+  // Icons for selection
+  const availableIcons = [
+    "restaurant-outline",
+    "car-outline",
+    "cart-outline",
+    "receipt-outline",
+    "film-outline",
+    "medkit-outline",
+    "school-outline",
+    "gift-outline",
+    "trending-up-outline",
+    "airplane-outline",
+    "person-outline",
+    "home-outline",
+    "wifi-outline",
+    "cafe-outline",
+    "fitness-outline",
+    "musical-notes-outline",
+    "book-outline",
+    "paw-outline",
+    "beer-outline",
+    "color-palette-outline"
+  ];
+
+  const openModal = () => {
+    setIsModalVisible(true);
+  };
+
+  const closeModal = () => {
+    setIsModalVisible(false);
+    setCategoryName("");
+    setSelectedIcon(null);
+    setNameError("");
+    setIconError("");
+  };
+
+  const handleSave = () => {
+    // Validation
+    let isValid = true;
+    
+    if (!categoryName.trim()) {
+      setNameError("Category name is required");
+      isValid = false;
+    } else {
+      setNameError("");
+    }
+    
+    if (!selectedIcon) {
+      setIconError("Please select an icon");
+      isValid = false;
+    } else {
+      setIconError("");
+    }
+    
+    if (!isValid) return;
+    
+    // Show success message (UI only)
+    setShowSuccess(true);
+    setTimeout(() => {
+      setShowSuccess(false);
+      closeModal();
+    }, 1500);
+  };
+
+  const renderIcon = (iconName) => {
+    return <Ionicons name={iconName} size={24} color="#fff" />;
+  };
+
   // Categories data
   const categories = [
     [
@@ -33,23 +113,6 @@ const Category = () => {
       { name: "Others", icon: "ellipsis-horizontal", color: "#FEE440" }
     ]
   ];
-
-  const renderIcon = (iconName) => {
-    switch(iconName) {
-      case 'car-outline':
-        return <Ionicons name={iconName} size={24} color="#fff" />;
-      case 'cart-outline':
-        return <Ionicons name={iconName} size={24} color="#fff" />;
-      case 'trending-up-outline':
-        return <Ionicons name={iconName} size={24} color="#fff" />;
-      case 'airplane-outline':
-        return <Ionicons name={iconName} size={24} color="#fff" />;
-      case 'ellipsis-horizontal':
-        return <Ionicons name={iconName} size={24} color="#fff" />;
-      default:
-        return <Ionicons name={iconName} size={24} color="#fff" />;
-    }
-  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -112,6 +175,12 @@ const Category = () => {
 
       {/* Categories Grid */}
       <View style={styles.categoriesContainer}>
+        {/* Add Category Button */}
+        <TouchableOpacity style={styles.addButton} onPress={openModal}>
+          <Ionicons name="add" size={24} color="#00C49A" />
+          <Text style={styles.addButtonText}>Add Category</Text>
+        </TouchableOpacity>
+
         {categories.map((row, rowIndex) => (
           <View key={rowIndex} style={styles.categoriesRow}>
             {row.map((category, index) => (
@@ -125,6 +194,79 @@ const Category = () => {
           </View>
         ))}
       </View>
+
+      {/* Add Category Modal */}
+      <Modal
+        visible={isModalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={closeModal}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={styles.modalContainer}
+        >
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Add New Category</Text>
+              <TouchableOpacity onPress={closeModal}>
+                <Ionicons name="close" size={24} color="#666" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView>
+              {/* Category Name Input */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Category Name</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter category name"
+                  value={categoryName}
+                  onChangeText={setCategoryName}
+                />
+                {nameError ? <Text style={styles.errorText}>{nameError}</Text> : null}
+              </View>
+
+              {/* Icon Selection */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Select Icon</Text>
+                <View style={styles.iconGrid}>
+                  {availableIcons.map((icon, index) => (
+                    <TouchableOpacity
+                      key={index}
+                      style={[
+                        styles.iconOption,
+                        selectedIcon === icon && styles.selectedIconOption
+                      ]}
+                      onPress={() => setSelectedIcon(icon)}
+                    >
+                      <Ionicons
+                        name={icon}
+                        size={24}
+                        color={selectedIcon === icon ? "#fff" : "#00C49A"}
+                      />
+                    </TouchableOpacity>
+                  ))}
+                </View>
+                {iconError ? <Text style={styles.errorText}>{iconError}</Text> : null}
+              </View>
+            </ScrollView>
+
+            {/* Save Button */}
+            <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+              <Text style={styles.saveButtonText}>Save Category</Text>
+            </TouchableOpacity>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      {/* Success Message */}
+      {showSuccess && (
+        <View style={styles.successMessage}>
+          <Ionicons name="checkmark-circle" size={24} color="#fff" />
+          <Text style={styles.successText}>Category saved successfully!</Text>
+        </View>
+      )}
 
       {/* Bottom Navigation */}
       <View style={styles.bottomNav}>
@@ -289,6 +431,113 @@ const styles = StyleSheet.create({
   },
   activeNavItem: {
     backgroundColor: "#00C49A",
+  },
+  addButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#fff",
+    paddingVertical: 12,
+    borderRadius: 12,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: "#00C49A",
+  },
+  addButtonText: {
+    color: "#00C49A",
+    fontSize: 16,
+    fontWeight: "600",
+    marginLeft: 8,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 20,
+    maxHeight: "80%",
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  inputContainer: {
+    marginBottom: 20,
+  },
+  inputLabel: {
+    fontSize: 14,
+    color: "#666",
+    marginBottom: 8,
+  },
+  input: {
+    backgroundColor: "#f5f5f7",
+    borderRadius: 12,
+    padding: 14,
+    fontSize: 16,
+  },
+  iconGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+  },
+  iconOption: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: "#f5f5f7",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  selectedIconOption: {
+    backgroundColor: "#00C49A",
+  },
+  saveButton: {
+    backgroundColor: "#00C49A",
+    padding: 16,
+    borderRadius: 12,
+    alignItems: "center",
+    marginTop: 10,
+  },
+  saveButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  errorText: {
+    color: "#FF4F4F",
+    fontSize: 12,
+    marginTop: 4,
+  },
+  successMessage: {
+    position: "absolute",
+    top: "50%",
+    left: "20%",
+    right: "20%",
+    backgroundColor: "#00C49A",
+    padding: 16,
+    borderRadius: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 1000,
+  },
+  successText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+    marginLeft: 8,
   },
 });
 
