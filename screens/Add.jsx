@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
   typeSelectorContainer: {
     flexDirection: "row",
     backgroundColor: "white",
-    borderRadius: 20,
+    borderRadius: 10,
     marginHorizontal: 20,
     marginVertical: 15,
     padding: 6,
@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 10,
     alignItems: "center",
-    borderRadius: 15,
+    borderRadius: 10,
   },
   activeTypeSelector: {
     backgroundColor: "#00c89c",
