@@ -7,6 +7,7 @@ import {
   StatusBar,
   TouchableOpacity,
   ScrollView,
+  Image,
 } from "react-native";
 import {
   Ionicons,
@@ -82,9 +83,17 @@ const Home = () => {
 
       {/* Header Section */}
       <View style={styles.header}>
-        <View>
-          <Text style={styles.welcomeText}>Hi, June</Text>
-          <Text style={styles.greetingText}>Good Morning</Text>
+        
+      <View style={styles.headerLeft}>
+          <Image 
+            source={require('../assets/fin.png')} 
+            style={styles.logo}
+            resizeMode="contain"
+          />
+          <View>
+            <Text style={styles.welcomeText}>Hi, June</Text>
+            <Text style={styles.greetingText}>Good Morning</Text>
+          </View>
         </View>
         <TouchableOpacity style={styles.notificationButton}>
           <Ionicons name="notifications-outline" size={24} color="white" />
@@ -244,6 +253,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 15,
     paddingBottom: 10,
+  },
+  headerLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  logo: {
+    width: 40,
+    height: 40,
+    marginRight: 10,
   },
   welcomeText: {
     fontSize: 20,
