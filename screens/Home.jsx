@@ -25,7 +25,7 @@ const Home = () => {
       <View style={styles.header}>
         <View>
           <Text style={styles.welcomeText}>Hi, Welcome Back</Text>
-          <Text style={styles.greetingText}>Good Morning</Text>
+          <Text style={styles.greetingText}>Good morning</Text>
         </View>
         <TouchableOpacity style={styles.notificationIcon}>
           <Text>🔔</Text>
