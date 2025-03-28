@@ -267,29 +267,6 @@ const Category = () => {
           <Text style={styles.successText}>Category saved successfully!</Text>
         </View>
       )}
-
-      {/* Bottom Navigation */}
-      <View style={styles.bottomNav}>
-        <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="home-outline" size={24} color="#333" />
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.navItem}>
-          <MaterialCommunityIcons name="chart-bar" size={24} color="#333" />
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.navItem}>
-          <FontAwesome5 name="credit-card" size={20} color="#333" />
-        </TouchableOpacity>
-
-        <TouchableOpacity style={[styles.navItem, styles.activeNavItem]}>
-          <Feather name="grid" size={24} color="#fff" />
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="person-outline" size={24} color="#333" />
-        </TouchableOpacity>
-      </View>
     </SafeAreaView>
   );
 };

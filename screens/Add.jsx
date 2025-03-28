@@ -260,22 +260,6 @@ const Add = () => {
           </TouchableOpacity>
         </ScrollView>
       </View>
-
-      {/* Note Input */}
-      <View style={styles.noteContainer}>
-        <Text style={styles.sectionTitle}>Note (Optional)</Text>
-        <TextInput
-          placeholder="Add a note..."
-          placeholderTextColor="#999"
-          style={styles.noteInput}
-          value={note}
-          onChangeText={setNote}
-          maxLength={50}
-          multiline
-        />
-        <Text style={styles.charCount}>{note.length}/50</Text>
-      </View>
-
       {/* Save Button - Only show when keyboard is not visible */}
       {!keyboardVisible && (
         <TouchableOpacity 
@@ -404,34 +388,12 @@ const styles = StyleSheet.create({
     marginTop: 5,
     textAlign: "center",
   },
-  noteContainer: {
-    backgroundColor: "white",
-    borderRadius: 20,
-    padding: 20,
-    marginHorizontal: 10,
-    marginBottom: 20,
-  },
-  noteInput: {
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 10,
-    padding: 15,
-    minHeight: 100,
-    textAlignVertical: "top",
-  },
-  charCount: {
-    textAlign: "right",
-    color: "#999",
-    fontSize: 12,
-    marginTop: 5,
-  },
   saveButton: {
     backgroundColor: "white",
     paddingVertical: 15,
     marginHorizontal: 20,
     borderRadius: 15,
     alignItems: "center",
-    marginBottom: 20,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
