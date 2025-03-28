@@ -91,7 +91,7 @@ const Home = () => {
             resizeMode="contain"
           />
           <View>
-            <Text style={styles.welcomeText}>Hi, June</Text>
+            <Text style={styles.welcomeText}>Hi, Pavithra</Text>
             <Text style={styles.greetingText}>Good Morning</Text>
           </View>
         </View>
