@@ -89,10 +89,10 @@ const Analysis = () => {
 
   // Summary data based on period
   const summaryData = {
-    daily: { income: "$580.00", expense: "$187.40" },
-    weekly: { income: "$3,120.00", expense: "$987.40" },
-    monthly: { income: "$12,240.00", expense: "$4,187.40" },
-    yearly: { income: "$145,120.00", expense: "$52,187.40" },
+    daily: { income: "Rs 580.00", expense: "Rs 187.40" },
+    weekly: { income: "Rs 3,120.00", expense: "Rs 987.40" },
+    monthly: { income: "Rs 12,240.00", expense: "Rs 4,187.40" },
+    yearly: { income: "Rs 145,120.00", expense: "Rs 52,187.40" },
   };
 
   // Handler for time period selection
@@ -125,7 +125,7 @@ const Analysis = () => {
                 </View>
                 <Text style={styles.summaryLabel}>Total Balance</Text>
               </View>
-              <Text style={styles.balanceAmount}>$7,783.00</Text>
+              <Text style={styles.balanceAmount}>LKR 7,783.00</Text>
             </View>
 
             <View style={styles.divider} />
@@ -137,7 +137,7 @@ const Analysis = () => {
                 </View>
                 <Text style={styles.summaryLabel}>Total Expense</Text>
               </View>
-              <Text style={styles.expenseAmount}>-$1,187.40</Text>
+              <Text style={styles.expenseAmount}>-LKR 1,187.40</Text>
             </View>
           </View>
 
@@ -148,7 +148,7 @@ const Analysis = () => {
             </View>
             <View style={styles.progressLabels}>
               <Text style={styles.progressPercentage}>30%</Text>
-              <Text style={styles.progressMaxAmount}>$20,000.00</Text>
+              <Text style={styles.progressMaxAmount}>LKR 20,000.00</Text>
             </View>
           </View>
 

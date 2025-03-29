@@ -137,7 +137,7 @@ const Category = () => {
               <Ionicons name="checkbox-outline" size={16} color="#00C49A" />
             </View>
             <Text style={styles.balanceLabel}>Total Balance</Text>
-            <Text style={styles.balanceValue}>$7,783.00</Text>
+            <Text style={styles.balanceValue}>LKR 7,783.00</Text>
           </View>
 
           <View style={styles.divider} />
@@ -148,7 +148,7 @@ const Category = () => {
             </View>
             <Text style={styles.balanceLabel}>Total Expense</Text>
             <Text style={[styles.balanceValue, styles.expenseValue]}>
-              -$1,187.40
+              LKR 1,187.40
             </Text>
           </View>
         </View>
@@ -159,7 +159,7 @@ const Category = () => {
           <View style={styles.progressBar}>
             <View style={styles.progressFill} />
           </View>
-          <Text style={styles.maxAmount}>$20,000.00</Text>
+          <Text style={styles.maxAmount}>LKR 20,000.00</Text>
         </View>
 
         {/* Status Message */}

@@ -201,7 +201,7 @@ const Add = () => {
 
       {/* Amount Input */}
       <View style={styles.amountContainer}>
-        <Text style={styles.currencySymbol}>$</Text>
+        <Text style={styles.currencySymbol}>LKR</Text>
         <TextInput 
           placeholder="0.00" 
           placeholderTextColor="#666"
