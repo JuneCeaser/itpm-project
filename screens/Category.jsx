@@ -21,6 +21,8 @@ const Category = () => {
   const [showSuccess, setShowSuccess] = useState(false);
   const [nameError, setNameError] = useState("");
   const [iconError, setIconError] = useState("");
+  const [activeTab, setActiveTab] = useState("expense"); // 'expense' or 'income'
+  const [categoryType, setCategoryType] = useState("expense");
 
   // Icons for selection
   const availableIcons = [
@@ -46,7 +48,8 @@ const Category = () => {
     "color-palette-outline"
   ];
 
-  const openModal = () => {
+  const openModal = (type) => {
+    setCategoryType(type);
     setIsModalVisible(true);
   };
 
@@ -90,8 +93,8 @@ const Category = () => {
     return <Ionicons name={iconName} size={24} color="#fff" />;
   };
 
-  // Categories data
-  const categories = [
+  // Expense Categories data
+  const expenseCategories = [
     [
       { name: "Food", icon: "restaurant-outline", color: "#FF6B6B" },
       { name: "Transport", icon: "car-outline", color: "#4ECDC4" },
@@ -113,6 +116,27 @@ const Category = () => {
       { name: "Others", icon: "ellipsis-horizontal", color: "#FEE440" }
     ]
   ];
+
+  // Income Categories data
+  const incomeCategories = [
+    [
+      { name: "Salary", icon: "cash-outline", color: "#4CAF50" },
+      { name: "Freelance", icon: "laptop-outline", color: "#2196F3" },
+      { name: "Investments", icon: "trending-up-outline", color: "#9C27B0" }
+    ],
+    [
+      { name: "Rental", icon: "home-outline", color: "#FF9800" },
+      { name: "Gifts", icon: "gift-outline", color: "#E91E63" },
+      { name: "Refunds", icon: "return-down-back-outline", color: "#3F51B5" }
+    ],
+    [
+      { name: "Dividends", icon: "pie-chart-outline", color: "#009688" },
+      { name: "Side Hustle", icon: "briefcase-outline", color: "#795548" },
+      { name: "Others", icon: "ellipsis-horizontal", color: "#607D8B" }
+    ]
+  ];
+
+  const categories = activeTab === "expense" ? expenseCategories : incomeCategories;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -173,26 +197,54 @@ const Category = () => {
         </View>
       </View>
 
-      {/* Categories Grid */}
+      {/* Categories Container */}
       <View style={styles.categoriesContainer}>
+        {/* Toggle Tabs */}
+        <View style={styles.tabContainer}>
+          <TouchableOpacity 
+            style={[styles.tab, activeTab === "expense" && styles.activeTab]}
+            onPress={() => setActiveTab("expense")}
+          >
+            <Text style={[styles.tabText, activeTab === "expense" && styles.activeTabText]}>
+              Expenses
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.tab, activeTab === "income" && styles.activeTab]}
+            onPress={() => setActiveTab("income")}
+          >
+            <Text style={[styles.tabText, activeTab === "income" && styles.activeTabText]}>
+              Income
+            </Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Add Category Button */}
-        <TouchableOpacity style={styles.addButton} onPress={openModal}>
-          <Ionicons name="add" size={24} color="#00C49A" />
-          <Text style={styles.addButtonText}>Add Category</Text>
+        <TouchableOpacity 
+          style={[styles.addButton, activeTab === "income" && styles.addButtonIncome]} 
+          onPress={() => openModal(activeTab)}
+        >
+          <Ionicons name="add" size={24} color={activeTab === "expense" ? "#00C49A" : "#4CAF50"} />
+          <Text style={[styles.addButtonText, activeTab === "income" && styles.addButtonTextIncome]}>
+            Add {activeTab === "expense" ? "Expense" : "Income"} Category
+          </Text>
         </TouchableOpacity>
 
-        {categories.map((row, rowIndex) => (
-          <View key={rowIndex} style={styles.categoriesRow}>
-            {row.map((category, index) => (
-              <TouchableOpacity key={index} style={styles.categoryItem}>
-                <View style={[styles.categoryIcon, { backgroundColor: category.color }]}>
-                  {renderIcon(category.icon)}
-                </View>
-                <Text style={styles.categoryText}>{category.name}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        ))}
+        {/* Categories Grid */}
+        <ScrollView showsVerticalScrollIndicator={false}>
+          {categories.map((row, rowIndex) => (
+            <View key={rowIndex} style={styles.categoriesRow}>
+              {row.map((category, index) => (
+                <TouchableOpacity key={index} style={styles.categoryItem}>
+                  <View style={[styles.categoryIcon, { backgroundColor: category.color }]}>
+                    {renderIcon(category.icon)}
+                  </View>
+                  <Text style={styles.categoryText}>{category.name}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          ))}
+        </ScrollView>
       </View>
 
       {/* Add Category Modal */}
@@ -208,7 +260,9 @@ const Category = () => {
         >
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Add New Category</Text>
+              <Text style={styles.modalTitle}>
+                Add New {categoryType === "expense" ? "Expense" : "Income"} Category
+              </Text>
               <TouchableOpacity onPress={closeModal}>
                 <Ionicons name="close" size={24} color="#666" />
               </TouchableOpacity>
@@ -236,14 +290,19 @@ const Category = () => {
                       key={index}
                       style={[
                         styles.iconOption,
-                        selectedIcon === icon && styles.selectedIconOption
+                        selectedIcon === icon && styles.selectedIconOption,
+                        categoryType === "income" && selectedIcon === icon && styles.selectedIconOptionIncome
                       ]}
                       onPress={() => setSelectedIcon(icon)}
                     >
                       <Ionicons
                         name={icon}
                         size={24}
-                        color={selectedIcon === icon ? "#fff" : "#00C49A"}
+                        color={
+                          selectedIcon === icon 
+                            ? "#fff" 
+                            : categoryType === "expense" ? "#00C49A" : "#4CAF50"
+                        }
                       />
                     </TouchableOpacity>
                   ))}
@@ -253,8 +312,16 @@ const Category = () => {
             </ScrollView>
 
             {/* Save Button */}
-            <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-              <Text style={styles.saveButtonText}>Save Category</Text>
+            <TouchableOpacity 
+              style={[
+                styles.saveButton, 
+                categoryType === "income" && styles.saveButtonIncome
+              ]} 
+              onPress={handleSave}
+            >
+              <Text style={styles.saveButtonText}>
+                Save {categoryType === "expense" ? "Expense" : "Income"} Category
+              </Text>
             </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>
@@ -262,7 +329,10 @@ const Category = () => {
 
       {/* Success Message */}
       {showSuccess && (
-        <View style={styles.successMessage}>
+        <View style={[
+          styles.successMessage,
+          categoryType === "income" && styles.successMessageIncome
+        ]}>
           <Ionicons name="checkmark-circle" size={24} color="#fff" />
           <Text style={styles.successText}>Category saved successfully!</Text>
         </View>
@@ -360,6 +430,29 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 14,
   },
+  tabContainer: {
+    flexDirection: "row",
+    marginBottom: 16,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 4,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: "center",
+    borderRadius: 10,
+  },
+  activeTab: {
+    backgroundColor: "#00C49A",
+  },
+  tabText: {
+    fontWeight: "600",
+    color: "#666",
+  },
+  activeTabText: {
+    color: "#fff",
+  },
   categoriesContainer: {
     flex: 1,
     backgroundColor: "#f5f5f7",
@@ -420,11 +513,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#00C49A",
   },
+  addButtonIncome: {
+    borderColor: "#4CAF50",
+  },
   addButtonText: {
     color: "#00C49A",
     fontSize: 16,
     fontWeight: "600",
     marginLeft: 8,
+  },
+  addButtonTextIncome: {
+    color: "#4CAF50",
   },
   modalContainer: {
     flex: 1,
@@ -480,12 +579,18 @@ const styles = StyleSheet.create({
   selectedIconOption: {
     backgroundColor: "#00C49A",
   },
+  selectedIconOptionIncome: {
+    backgroundColor: "#4CAF50",
+  },
   saveButton: {
     backgroundColor: "#00C49A",
     padding: 16,
     borderRadius: 12,
     alignItems: "center",
     marginTop: 10,
+  },
+  saveButtonIncome: {
+    backgroundColor: "#4CAF50",
   },
   saveButtonText: {
     color: "#fff",
@@ -509,6 +614,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     zIndex: 1000,
+  },
+  successMessageIncome: {
+    backgroundColor: "#4CAF50",
   },
   successText: {
     color: "#fff",
