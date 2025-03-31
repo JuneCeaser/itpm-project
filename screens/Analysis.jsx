@@ -89,10 +89,10 @@ const Analysis = () => {
 
   // Summary data based on period
   const summaryData = {
-    daily: { income: "$580.00", expense: "$187.40" },
-    weekly: { income: "$3,120.00", expense: "$987.40" },
-    monthly: { income: "$12,240.00", expense: "$4,187.40" },
-    yearly: { income: "$145,120.00", expense: "$52,187.40" },
+    daily: { income: "Rs 580.00", expense: "Rs 187.40" },
+    weekly: { income: "Rs 3,120.00", expense: "Rs 987.40" },
+    monthly: { income: "Rs 12,240.00", expense: "Rs 4,187.40" },
+    yearly: { income: "Rs 145,120.00", expense: "Rs 52,187.40" },
   };
 
   // Handler for time period selection
@@ -115,12 +115,8 @@ const Analysis = () => {
         </TouchableOpacity>
       </View>
 
-      <ScrollView
-        style={styles.content}
-        contentContainerStyle={styles.scrollContent}
-      >
-        {/* Balance and Expense Summary */}
-        <View style={styles.summaryContainer}>
+              {/* Balance and Expense Summary */}
+              <View style={styles.summaryContainer}>
           <View style={styles.balanceSection}>
             <View style={styles.summaryItem}>
               <View style={styles.labelContainer}>
@@ -129,7 +125,7 @@ const Analysis = () => {
                 </View>
                 <Text style={styles.summaryLabel}>Total Balance</Text>
               </View>
-              <Text style={styles.balanceAmount}>$7,783.00</Text>
+              <Text style={styles.balanceAmount}>LKR 7,783.00</Text>
             </View>
 
             <View style={styles.divider} />
@@ -141,7 +137,7 @@ const Analysis = () => {
                 </View>
                 <Text style={styles.summaryLabel}>Total Expense</Text>
               </View>
-              <Text style={styles.expenseAmount}>-$1,187.40</Text>
+              <Text style={styles.expenseAmount}>-LKR 1,187.40</Text>
             </View>
           </View>
 
@@ -152,7 +148,7 @@ const Analysis = () => {
             </View>
             <View style={styles.progressLabels}>
               <Text style={styles.progressPercentage}>30%</Text>
-              <Text style={styles.progressMaxAmount}>$20,000.00</Text>
+              <Text style={styles.progressMaxAmount}>LKR 20,000.00</Text>
             </View>
           </View>
 
@@ -167,8 +163,8 @@ const Analysis = () => {
           </View>
         </View>
 
-        {/* Time Period Selector */}
-        <View style={styles.periodSelector}>
+          {/* Time Period Selector */}
+          <View style={styles.periodSelector}>
           <TouchableOpacity
             style={[
               styles.periodButton,
@@ -242,30 +238,18 @@ const Analysis = () => {
           </TouchableOpacity>
         </View>
 
-        {/* Income & Expenses Chart */}
-        <View style={styles.chartSection}>
-          <View style={styles.chartHeader}>
-            <Text style={styles.chartTitle}>Income & Expenses</Text>
-            <View style={styles.chartActions}>
-              <TouchableOpacity style={styles.chartActionButton}>
-                <Ionicons name="search" size={22} color="#00a8ff" />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.chartActionButton}>
-                <Ionicons name="calendar-outline" size={22} color="#00a8ff" />
-              </TouchableOpacity>
-            </View>
-          </View>
+      <ScrollView
+        style={styles.content}
+        contentContainerStyle={styles.scrollContent}
+      >
 
-          <BarChart period={selectedPeriod} />
-        </View>
-
-        {/* Income and Expense Summary */}
-        <View style={styles.financialSummary}>
+         {/* Income and Expense Summary */}
+         <View style={styles.financialSummary}>
           <View style={styles.summaryBox}>
             <Ionicons
               name="arrow-up-circle-outline"
               size={24}
-              color="#00a8ff"
+              color="#00cba0"
             />
             <Text style={styles.summaryBoxTitle}>Income</Text>
             <Text style={styles.summaryBoxAmount}>
@@ -277,7 +261,7 @@ const Analysis = () => {
             <Ionicons
               name="arrow-down-circle-outline"
               size={24}
-              color="#00a8ff"
+              color="#2196f3"
             />
             <Text style={styles.summaryBoxTitle}>Expense</Text>
             <Text style={styles.summaryBoxAmountBlue}>
@@ -286,6 +270,25 @@ const Analysis = () => {
           </View>
         </View>
 
+
+        {/* Income & Expenses Chart */}
+        <View style={styles.chartSection}>
+          <View style={styles.chartHeader}>
+            <Text style={styles.chartTitle}>Income & Expenses</Text>
+            <View style={styles.chartActions}>
+              <TouchableOpacity style={styles.chartActionButton}>
+                <Ionicons name="search" size={22} color="#00cba0" />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.chartActionButton}>
+                <Ionicons name="calendar-outline" size={22} color="#00cba0" />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          <BarChart period={selectedPeriod} />
+        </View>
+
+       
         {/* Empty space for bottom navigation */}
         <View style={styles.bottomSpace} />
       </ScrollView>
@@ -296,7 +299,7 @@ const Analysis = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#00a8ff",
+    backgroundColor: "#00cba0",
   },
   header: {
     flexDirection: "row",
@@ -414,18 +417,18 @@ const styles = StyleSheet.create({
   periodSelector: {
     flexDirection: "row",
     backgroundColor: "white",
-    borderRadius: 30,
+    borderRadius: 10,
     margin: 16,
-    padding: 4,
+    padding: 7,
   },
   periodButton: {
     flex: 1,
     paddingVertical: 10,
     alignItems: "center",
-    borderRadius: 30,
+    borderRadius: 10,
   },
   activeButton: {
-    backgroundColor: "#00a8ff",
+    backgroundColor: "#00cba0",
   },
   periodText: {
     color: "#666",
