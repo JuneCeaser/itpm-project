@@ -140,7 +140,7 @@ const Category = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar backgroundColor="#00a8ff" barStyle="light-content" />
+      <StatusBar backgroundColor="#00C49A" barStyle="light-content" />
 
       {/* Header */}
       <View style={styles.header}>
@@ -344,7 +344,7 @@ const Category = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#00a8ff",
+    backgroundColor: "#00C49A",
   },
   header: {
     flexDirection: "row",
