@@ -40,6 +40,9 @@
     },
     "runtimeVersion": {
       "policy": "sdkVersion"
-    }
+    },
+    "plugins": [
+      "expo-sqlite"
+    ]
   }
 }
