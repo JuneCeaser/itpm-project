@@ -48,12 +48,18 @@ const Profile = ({ navigation }) => {
 
       Alert.alert("Success", response.data.msg);
       logout();
-      navigation.navigate("Auth");
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "Auth" }],
+      });
     } catch (error) {
       if (error.response && error.response.status === 401) {
         Alert.alert("Session Expired", "Please log in again.");
         logout(); // Clear the token and user data
-        navigation.navigate("Auth"); // Redirect to the login screen
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "Auth" }],
+        });
       } else {
         console.error("Error deleting account:", error);
         Alert.alert("Error", "Failed to delete account. Please try again.");
@@ -95,7 +101,7 @@ const Profile = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#6366f1" />
+      <StatusBar barStyle="light-content" backgroundColor="#00D09E" />
 
       {/* Header with gradient effect */}
       <View style={styles.header}>

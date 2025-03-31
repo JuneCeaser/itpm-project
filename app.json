@@ -10,17 +10,25 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#00c89c"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.juneceaser.sub",
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "This app uses the microphone to enable voice input for transactions"
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.juneceaser.sub"
+      "package": "com.juneceaser.sub",
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ],
+      "versionCode": 1
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -29,6 +37,12 @@
       "eas": {
         "projectId": "c062f74a-6aff-40b8-b8e8-28a7e2283b41"
       }
-    }
+    },
+    "runtimeVersion": {
+      "policy": "sdkVersion"
+    },
+    "plugins": [
+      "expo-sqlite"
+    ]
   }
 }
