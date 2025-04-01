@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useContext } from "react";
 import {
   StyleSheet,
   Text,
@@ -12,10 +13,12 @@ import {
 } from "react-native";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useTransactions } from '../context/TransactionContext';
+import { AuthContext } from '../context/AuthContext';
 
 const Home = () => {
   const [activeTab, setActiveTab] = useState("Daily");
   const { transactions, balance, loading } = useTransactions();
+  const { user } = useContext(AuthContext);
 
   const getCategoryColor = (category) => {
     const colors = {
@@ -66,8 +69,11 @@ const Home = () => {
           />
         </View>
         <View>
-          <Text style={styles.welcomeText}>Hi, User</Text>
-          <Text style={styles.greetingText}>Good Morning</Text>
+          <Text style={styles.welcomeText}>Hi, {user?.name || 'User'}</Text>
+          <Text style={styles.greetingText}>
+            {new Date().getHours() < 12 ? 'Good Morning' : 
+             new Date().getHours() < 18 ? 'Good Afternoon' : 'Good Evening'}
+          </Text>
         </View>
         <TouchableOpacity style={styles.notificationButton}>
           <Ionicons name="notifications-outline" size={24} color="white"/>
