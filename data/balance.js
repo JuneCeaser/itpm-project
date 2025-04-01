@@ -1,4 +1,5 @@
-import { getBalance, saveBalance } from './storage';
+// data/balance.js
+import { getTransactions } from './storage';
 
 export const calculateTotalExpenses = async () => {
   const transactions = await getTransactions();
@@ -20,6 +21,5 @@ export const updateBalance = async () => {
   const income = await calculateTotalIncome();
   const expenses = await calculateTotalExpenses();
   const balance = income - expenses;
-  await saveBalance(balance);
   return balance;
 };
