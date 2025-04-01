@@ -10,6 +10,9 @@ import {
   StatusBar,
   Alert,
   Keyboard,
+  Modal,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTransactions } from '../context/TransactionContext';
@@ -26,8 +29,40 @@ const Add = () => {
   });
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   
+  // New state for category modal
+  const [isCategoryModalVisible, setIsCategoryModalVisible] = useState(false);
+  const [categoryName, setCategoryName] = useState("");
+  const [selectedIcon, setSelectedIcon] = useState(null);
+  const [nameError, setNameError] = useState("");
+  const [iconError, setIconError] = useState("");
+  const [showSuccess, setShowSuccess] = useState(false);
+
   const { addTransaction } = useTransactions();
   const { expenseCategories, incomeCategories, addCategory } = useCategories();
+
+  // Icons for selection (same as in Category.jsx)
+  const availableIcons = [
+    "restaurant-outline",
+    "car-outline",
+    "cart-outline",
+    "receipt-outline",
+    "film-outline",
+    "medkit-outline",
+    "school-outline",
+    "gift-outline",
+    "trending-up-outline",
+    "airplane-outline",
+    "person-outline",
+    "home-outline",
+    "wifi-outline",
+    "cafe-outline",
+    "fitness-outline",
+    "musical-notes-outline",
+    "book-outline",
+    "paw-outline",
+    "beer-outline",
+    "color-palette-outline"
+  ];
 
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener(
@@ -65,39 +100,58 @@ const Add = () => {
     return valid;
   };
 
-  const handleAddCategory = () => {
-    Alert.prompt(
-      "New Category",
-      "Enter category name:",
-      (categoryName) => {
-        if (!categoryName || categoryName.trim() === "") {
-          Alert.alert("Error", "Category name cannot be empty");
-          return;
-        }
-
-        if (categoryName.length > 15) {
-          Alert.alert("Error", "Category name is too long (max 15 characters)");
-          return;
-        }
-
-        const newCategory = {
-          id: Date.now(),
-          name: categoryName,
-          emoji: "📝",
-          icon: selectedType === "Expenses" ? "receipt-outline" : "cash-outline",
-          type: selectedType === "Expenses" ? "expense" : "income"
-        };
-
-        addCategory(newCategory);
-        setSelectedCategory(newCategory.id);
-      },
-      "plain-text",
-      "",
-      ["Cancel","Add"] 
-    );
+  const openCategoryModal = () => {
+    setIsCategoryModalVisible(true);
   };
 
-  const handleSave = async () => {
+  const closeCategoryModal = () => {
+    setIsCategoryModalVisible(false);
+    setCategoryName("");
+    setSelectedIcon(null);
+    setNameError("");
+    setIconError("");
+  };
+
+  const handleSaveCategory = () => {
+    // Validation
+    let isValid = true;
+
+    if (!categoryName.trim()) {
+      setNameError("Category name is required");
+      isValid = false;
+    } else {
+      setNameError("");
+    }
+
+    if (!selectedIcon) {
+      setIconError("Please select an icon");
+      isValid = false;
+    } else {
+      setIconError("");
+    }
+
+    if (!isValid) return;
+
+    const newCategory = {
+      id: Date.now(),
+      name: categoryName,
+      emoji: "📝",
+      icon: selectedIcon,
+      type: selectedType === "Expenses" ? "expense" : "income"
+    };
+
+    addCategory(newCategory);
+    setSelectedCategory(newCategory.id);
+
+    // Show success message
+    setShowSuccess(true);
+    setTimeout(() => {
+      setShowSuccess(false);
+      closeCategoryModal();
+    }, 1500);
+  };
+
+  const handleSaveTransaction = async () => {
     if (!validateForm()) return;
 
     const transaction = {
@@ -252,7 +306,7 @@ const Add = () => {
           {/* Add New Category Button */}
           <TouchableOpacity
             style={styles.addCategoryItem}
-            onPress={handleAddCategory}
+            onPress={openCategoryModal}
             disabled={keyboardVisible}
           >
             <View style={styles.categoryIconContainer}>
@@ -279,10 +333,101 @@ const Add = () => {
       {!keyboardVisible && (
         <TouchableOpacity
           style={styles.saveButton}
-          onPress={handleSave}
+          onPress={handleSaveTransaction}
         >
           <Text style={styles.saveButtonText}>Save Transaction</Text>
         </TouchableOpacity>
+      )}
+
+      {/* Add Category Modal (same as in Category.jsx) */}
+      <Modal
+        visible={isCategoryModalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={closeCategoryModal}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={styles.modalContainer}
+        >
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>
+                Add New {selectedType === "Expenses" ? "Expense" : "Income"} Category
+              </Text>
+              <TouchableOpacity onPress={closeCategoryModal}>
+                <Ionicons name="close" size={24} color="#666"/>
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView>
+              {/* Category Name Input */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Category Name</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter category name"
+                  value={categoryName}
+                  onChangeText={setCategoryName}
+                />
+                {nameError ? <Text style={styles.errorText}>{nameError}</Text> : null}
+              </View>
+
+              {/* Icon Selection */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Select Icon</Text>
+                <View style={styles.iconGrid}>
+                  {availableIcons.map((icon, index) => (
+                    <TouchableOpacity
+                      key={index}
+                      style={[
+                        styles.iconOption,
+                        selectedIcon === icon && styles.selectedIconOption,
+                        selectedType === "Income" && selectedIcon === icon && styles.selectedIconOptionIncome
+                      ]}
+                      onPress={() => setSelectedIcon(icon)}
+                    >
+                      <Ionicons
+                        name={icon}
+                        size={24}
+                        color={
+                          selectedIcon === icon
+                            ? "#fff"
+                            : selectedType === "Expenses" ? "#00c89c" : "#4CAF50"
+                        }
+                      />
+                    </TouchableOpacity>
+                  ))}
+                </View>
+                {iconError ? <Text style={styles.errorText}>{iconError}</Text> : null}
+              </View>
+            </ScrollView>
+
+            {/* Save Button */}
+            <TouchableOpacity
+              style={[
+                styles.modalSaveButton,
+                selectedType === "Income" && styles.modalSaveButtonIncome
+              ]}
+              onPress={handleSaveCategory}
+            >
+              <Text style={styles.modalSaveButtonText}>
+                Save {selectedType === "Expenses" ? "Expense" : "Income"} Category
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      {/* Success Message */}
+      {showSuccess && (
+        <View style={[
+          styles.successMessage,
+          selectedType === "Income" && styles.successMessageIncome
+        ]}>
+          <Ionicons name="checkmark-circle" size={24} color="#fff"/>
+          <Text style={styles.successText}>Category saved successfully!</Text>
+        </View>
       )}
     </SafeAreaView>
   );
@@ -450,6 +595,101 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 5,
     marginLeft: 20,
+  },
+  // Modal styles (same as in Category.jsx)
+  modalContainer: {
+    flex: 1,
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 20,
+    maxHeight: "80%",
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  inputContainer: {
+    marginBottom: 20,
+  },
+  inputLabel: {
+    fontSize: 14,
+    color: "#666",
+    marginBottom: 8,
+  },
+  input: {
+    backgroundColor: "#f5f5f7",
+    borderRadius: 12,
+    padding: 14,
+    fontSize: 16,
+  },
+  iconGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+  },
+  iconOption: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: "#f5f5f7",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  selectedIconOption: {
+    backgroundColor: "#00c89c",
+  },
+  selectedIconOptionIncome: {
+    backgroundColor: "#4CAF50",
+  },
+  modalSaveButton: {
+    backgroundColor: "#00c89c",
+    padding: 16,
+    borderRadius: 12,
+    alignItems: "center",
+    marginTop: 10,
+  },
+  modalSaveButtonIncome: {
+    backgroundColor: "#4CAF50",
+  },
+  modalSaveButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  successMessage: {
+    position: "absolute",
+    top: "50%",
+    left: "20%",
+    right: "20%",
+    backgroundColor: "#00c89c",
+    padding: 16,
+    borderRadius: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 1000,
+  },
+  successMessageIncome: {
+    backgroundColor: "#4CAF50",
+  },
+  successText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+    marginLeft: 8,
   },
 });
 
