@@ -150,41 +150,43 @@ const Add = () => {
     }
   };
 
-  const handleSaveTransaction = async () => {
-    if (!validateForm()) return;
+ // screens/Add.jsx
+const handleSaveTransaction = async () => {
+  if (!validateForm()) return;
 
-    setIsSaving(true);
-    try {
-      const transaction = {
-        id: Date.now().toString(),
-        title: note || categories.find(c => c.id === selectedCategory)?.name || "Transaction",
-        amount: parseFloat(amount) * (selectedType === "Expenses" ? -1 : 1),
-        category: categories.find(c => c.id === selectedCategory)?.name || "Other",
-        date: new Date().toISOString(),
-        note: note || undefined,
-      };
+  setIsSaving(true);
+  try {
+    const selectedCat = categories.find(c => c.id === selectedCategory);
+    const transaction = {
+      title: note || selectedCat?.name || "Transaction",
+      amount: parseFloat(amount) * (selectedType === "Expenses" ? -1 : 1),
+      category: selectedCat?.name || "Other",
+      categoryIcon: selectedCat?.icon || "pricetag-outline", // Add category icon
+      date: new Date().toISOString(),
+      note: note || undefined,
+    };
 
-      const result = await addTransaction(transaction);
-      if (result.success) {
-        Alert.alert(
-          "Success",
-          `Transaction saved successfully!\n\n${selectedType}: Rs${amount}\nCategory: ${transaction.category}`,
-          [{
-            text: "OK",
-            onPress: () => {
-              setAmount("");
-              setNote("");
-              setSelectedCategory(null);
-            },
-          }]
-        );
-      }
-    } catch (error) {
-      Alert.alert("Error", "Failed to save transaction. Please try again.");
-    } finally {
-      setIsSaving(false);
+    const result = await addTransaction(transaction);
+    if (result.success) {
+      Alert.alert(
+        "Success",
+        `Transaction saved successfully!\n\n${selectedType}: Rs${amount}\nCategory: ${transaction.category}`,
+        [{
+          text: "OK",
+          onPress: () => {
+            setAmount("");
+            setNote("");
+            setSelectedCategory(null);
+          },
+        }]
+      );
     }
-  };
+  } catch (error) {
+    Alert.alert("Error", "Failed to save transaction. Please try again.");
+  } finally {
+    setIsSaving(false);
+  }
+};
 
   const formatAmount = (text) => {
     let cleanedText = text.replace(/[^0-9.]/g, '');

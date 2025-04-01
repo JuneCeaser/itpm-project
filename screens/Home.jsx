@@ -13,27 +13,9 @@ import {
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useTransactions } from '../context/TransactionContext';
 
-
 const Home = () => {
   const [activeTab, setActiveTab] = useState("Daily");
   const { transactions, balance, loading } = useTransactions();
-
-  const getCategoryIcon = (category) => {
-    const iconMap = {
-      "Food": "restaurant",
-      "Transport": "car",
-      "Shopping": "cart",
-      "Bills": "receipt",
-      "Entertainment": "film",
-      "Salary": "cash",
-      "Freelance": "laptop",
-      "Investments": "trending-up",
-      "Gifts": "gift",
-      "Other": "pricetag"
-    };
-    
-    return iconMap[category] || "pricetag";
-  };
 
   const getCategoryColor = (category) => {
     const colors = {
@@ -48,7 +30,6 @@ const Home = () => {
       "Gifts": "#FF9800",
       "Other": "#607D8B"
     };
-    
     return colors[category] || "#607D8B";
   };
 
@@ -73,11 +54,11 @@ const Home = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#00c89c" /> 
+      <StatusBar barStyle="light-content" backgroundColor="#00c89c" />
       
       {/* Header Section */}
-      <View style={styles.header}> 
-        <View style={styles.headerLeft}> 
+      <View style={styles.header}>
+        <View style={styles.headerLeft}>
           <Image
             source={require('../assets/fin.png')}
             style={styles.logo}
@@ -88,17 +69,17 @@ const Home = () => {
           <Text style={styles.welcomeText}>Hi, User</Text>
           <Text style={styles.greetingText}>Good Morning</Text>
         </View>
-        <TouchableOpacity style={styles.notificationButton}> 
+        <TouchableOpacity style={styles.notificationButton}>
           <Ionicons name="notifications-outline" size={24} color="white"/>
         </TouchableOpacity>
       </View>
 
       {/* Summary Container */}
-      <View style={styles.summaryContainer}> 
-        <View style={styles.balanceSection}> 
-          <View style={styles.summaryItem}> 
-            <View style={styles.labelContainer}> 
-              <View style={styles.checkboxIcon}> 
+      <View style={styles.summaryContainer}>
+        <View style={styles.balanceSection}>
+          <View style={styles.summaryItem}>
+            <View style={styles.labelContainer}>
+              <View style={styles.checkboxIcon}>
                 <Ionicons name="checkmark" size={16} color="white" />
               </View>
               <Text style={styles.summaryLabel}>Total Balance</Text>
@@ -108,9 +89,9 @@ const Home = () => {
           
           <View style={styles.divider}/>
           
-          <View style={styles.summaryItem}> 
-            <View style={styles.labelContainer}> 
-              <View style={styles.checkboxIcon}> 
+          <View style={styles.summaryItem}>
+            <View style={styles.labelContainer}>
+              <View style={styles.checkboxIcon}>
                 <Ionicons name="checkmark" size={16} color="white" />
               </View>
               <Text style={styles.summaryLabel}>Total Expense</Text>
@@ -191,7 +172,7 @@ const Home = () => {
                 { backgroundColor: getCategoryColor(transaction.category) }
               ]}>
                 <Ionicons 
-                  name={getCategoryIcon(transaction.category)} 
+                  name={transaction.categoryIcon || "pricetag-outline"} 
                   size={24} 
                   color="#fff" 
                 />
