@@ -161,7 +161,7 @@ const handleSaveTransaction = async () => {
       title: note || selectedCat?.name || "Transaction",
       amount: parseFloat(amount) * (selectedType === "Expenses" ? -1 : 1),
       category: selectedCat?.name || "Other",
-      categoryIcon: selectedCat?.icon || "pricetag-outline", // Add category icon
+      categoryIcon: selectedCat?.icon || "pricetag-outline", 
       date: new Date().toISOString(),
       note: note || undefined,
     };
