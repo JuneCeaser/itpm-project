@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { getRecentTransactions, addTransaction as addTransactionToStorage, getBalance } from '../data/transactions'; // Changed from '../data/storage'
+import { getRecentTransactions, addTransaction as addTransactionToStorage, getBalance } from '../data/transactions';
 
 const TransactionContext = createContext();
 
