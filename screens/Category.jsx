@@ -119,7 +119,7 @@ const Category = () => {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity>
-          <Ionicons name="arrow-back" size={24} color="#fff"/>
+          
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Categories</Text>
         <TouchableOpacity>

@@ -233,7 +233,7 @@ const handleSaveTransaction = async () => {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="white"/>
+        
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Add Transaction</Text>
         <View style={styles.placeholder}/>
