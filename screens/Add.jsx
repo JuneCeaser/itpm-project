@@ -13,10 +13,12 @@ import {
   Modal,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTransactions } from '../context/TransactionContext';
 import { useCategories } from '../context/CategoryContext';
+
 
 const Add = () => {
   const [selectedType, setSelectedType] = useState("Expenses");
@@ -28,19 +30,17 @@ const Add = () => {
     category: "",
   });
   const [keyboardVisible, setKeyboardVisible] = useState(false);
-  
-  // New state for category modal
   const [isCategoryModalVisible, setIsCategoryModalVisible] = useState(false);
   const [categoryName, setCategoryName] = useState("");
   const [selectedIcon, setSelectedIcon] = useState(null);
   const [nameError, setNameError] = useState("");
   const [iconError, setIconError] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const { addTransaction } = useTransactions();
-  const { expenseCategories, incomeCategories, addCategory } = useCategories();
+  const { expenseCategories, incomeCategories, addCategory, loading: categoriesLoading } = useCategories();
 
-  // Icons for selection (same as in Category.jsx)
   const availableIcons = [
     "restaurant-outline",
     "car-outline",
@@ -112,8 +112,7 @@ const Add = () => {
     setIconError("");
   };
 
-  const handleSaveCategory = () => {
-    // Validation
+  const handleSaveCategory = async () => {
     let isValid = true;
 
     if (!categoryName.trim()) {
@@ -133,49 +132,57 @@ const Add = () => {
     if (!isValid) return;
 
     const newCategory = {
-      id: Date.now(),
+      id: Date.now().toString(),
       name: categoryName,
       emoji: "📝",
       icon: selectedIcon,
       type: selectedType === "Expenses" ? "expense" : "income"
     };
 
-    addCategory(newCategory);
-    setSelectedCategory(newCategory.id);
-
-    // Show success message
-    setShowSuccess(true);
-    setTimeout(() => {
-      setShowSuccess(false);
-      closeCategoryModal();
-    }, 1500);
+    const result = await addCategory(newCategory);
+    if (result.success) {
+      setSelectedCategory(newCategory.id);
+      setShowSuccess(true);
+      setTimeout(() => {
+        setShowSuccess(false);
+        closeCategoryModal();
+      }, 1500);
+    }
   };
 
   const handleSaveTransaction = async () => {
     if (!validateForm()) return;
 
-    const transaction = {
-      id: Date.now(),
-      title: note || categories.find(c => c.id === selectedCategory)?.name || "Transaction",
-      amount: parseFloat(amount) * (selectedType === "Expenses" ? -1 : 1),
-      category: categories.find(c => c.id === selectedCategory)?.name || "Other",
-      date: new Date().toISOString(),
-    };
+    setIsSaving(true);
+    try {
+      const transaction = {
+        id: Date.now().toString(),
+        title: note || categories.find(c => c.id === selectedCategory)?.name || "Transaction",
+        amount: parseFloat(amount) * (selectedType === "Expenses" ? -1 : 1),
+        category: categories.find(c => c.id === selectedCategory)?.name || "Other",
+        date: new Date().toISOString(),
+        note: note || undefined,
+      };
 
-    const result = await addTransaction(transaction);
-    if (result.success) {
-      Alert.alert(
-        "Success",
-        `Transaction saved successfully!\n\n${selectedType}: Rs${amount}\nCategory: ${transaction.category}`,
-        {
-          text: "OK",
-          onPress: () => {
-            setAmount("");
-            setNote("");
-            setSelectedCategory(null);
-          },
-        }
-      );
+      const result = await addTransaction(transaction);
+      if (result.success) {
+        Alert.alert(
+          "Success",
+          `Transaction saved successfully!\n\n${selectedType}: Rs${amount}\nCategory: ${transaction.category}`,
+          [{
+            text: "OK",
+            onPress: () => {
+              setAmount("");
+              setNote("");
+              setSelectedCategory(null);
+            },
+          }]
+        );
+      }
+    } catch (error) {
+      Alert.alert("Error", "Failed to save transaction. Please try again.");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -208,6 +215,14 @@ const Add = () => {
       </View>
     );
   };
+
+  if (categoriesLoading) {
+    return (
+      <SafeAreaView style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#00c89c" />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -326,20 +341,26 @@ const Add = () => {
           style={styles.noteInput}
           value={note}
           onChangeText={setNote}
+          multiline
         />
       </View>
 
-      {/* Save Button - Only show when keyboard is not visible */}
+      {/* Save Button */}
       {!keyboardVisible && (
         <TouchableOpacity
           style={styles.saveButton}
           onPress={handleSaveTransaction}
+          disabled={isSaving}
         >
-          <Text style={styles.saveButtonText}>Save Transaction</Text>
+          {isSaving ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <Text style={styles.saveButtonText}>Save Transaction</Text>
+          )}
         </TouchableOpacity>
       )}
 
-      {/* Add Category Modal (same as in Category.jsx) */}
+      {/* Add Category Modal */}
       <Modal
         visible={isCategoryModalVisible}
         animationType="slide"
@@ -438,6 +459,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#00c89c",
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: "#00c89c",
+  },
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -523,6 +550,8 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 15,
     fontSize: 16,
+    minHeight: 100,
+    textAlignVertical: 'top',
   },
   categoriesScrollView: {
     paddingVertical: 10,
@@ -596,7 +625,6 @@ const styles = StyleSheet.create({
     marginTop: 5,
     marginLeft: 20,
   },
-  // Modal styles (same as in Category.jsx)
   modalContainer: {
     flex: 1,
     justifyContent: "flex-end",

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   StyleSheet,
   Text,
@@ -8,41 +8,67 @@ import {
   TouchableOpacity,
   ScrollView,
   Image,
+  ActivityIndicator
 } from "react-native";
-import {
-  Ionicons,
-  MaterialCommunityIcons,
-  FontAwesome5,
-  Feather,
-  MaterialIcons,
-} from "@expo/vector-icons";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useTransactions } from '../context/TransactionContext';
+
 
 const Home = () => {
   const [activeTab, setActiveTab] = useState("Daily");
   const { transactions, balance, loading } = useTransactions();
 
-  const renderTransactionIcon = (icon) => {
-    return (
-      <View style={[styles.transactionIcon, { backgroundColor: getRandomColor() }]}>
-        <Text style={styles.transactionIconText}>{icon}</Text>
-      </View>
-    );
+  const getCategoryIcon = (category) => {
+    const iconMap = {
+      "Food": "restaurant",
+      "Transport": "car",
+      "Shopping": "cart",
+      "Bills": "receipt",
+      "Entertainment": "film",
+      "Salary": "cash",
+      "Freelance": "laptop",
+      "Investments": "trending-up",
+      "Gifts": "gift",
+      "Other": "pricetag"
+    };
+    
+    return iconMap[category] || "pricetag";
   };
 
-  const getRandomColor = () => {
-    const colors = ["#e3f2fd", "#e115fe", "#e8ea6", "#f3e55f5", "#e0f7fa", "#f1f8e9", "#fff3e0"];
-    return colors[Math.floor(Math.random() * colors.length)];
-  };
-
-  const handleVoiceInput = () => {
-    console.log("Voice input activated");
+  const getCategoryColor = (category) => {
+    const colors = {
+      "Food": "#FF6384",
+      "Transport": "#36A2EB",
+      "Shopping": "#FFCE56",
+      "Bills": "#4BC0C0",
+      "Entertainment": "#9966FF",
+      "Salary": "#4CAF50",
+      "Freelance": "#2196F3",
+      "Investments": "#9C27B0",
+      "Gifts": "#FF9800",
+      "Other": "#607D8B"
+    };
+    
+    return colors[category] || "#607D8B";
   };
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' - ' + 
-           date.toLocaleDateString([], { day: 'numeric', month: 'short' });
+    const time = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const day = date.toLocaleDateString([], { day: 'numeric', month: 'short' });
+    return `${time} • ${day}`;
+  };
+
+  const calculateTotalExpenses = () => {
+    return transactions
+      .filter(t => t.amount < 0)
+      .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+  };
+
+  const calculateTotalIncome = () => {
+    return transactions
+      .filter(t => t.amount > 0)
+      .reduce((sum, t) => sum + t.amount, 0);
   };
 
   return (
@@ -90,19 +116,8 @@ const Home = () => {
               <Text style={styles.summaryLabel}>Total Expense</Text>
             </View>
             <Text style={styles.expenseAmount}>
-              -LKR {transactions.filter(t => t.amount < 0).reduce((sum, t) => sum + Math.abs(t.amount), 0).toFixed(2)}
+              LKR {calculateTotalExpenses().toFixed(2)}
             </Text>
-          </View>
-        </View>
-
-        {/* Progress Bar */}
-        <View style={styles.progressContainer}> 
-          <View style={styles.progressBar}> 
-            <View style={[styles.progress, { width: "20%" }]} />
-          </View>
-          <View style={styles.progressLabels}> 
-            <Text style={styles.progressPercentage}>20.93%</Text>
-            <Text style={styles.progressMaxAmount}>Rs 200 000.00</Text>
           </View>
         </View>
       </View>
@@ -155,36 +170,48 @@ const Home = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Transactions */}
+      {/* Transactions List */}
       <ScrollView
         style={styles.transactionsContainer}
         showsVerticalScrollIndicator={false}
       >
         {loading ? (
-          <Text>Loading transactions...</Text>
+          <ActivityIndicator size="large" color="#00c89c" style={styles.loadingIndicator} />
         ) : transactions.length === 0 ? (
-          <Text>No transactions yet</Text>
+          <View style={styles.emptyState}>
+            <Ionicons name="receipt-outline" size={48} color="#ccc" />
+            <Text style={styles.emptyStateText}>No transactions yet</Text>
+            <Text style={styles.emptyStateSubtext}>Add your first transaction to get started</Text>
+          </View>
         ) : (
           transactions.map((transaction) => (
             <View key={transaction.id} style={styles.transaction}>
-              {renderTransactionIcon(transaction.category.charAt(0))}
+              <View style={[
+                styles.transactionIcon,
+                { backgroundColor: getCategoryColor(transaction.category) }
+              ]}>
+                <Ionicons 
+                  name={getCategoryIcon(transaction.category)} 
+                  size={24} 
+                  color="#fff" 
+                />
+              </View>
               
               <View style={styles.transactionDetails}>
                 <Text style={styles.transactionTitle}>{transaction.title}</Text>
                 <Text style={styles.transactionTime}>{formatDate(transaction.date)}</Text>
-              </View>
-              
-              <View style={styles.transactionCategory}>
-                <Text style={styles.categoryText}>{transaction.category}</Text>
+                {transaction.note && (
+                  <Text style={styles.transactionNote}>{transaction.note}</Text>
+                )}
               </View>
               
               <Text style={[
                 styles.transactionAmount,
-                transaction.amount < 0 && styles.transactionExpense
+                transaction.amount < 0 ? styles.transactionExpense : styles.transactionIncome
               ]}>
                 {transaction.amount < 0 
                   ? `-Rs${Math.abs(transaction.amount).toFixed(2)}` 
-                  : `Rs${transaction.amount.toFixed(2)}`}
+                  : `+Rs${transaction.amount.toFixed(2)}`}
               </Text>
             </View>
           ))
@@ -194,7 +221,7 @@ const Home = () => {
       {/* Voice Input Floating Button */}
       <TouchableOpacity
         style={styles.voiceInputButton}
-        onPress={handleVoiceInput}
+        onPress={() => console.log("Voice input")}
       >
         <MaterialIcons name="keyboard-voice" size={28} color="white"/>
       </TouchableOpacity>
@@ -276,40 +303,13 @@ const styles = StyleSheet.create({
   expenseAmount: {
     fontSize: 22,
     fontWeight: "bold",
-    color: "#2196f3",
+    color: "#F44336",
   },
   divider: {
     width: 1,
     height: "80%",
     backgroundColor: "#eee",
     marginHorizontal: 8,
-  },
-  progressContainer: {
-    marginTop: 16,
-  },
-  progressBar: {
-    height: 10,
-    backgroundColor: "#f0f0f0",
-    borderRadius: 10,
-    overflow: "hidden",
-  },
-  progress: {
-    height: "100%",
-    backgroundColor: "#00c89c",
-    borderRadius: 10,
-  },
-  progressLabels: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 4,
-  },
-  progressPercentage: {
-    fontSize: 12,
-    color: "#666",
-  },
-  progressMaxAmount: {
-    fontSize: 12,
-    color: "#666",
   },
   timeSelector: {
     flexDirection: "row",
@@ -343,6 +343,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 20,
   },
+  loadingIndicator: {
+    marginTop: 40,
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+  },
+  emptyStateText: {
+    fontSize: 18,
+    color: '#666',
+    marginTop: 16,
+  },
+  emptyStateSubtext: {
+    fontSize: 14,
+    color: '#999',
+    marginTop: 8,
+  },
   transaction: {
     flexDirection: "row",
     alignItems: "center",
@@ -352,48 +370,42 @@ const styles = StyleSheet.create({
     borderBottomColor: "#f0f0f0",
   },
   transactionIcon: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 15,
-  },
-  transactionIconText: {
-    fontSize: 24,
+    marginRight: 12,
   },
   transactionDetails: {
     flex: 1,
+    marginRight: 10,
   },
   transactionTitle: {
     fontSize: 16,
-    fontWeight: "bold",
-    color: "#333",
+    fontWeight: '600',
+    color: '#333',
   },
   transactionTime: {
     fontSize: 12,
-    color: "#888",
+    color: '#888',
+    marginTop: 2,
   },
-  transactionCategory: {
-    backgroundColor: "#f5f5f5",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 10,
-    marginRight: 10,
-  },
-  categoryText: {
-    fontSize: 12,
-    color: "#555",
+  transactionNote: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 4,
+    fontStyle: 'italic',
   },
   transactionAmount: {
     fontSize: 16,
-    fontWeight: "bold",
-    color: "#333",
+    fontWeight: 'bold',
+  },
+  transactionIncome: {
+    color: '#4CAF50',
   },
   transactionExpense: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#444336",
+    color: '#F44336',
   },
   voiceInputButton: {
     position: 'absolute',

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { getRecentTransactions, addTransaction as addTransactionToStorage, getBalance } from '../data/storage';
+import { getRecentTransactions, addTransaction as addTransactionToStorage, getBalance } from '../data/transactions'; // Changed from '../data/storage'
 
 const TransactionContext = createContext();
 
@@ -29,7 +29,7 @@ export const TransactionProvider = ({ children }) => {
       const result = await addTransactionToStorage(transaction);
       if (result.success) {
         await loadTransactions();
-        return { success: true };
+        return { success: true, transaction: result.transaction };
       }
       return { success: false };
     } catch (error) {
@@ -43,7 +43,13 @@ export const TransactionProvider = ({ children }) => {
   }, []);
 
   return (
-    <TransactionContext.Provider value={{ transactions, balance, loading, addTransaction, refresh: loadTransactions }}>
+    <TransactionContext.Provider value={{ 
+      transactions, 
+      balance, 
+      loading, 
+      addTransaction,
+      refresh: loadTransactions 
+    }}>
       {children}
     </TransactionContext.Provider>
   );
