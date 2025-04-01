@@ -12,6 +12,8 @@ import {
   Keyboard,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useTransactions } from '../context/TransactionContext';
+import { useCategories } from '../context/CategoryContext';
 
 const Add = () => {
   const [selectedType, setSelectedType] = useState("Expenses");
@@ -23,22 +25,9 @@ const Add = () => {
     category: "",
   });
   const [keyboardVisible, setKeyboardVisible] = useState(false);
-
-  const [expenseCategories, setExpenseCategories] = useState([
-    { id: 1, name: "Food", emoji: "🍽️" },
-    { id: 2, name: "Transport", emoji: "🚗" },
-    { id: 3, name: "Entertainment", emoji: "🍿" },
-    { id: 4, name: "Shopping", emoji: "🛍️" },
-    { id: 5, name: "Bills", emoji: "💸" },
-  ]);
-
-  const [incomeCategories, setIncomeCategories] = useState([
-    { id: 6, name: "Salary", emoji: "💰" },
-    { id: 7, name: "Freelance", emoji: "🖥️" },
-    { id: 8, name: "Investments", emoji: "📈" },
-    { id: 9, name: "Gifts", emoji: "🎁" },
-    { id: 10, name: "Other", emoji: "🔄" },
-  ]);
+  
+  const { addTransaction } = useTransactions();
+  const { expenseCategories, incomeCategories, addCategory } = useCategories();
 
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener(
@@ -94,63 +83,56 @@ const Add = () => {
         const newCategory = {
           id: Date.now(),
           name: categoryName,
-          emoji: "➕",
+          emoji: "📝",
+          icon: selectedType === "Expenses" ? "receipt-outline" : "cash-outline",
+          type: selectedType === "Expenses" ? "expense" : "income"
         };
 
-        if (selectedType === "Expenses") {
-          setExpenseCategories([...expenseCategories, newCategory]);
-        } else {
-          setIncomeCategories([...incomeCategories, newCategory]);
-        }
-
+        addCategory(newCategory);
         setSelectedCategory(newCategory.id);
       },
       "plain-text",
       "",
-      ["Cancel", "Add"]
+      ["Cancel","Add"] 
     );
   };
 
-  const handleSave = () => {
-    if (validateForm()) {
-      // Here you would typically save to your database/state
-      const transaction = {
-        type: selectedType,
-        category: categories.find(c => c.id === selectedCategory),
-        amount: parseFloat(amount),
-        note: note,
-        date: new Date().toISOString(),
-      };
+  const handleSave = async () => {
+    if (!validateForm()) return;
 
+    const transaction = {
+      id: Date.now(),
+      title: note || categories.find(c => c.id === selectedCategory)?.name || "Transaction",
+      amount: parseFloat(amount) * (selectedType === "Expenses" ? -1 : 1),
+      category: categories.find(c => c.id === selectedCategory)?.name || "Other",
+      date: new Date().toISOString(),
+    };
+
+    const result = await addTransaction(transaction);
+    if (result.success) {
       Alert.alert(
         "Success",
-        `Transaction saved successfully!\n\n${transaction.type}: $${transaction.amount.toFixed(2)}\nCategory: ${transaction.category.name}`,
-        [
-          {
-            text: "OK",
-            onPress: () => {
-              // Reset form after successful save
-              setAmount("");
-              setNote("");
-              setSelectedCategory(null);
-            },
+        `Transaction saved successfully!\n\n${selectedType}: Rs${amount}\nCategory: ${transaction.category}`,
+        {
+          text: "OK",
+          onPress: () => {
+            setAmount("");
+            setNote("");
+            setSelectedCategory(null);
           },
-        ]
+        }
       );
     }
   };
 
   const formatAmount = (text) => {
-    // Remove all non-digit characters except decimal point
     let cleanedText = text.replace(/[^0-9.]/g, '');
-    
-    // Ensure only one decimal point
     const decimalParts = cleanedText.split('.');
+    
     if (decimalParts.length > 2) {
       cleanedText = decimalParts[0] + '.' + decimalParts.slice(1).join('');
     }
     
-    // Limit to 2 decimal places
     if (decimalParts.length === 2 && decimalParts[1].length > 2) {
       cleanedText = decimalParts[0] + '.' + decimalParts[1].substring(0, 2);
     }
@@ -158,17 +140,32 @@ const Add = () => {
     setAmount(cleanedText);
   };
 
+  const renderCategoryIcon = (category) => {
+    return (
+      <View style={[
+        styles.categoryIconContainer,
+        selectedCategory === category.id && styles.selectedCategoryIcon
+      ]}>
+        <Ionicons 
+          name={category.icon} 
+          size={24} 
+          color={selectedCategory === category.id ? "white" : "#00c89c"} 
+        />
+      </View>
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#00c89c" />
-
+      <StatusBar barStyle="light-content" backgroundColor="#00c89c"/>
+      
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="white" />
+          <Ionicons name="arrow-back" size={24} color="white"/>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Add Transaction</Text>
-        <View style={styles.placeholder} />
+        <View style={styles.placeholder}/>
       </View>
 
       {/* Type Selector */}
@@ -185,6 +182,7 @@ const Add = () => {
             Expenses
           </Text>
         </TouchableOpacity>
+        
         <TouchableOpacity
           style={[styles.typeSelector, selectedType === "Income" && styles.activeTypeSelector]}
           onPress={() => {
@@ -202,10 +200,10 @@ const Add = () => {
       {/* Amount Input */}
       <View style={styles.amountContainer}>
         <Text style={styles.currencySymbol}>LKR</Text>
-        <TextInput 
-          placeholder="0.00" 
+        <TextInput
+          placeholder="0.00"
           placeholderTextColor="#666"
-          style={styles.amountInput} 
+          style={styles.amountInput}
           keyboardType="decimal-pad"
           value={amount}
           onChangeText={formatAmount}
@@ -222,9 +220,10 @@ const Add = () => {
       <View style={styles.categoryContainer}>
         <Text style={styles.sectionTitle}>Select Category</Text>
         {errors.category ? <Text style={styles.errorText}>{errors.category}</Text> : null}
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false} 
+        
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
           style={styles.categoriesScrollView}
           contentContainerStyle={styles.categoriesScrollContent}
         >
@@ -240,7 +239,7 @@ const Add = () => {
                 setErrors({...errors, category: ""});
               }}
             >
-              <Text style={styles.categoryEmoji}>{category.emoji}</Text>
+              {renderCategoryIcon(category)}
               <Text style={[
                 styles.categoryText,
                 selectedCategory === category.id && styles.selectedCategoryText
@@ -249,20 +248,36 @@ const Add = () => {
               </Text>
             </TouchableOpacity>
           ))}
+          
           {/* Add New Category Button */}
-          <TouchableOpacity 
-            style={styles.addCategoryItem} 
+          <TouchableOpacity
+            style={styles.addCategoryItem}
             onPress={handleAddCategory}
             disabled={keyboardVisible}
           >
-            <Ionicons name="add-circle" size={36} color="#00c89c" />
+            <View style={styles.categoryIconContainer}>
+              <Ionicons name="add-circle" size={24} color="#00c89c"/>
+            </View>
             <Text style={styles.categoryText}>New</Text>
           </TouchableOpacity>
         </ScrollView>
       </View>
+
+      {/* Note Input */}
+      <View style={styles.noteContainer}>
+        <Text style={styles.sectionTitle}>Note (Optional)</Text>
+        <TextInput
+          placeholder="Add a note..."
+          placeholderTextColor="#888"
+          style={styles.noteInput}
+          value={note}
+          onChangeText={setNote}
+        />
+      </View>
+
       {/* Save Button - Only show when keyboard is not visible */}
       {!keyboardVisible && (
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.saveButton}
           onPress={handleSave}
         >
@@ -345,11 +360,24 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
     marginBottom: 20,
   },
+  noteContainer: {
+    backgroundColor: "white",
+    borderRadius: 20,
+    padding: 20,
+    marginHorizontal: 10,
+    marginBottom: 20,
+  },
   sectionTitle: {
     fontSize: 16,
     fontWeight: "bold",
     color: "#333",
     marginBottom: 10,
+  },
+  noteInput: {
+    backgroundColor: "#f5f5f5",
+    borderRadius: 10,
+    padding: 15,
+    fontSize: 16,
   },
   categoriesScrollView: {
     paddingVertical: 10,
@@ -372,15 +400,24 @@ const styles = StyleSheet.create({
   selectedCategoryText: {
     color: "white",
   },
+  categoryIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "white",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  selectedCategoryIcon: {
+    backgroundColor: "#00c89c",
+  },
   addCategoryItem: {
     alignItems: "center",
     justifyContent: "center",
     padding: 10,
     marginRight: 15,
     minWidth: 80,
-  },
-  categoryEmoji: {
-    fontSize: 28,
   },
   categoryText: {
     fontSize: 14,
