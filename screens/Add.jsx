@@ -13,12 +13,12 @@ import {
   Modal,
   KeyboardAvoidingView,
   Platform,
-  ActivityIndicator
+  ActivityIndicator,
+  Dimensions
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTransactions } from '../context/TransactionContext';
 import { useCategories } from '../context/CategoryContext';
-
 
 const Add = () => {
   const [selectedType, setSelectedType] = useState("Expenses");
@@ -150,43 +150,42 @@ const Add = () => {
     }
   };
 
- // screens/Add.jsx
- const handleSaveTransaction = async () => {
-  if (!validateForm()) return;
+  const handleSaveTransaction = async () => {
+    if (!validateForm()) return;
 
-  setIsSaving(true);
-  try {
-    const selectedCat = categories.find(c => c.id === selectedCategory);
-    const transaction = {
-      title: selectedCat?.name || "Transaction", 
-      amount: parseFloat(amount) * (selectedType === "Expenses" ? -1 : 1),
-      category: selectedCat?.name || "Other",
-      categoryIcon: selectedCat?.icon || "pricetag-outline", 
-      date: new Date().toISOString(),
-      note: note.trim() || undefined, 
-    };
+    setIsSaving(true);
+    try {
+      const selectedCat = categories.find(c => c.id === selectedCategory);
+      const transaction = {
+        title: selectedCat?.name || "Transaction",
+        amount: parseFloat(amount) * (selectedType === "Expenses" ? -1 : 1),
+        category: selectedCat?.name || "Other",
+        categoryIcon: selectedCat?.icon || "pricetag-outline",
+        date: new Date().toISOString(),
+        note: note.trim() || undefined,
+      };
 
-    const result = await addTransaction(transaction);
-    if (result.success) {
-      Alert.alert(
-        "Success",
-        `Transaction saved successfully!\n\n${selectedType}: Rs${amount}\nCategory: ${transaction.category}`,
-        [{
-          text: "OK",
-          onPress: () => {
-            setAmount("");
-            setNote("");
-            setSelectedCategory(null);
-          },
-        }]
-      );
+      const result = await addTransaction(transaction);
+      if (result.success) {
+        Alert.alert(
+          "Success",
+          `Transaction saved successfully!\n\n${selectedType}: Rs${amount}\nCategory: ${transaction.category}`,
+          [{
+            text: "OK",
+            onPress: () => {
+              setAmount("");
+              setNote("");
+              setSelectedCategory(null);
+            },
+          }]
+        );
+      }
+    } catch (error) {
+      Alert.alert("Error", "Failed to save transaction. Please try again.");
+    } finally {
+      setIsSaving(false);
     }
-  } catch (error) {
-    Alert.alert("Error", "Failed to save transaction. Please try again.");
-  } finally {
-    setIsSaving(false);
-  }
-};
+  };
 
   const formatAmount = (text) => {
     let cleanedText = text.replace(/[^0-9.]/g, '');
@@ -230,137 +229,150 @@ const Add = () => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#00c89c"/>
       
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton}>
-        
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Add Transaction</Text>
-        <View style={styles.placeholder}/>
-      </View>
-
-      {/* Type Selector */}
-      <View style={styles.typeSelectorContainer}>
-        <TouchableOpacity
-          style={[styles.typeSelector, selectedType === "Expenses" && styles.activeTypeSelector]}
-          onPress={() => {
-            setSelectedType("Expenses");
-            setSelectedCategory(null);
-            setErrors({...errors, category: ""});
-          }}
-        >
-          <Text style={selectedType === "Expenses" ? styles.typeSelectorText : styles.typeSelectorTextInactive}>
-            Expenses
-          </Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity
-          style={[styles.typeSelector, selectedType === "Income" && styles.activeTypeSelector]}
-          onPress={() => {
-            setSelectedType("Income");
-            setSelectedCategory(null);
-            setErrors({...errors, category: ""});
-          }}
-        >
-          <Text style={selectedType === "Income" ? styles.typeSelectorText : styles.typeSelectorTextInactive}>
-            Income
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Amount Input */}
-      <View style={styles.amountContainer}>
-        <Text style={styles.currencySymbol}>LKR</Text>
-        <TextInput
-          placeholder="0.00"
-          placeholderTextColor="#666"
-          style={styles.amountInput}
-          keyboardType="decimal-pad"
-          value={amount}
-          onChangeText={formatAmount}
-          onBlur={() => {
-            if (amount && !isNaN(parseFloat(amount))) {
-              setAmount(parseFloat(amount).toFixed(2));
-            }
-          }}
-        />
-      </View>
-      {errors.amount ? <Text style={styles.errorText}>{errors.amount}</Text> : null}
-
-      {/* Category Selection */}
-      <View style={styles.categoryContainer}>
-        <Text style={styles.sectionTitle}>Select Category</Text>
-        {errors.category ? <Text style={styles.errorText}>{errors.category}</Text> : null}
-        
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.keyboardAvoidingContainer}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
+      >
         <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.categoriesScrollView}
-          contentContainerStyle={styles.categoriesScrollContent}
+          contentContainerStyle={styles.scrollViewContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
-          {categories.map((category) => (
+          {/* Header */}
+          <View style={styles.header}>
+            <TouchableOpacity style={styles.backButton} />
+            <Text style={styles.headerTitle}>Add Transaction</Text>
+            <View style={styles.placeholder}/>
+          </View>
+
+          {/* Type Selector */}
+          <View style={styles.typeSelectorContainer}>
             <TouchableOpacity
-              key={category.id}
-              style={[
-                styles.categoryItem,
-                selectedCategory === category.id && styles.selectedCategory
-              ]}
+              style={[styles.typeSelector, selectedType === "Expenses" && styles.activeTypeSelector]}
               onPress={() => {
-                setSelectedCategory(category.id);
+                setSelectedType("Expenses");
+                setSelectedCategory(null);
                 setErrors({...errors, category: ""});
               }}
             >
-              {renderCategoryIcon(category)}
-              <Text style={[
-                styles.categoryText,
-                selectedCategory === category.id && styles.selectedCategoryText
-              ]}>
-                {category.name}
+              <Text style={selectedType === "Expenses" ? styles.typeSelectorText : styles.typeSelectorTextInactive}>
+                Expenses
               </Text>
             </TouchableOpacity>
-          ))}
-          
-          {/* Add New Category Button */}
-          <TouchableOpacity
-            style={styles.addCategoryItem}
-            onPress={openCategoryModal}
-            disabled={keyboardVisible}
-          >
-            <View style={styles.categoryIconContainer}>
-              <Ionicons name="add-circle" size={24} color="#00c89c"/>
+            
+            <TouchableOpacity
+              style={[styles.typeSelector, selectedType === "Income" && styles.activeTypeSelector]}
+              onPress={() => {
+                setSelectedType("Income");
+                setSelectedCategory(null);
+                setErrors({...errors, category: ""});
+              }}
+            >
+              <Text style={selectedType === "Income" ? styles.typeSelectorText : styles.typeSelectorTextInactive}>
+                Income
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Amount Input */}
+          <View style={styles.amountContainer}>
+            <Text style={styles.currencySymbol}>LKR</Text>
+            <TextInput
+              placeholder="0.00"
+              placeholderTextColor="#666"
+              style={styles.amountInput}
+              keyboardType="decimal-pad"
+              value={amount}
+              onChangeText={formatAmount}
+              onBlur={() => {
+                if (amount && !isNaN(parseFloat(amount))) {
+                  setAmount(parseFloat(amount).toFixed(2));
+                }
+              }}
+            />
+          </View>
+          {errors.amount ? <Text style={styles.errorText}>{errors.amount}</Text> : null}
+
+          {/* Category Selection */}
+          <View style={styles.categoryContainer}>
+            <Text style={styles.sectionTitle}>Select Category</Text>
+            {errors.category ? <Text style={styles.errorText}>{errors.category}</Text> : null}
+            
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.categoriesScrollView}
+              contentContainerStyle={styles.categoriesScrollContent}
+            >
+              {categories.map((category) => (
+                <TouchableOpacity
+                  key={category.id}
+                  style={[
+                    styles.categoryItem,
+                    selectedCategory === category.id && styles.selectedCategory
+                  ]}
+                  onPress={() => {
+                    setSelectedCategory(category.id);
+                    setErrors({...errors, category: ""});
+                  }}
+                >
+                  {renderCategoryIcon(category)}
+                  <Text style={[
+                    styles.categoryText,
+                    selectedCategory === category.id && styles.selectedCategoryText
+                  ]}>
+                    {category.name}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+              
+              {/* Add New Category Button */}
+              <TouchableOpacity
+                style={styles.addCategoryItem}
+                onPress={openCategoryModal}
+                disabled={keyboardVisible}
+              >
+                <View style={styles.categoryIconContainer}>
+                  <Ionicons name="add-circle" size={24} color="#00c89c"/>
+                </View>
+                <Text style={styles.categoryText}>New</Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+
+          {/* Note Input */}
+          <View style={styles.noteContainer}>
+            <Text style={styles.sectionTitle}>Note (Optional)</Text>
+            <TextInput
+              placeholder="Add a note..."
+              placeholderTextColor="#888"
+              style={styles.noteInput}
+              value={note}
+              onChangeText={setNote}
+              multiline
+              scrollEnabled={false}
+            />
+          </View>
+
+          {/* Save Button */}
+          {!keyboardVisible && (
+            <View style={styles.saveButtonContainer}>
+              <TouchableOpacity
+                style={styles.saveButton}
+                onPress={handleSaveTransaction}
+                disabled={isSaving}
+              >
+                {isSaving ? (
+                  <ActivityIndicator color="white" />
+                ) : (
+                  <Text style={styles.saveButtonText}>Save Transaction</Text>
+                )}
+              </TouchableOpacity>
             </View>
-            <Text style={styles.categoryText}>New</Text>
-          </TouchableOpacity>
-        </ScrollView>
-      </View>
-
-      {/* Note Input */}
-      <View style={styles.noteContainer}>
-        <Text style={styles.sectionTitle}>Note (Optional)</Text>
-        <TextInput
-          placeholder="Add a note..."
-          placeholderTextColor="#888"
-          style={styles.noteInput}
-          value={note}
-          onChangeText={setNote}
-          multiline
-        />
-      </View>
-
-      {/* Save Button */}
-      {!keyboardVisible && (
-        <TouchableOpacity
-          style={styles.saveButton}
-          onPress={handleSaveTransaction}
-          disabled={isSaving}
-        >
-          {isSaving ? (
-            <ActivityIndicator color="white" />
-          ) : (
-            <Text style={styles.saveButtonText}>Save Transaction</Text>
           )}
-        </TouchableOpacity>
-      )}
+        </ScrollView>
+      </KeyboardAvoidingView>
 
       {/* Add Category Modal */}
       <Modal
@@ -461,6 +473,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#00c89c",
   },
+  keyboardAvoidingContainer: {
+    flex: 1,
+  },
+  scrollViewContent: {
+    flexGrow: 1,
+    paddingBottom: 30,
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -553,6 +572,7 @@ const styles = StyleSheet.create({
     padding: 15,
     fontSize: 16,
     minHeight: 100,
+    maxHeight: 150,
     textAlignVertical: 'top',
   },
   categoriesScrollView: {
@@ -601,10 +621,13 @@ const styles = StyleSheet.create({
     marginTop: 5,
     textAlign: "center",
   },
+  saveButtonContainer: {
+    paddingHorizontal: 20,
+    marginBottom: 20,
+  },
   saveButton: {
     backgroundColor: "white",
     paddingVertical: 15,
-    marginHorizontal: 20,
     borderRadius: 15,
     alignItems: "center",
     shadowColor: "#000",

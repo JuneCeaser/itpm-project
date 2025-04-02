@@ -158,7 +158,7 @@ const Category = () => {
           <Ionicons 
             name="add" 
             size={24} 
-            color={activeTab === "expense" ? "#00C49A" : "#4CAF50"} 
+            color={activeTab === "expense" ? "#00C49A" : "#00C49A"} 
           />
           <Text style={[
             styles.addButtonText, 
@@ -239,7 +239,7 @@ const Category = () => {
                         color={
                           selectedIcon === icon
                             ? "#fff"
-                            : activeTab === "expense" ? "#00C49A" : "#4CAF50"
+                            : activeTab === "expense" ? "#00C49A" : "#00C49A"
                         }
                       />
                     </TouchableOpacity>
@@ -344,7 +344,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 8,
-    backgroundColor: '#00c89c', // Set the fixed color here
+    backgroundColor: '#00c89c', 
   },
   categoryText: {
     fontSize: 14,
@@ -364,7 +364,7 @@ const styles = StyleSheet.create({
     borderColor: "#00C49A",
   },
   addButtonIncome: {
-    borderColor: "#4CAF50",
+    borderColor: "#00C49A",
   },
   addButtonText: {
     color: "#00C49A",
@@ -373,7 +373,7 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   addButtonTextIncome: {
-    color: "#4CAF50",
+    color: "#00C49A",
   },
   modalContainer: {
     flex: 1,
@@ -430,7 +430,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#00C49A",
   },
   selectedIconOptionIncome: {
-    backgroundColor: "#4CAF50",
+    backgroundColor: "#00C49A",
   },
   saveButton: {
     backgroundColor: "#00C49A",
@@ -440,7 +440,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   saveButtonIncome: {
-    backgroundColor: "#4CAF50",
+    backgroundColor: "#00C49A",
   },
   saveButtonText: {
     color: "#fff",
@@ -466,7 +466,7 @@ const styles = StyleSheet.create({
     zIndex: 1000,
   },
   successMessageIncome: {
-    backgroundColor: "#4CAF50",
+    backgroundColor: "#00C49A",
   },
   successText: {
     color: "#fff",
