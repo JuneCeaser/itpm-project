@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import {
   View,
   Text,
@@ -7,98 +7,72 @@ import {
   ScrollView,
   StatusBar,
 } from "react-native";
-import {
-  Ionicons,
-  MaterialCommunityIcons,
-  FontAwesome5,
-  Feather,
-} from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
+import { useTransactions } from '../context/TransactionContext';
+import { useCategories } from '../context/CategoryContext';
 
-const BarChart = ({ period }) => {
-  const chartData = {
-    daily: {
-      labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-      income: [6000, 1500, 6500, 3000, 10000, 800, 5500],
-      expense: [3000, 500, 2500, 500, 8000, 300, 1000],
-    },
-    weekly: {
-      labels: ["W1", "W2", "W3", "W4"],
-      income: [16000, 12500, 19500, 23000],
-      expense: [9000, 7500, 11500, 13000],
-    },
-    monthly: {
-      labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
-      income: [40000, 38000, 45000, 42000, 48000, 52000],
-      expense: [25000, 22000, 28000, 24000, 26000, 30000],
-    },
-    yearly: {
-      labels: ["2020", "2021", "2022", "2023", "2024"],
-      income: [280000, 310000, 350000, 380000, 420000],
-      expense: [180000, 200000, 220000, 240000, 260000],
-    },
-  };
-
-  // Get the appropriate data for the selected period
-  const { labels, income, expense } = chartData[period];
-
-  // Find max value to calculate relative heights
-  const maxValue = Math.max(...income, ...expense);
-
-  return (
-    <View style={styles.chartContainer}>
-      <View style={styles.yAxis}>
-        <Text style={styles.yAxisLabel}>15k</Text>
-        <Text style={styles.yAxisLabel}>10k</Text>
-        <Text style={styles.yAxisLabel}>5k</Text>
-        <Text style={styles.yAxisLabel}>1k</Text>
-      </View>
-
-      <View style={styles.barContainer}>
-        {labels.map((label, index) => (
-          <View key={index} style={styles.dayColumn}>
-            {/* Income bar */}
-            <View
-              style={[
-                styles.bar,
-                styles.incomeBar,
-                { height: (income[index] / maxValue) * 150 },
-              ]}
-            />
-
-            {/* Expense bar */}
-            <View
-              style={[
-                styles.bar,
-                styles.expenseBar,
-                { height: (expense[index] / maxValue) * 150 },
-              ]}
-            />
-
-            <Text style={styles.dayLabel}>{label}</Text>
-          </View>
-        ))}
-      </View>
-    </View>
-  );
-};
-
-// Main Analysis component
 const Analysis = () => {
-  // State to track the selected time period
   const [selectedPeriod, setSelectedPeriod] = useState("daily");
+  const { transactions } = useTransactions();
+  const { expenseCategories, incomeCategories } = useCategories();
 
-  // Summary data based on period
-  const summaryData = {
-    daily: { income: "Rs 580.00", expense: "Rs 187.40" },
-    weekly: { income: "Rs 3,120.00", expense: "Rs 987.40" },
-    monthly: { income: "Rs 12,240.00", expense: "Rs 4,187.40" },
-    yearly: { income: "Rs 145,120.00", expense: "Rs 52,187.40" },
+  // Filter transactions based on selected period
+  const filterTransactions = (period) => {
+    const now = new Date();
+    let startDate;
+
+    switch (period) {
+      case "daily":
+        startDate = new Date(now.setHours(0, 0, 0, 0));
+        break;
+      case "weekly":
+        const day = now.getDay();
+        const diff = now.getDate() - day + (day === 0 ? -6 : 1); // Adjust for Sunday
+        startDate = new Date(now.setDate(diff));
+        startDate.setHours(0, 0, 0, 0);
+        break;
+      case "monthly":
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        break;
+      case "yearly":
+        startDate = new Date(now.getFullYear(), 0, 1);
+        break;
+      default:
+        startDate = new Date(now.setHours(0, 0, 0, 0));
+    }
+
+    return transactions.filter(t => new Date(t.date) >= startDate);
   };
 
-  // Handler for time period selection
-  const handlePeriodChange = (period) => {
-    setSelectedPeriod(period);
+  const filteredTransactions = filterTransactions(selectedPeriod);
+
+  // Calculate total income and expenses
+  const totalIncome = filteredTransactions
+    .filter(t => t.amount > 0)
+    .reduce((sum, t) => sum + t.amount, 0);
+
+  const totalExpenses = filteredTransactions
+    .filter(t => t.amount < 0)
+    .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+
+  // Calculate category totals
+  const getCategoryTotals = (type) => {
+    const categories = type === 'expense' ? expenseCategories : incomeCategories;
+    return categories.map(category => {
+      const total = filteredTransactions
+        .filter(t => t.category === category.name && 
+                   ((type === 'expense' && t.amount < 0) || (type === 'income' && t.amount > 0)))
+        .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+      
+      return {
+        ...category,
+        total: parseFloat(total.toFixed(2))
+      };
+    }).filter(cat => cat.total > 0); // Only show categories with transactions
   };
+
+  const expenseCategoryTotals = getCategoryTotals('expense');
+  const incomeCategoryTotals = getCategoryTotals('income');
 
   return (
     <View style={styles.container}>
@@ -106,189 +80,162 @@ const Analysis = () => {
 
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton}>
-         
-        </TouchableOpacity>
         <Text style={styles.headerTitle}>Analysis</Text>
         <TouchableOpacity style={styles.notificationButton}>
           <Ionicons name="notifications-outline" size={24} color="white" />
         </TouchableOpacity>
       </View>
 
-              {/* Balance and Expense Summary */}
-              <View style={styles.summaryContainer}>
-          <View style={styles.balanceSection}>
-            <View style={styles.summaryItem}>
-              <View style={styles.labelContainer}>
-                <View style={styles.checkboxIcon}>
-                  <Ionicons name="checkmark" size={16} color="white" />
-                </View>
-                <Text style={styles.summaryLabel}>Total Balance</Text>
+      {/* Summary Container */}
+      <View style={styles.summaryContainer}>
+        <View style={styles.balanceSection}>
+          <View style={styles.summaryItem}>
+            <View style={styles.labelContainer}>
+              <View style={styles.checkboxIcon}>
+                <Ionicons name="checkmark" size={16} color="white" />
               </View>
-              <Text style={styles.balanceAmount}>LKR 7,783.00</Text>
+              <Text style={styles.summaryLabel}>Total Income</Text>
             </View>
-
-            <View style={styles.divider} />
-
-            <View style={styles.summaryItem}>
-              <View style={styles.labelContainer}>
-                <View style={styles.checkboxIcon}>
-                  <Ionicons name="checkmark" size={16} color="white" />
-                </View>
-                <Text style={styles.summaryLabel}>Total Expense</Text>
-              </View>
-              <Text style={styles.expenseAmount}>-LKR 1,187.40</Text>
-            </View>
+            <Text style={styles.incomeAmount}>LKR {totalIncome.toFixed(2)}</Text>
           </View>
 
-          {/* Progress Bar */}
-          <View style={styles.progressContainer}>
-            <View style={styles.progressBar}>
-              <View style={[styles.progress, { width: "30%" }]} />
-            </View>
-            <View style={styles.progressLabels}>
-              <Text style={styles.progressPercentage}>30%</Text>
-              <Text style={styles.progressMaxAmount}>LKR 20,000.00</Text>
-            </View>
-          </View>
+          <View style={styles.divider} />
 
-          {/* Progress Status */}
-          <View style={styles.progressStatus}>
-            <View style={styles.checkboxIcon}>
-              <Ionicons name="checkmark" size={16} color="white" />
+          <View style={styles.summaryItem}>
+            <View style={styles.labelContainer}>
+              <View style={styles.checkboxIcon}>
+                <Ionicons name="checkmark" size={16} color="white" />
+              </View>
+              <Text style={styles.summaryLabel}>Total Expense</Text>
             </View>
-            <Text style={styles.progressStatusText}>
-              30% Of Your Expenses, Looks Good.
-            </Text>
+            <Text style={styles.expenseAmount}>LKR {totalExpenses.toFixed(2)}</Text>
           </View>
         </View>
+      </View>
 
-          {/* Time Period Selector */}
-          <View style={styles.periodSelector}>
-          <TouchableOpacity
-            style={[
-              styles.periodButton,
-              selectedPeriod === "daily" && styles.activeButton,
-            ]}
-            onPress={() => handlePeriodChange("daily")}
+      {/* Time Period Selector */}
+      <View style={styles.periodSelector}>
+        <TouchableOpacity
+          style={[
+            styles.periodButton,
+            selectedPeriod === "daily" && styles.activeButton,
+          ]}
+          onPress={() => setSelectedPeriod("daily")}
+        >
+          <Text
+            style={
+              selectedPeriod === "daily"
+                ? styles.activePeriodText
+                : styles.periodText
+            }
           >
-            <Text
-              style={
-                selectedPeriod === "daily"
-                  ? styles.activePeriodText
-                  : styles.periodText
-              }
-            >
-              Daily
-            </Text>
-          </TouchableOpacity>
+            Daily
+          </Text>
+        </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[
-              styles.periodButton,
-              selectedPeriod === "weekly" && styles.activeButton,
-            ]}
-            onPress={() => handlePeriodChange("weekly")}
+        <TouchableOpacity
+          style={[
+            styles.periodButton,
+            selectedPeriod === "weekly" && styles.activeButton,
+          ]}
+          onPress={() => setSelectedPeriod("weekly")}
+        >
+          <Text
+            style={
+              selectedPeriod === "weekly"
+                ? styles.activePeriodText
+                : styles.periodText
+            }
           >
-            <Text
-              style={
-                selectedPeriod === "weekly"
-                  ? styles.activePeriodText
-                  : styles.periodText
-              }
-            >
-              Weekly
-            </Text>
-          </TouchableOpacity>
+            Weekly
+          </Text>
+        </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[
-              styles.periodButton,
-              selectedPeriod === "monthly" && styles.activeButton,
-            ]}
-            onPress={() => handlePeriodChange("monthly")}
+        <TouchableOpacity
+          style={[
+            styles.periodButton,
+            selectedPeriod === "monthly" && styles.activeButton,
+          ]}
+          onPress={() => setSelectedPeriod("monthly")}
+        >
+          <Text
+            style={
+              selectedPeriod === "monthly"
+                ? styles.activePeriodText
+                : styles.periodText
+            }
           >
-            <Text
-              style={
-                selectedPeriod === "monthly"
-                  ? styles.activePeriodText
-                  : styles.periodText
-              }
-            >
-              Monthly
-            </Text>
-          </TouchableOpacity>
+            Monthly
+          </Text>
+        </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[
-              styles.periodButton,
-              selectedPeriod === "yearly" && styles.activeButton,
-            ]}
-            onPress={() => handlePeriodChange("yearly")}
+        <TouchableOpacity
+          style={[
+            styles.periodButton,
+            selectedPeriod === "yearly" && styles.activeButton,
+          ]}
+          onPress={() => setSelectedPeriod("yearly")}
+        >
+          <Text
+            style={
+              selectedPeriod === "yearly"
+                ? styles.activePeriodText
+                : styles.periodText
+            }
           >
-            <Text
-              style={
-                selectedPeriod === "yearly"
-                  ? styles.activePeriodText
-                  : styles.periodText
-              }
-            >
-              Year
-            </Text>
-          </TouchableOpacity>
-        </View>
+            Yearly
+          </Text>
+        </TouchableOpacity>
+      </View>
 
       <ScrollView
         style={styles.content}
         contentContainerStyle={styles.scrollContent}
       >
-
-         {/* Income and Expense Summary */}
-         <View style={styles.financialSummary}>
-          <View style={styles.summaryBox}>
-            <Ionicons
-              name="arrow-up-circle-outline"
-              size={24}
-              color="#00cba0"
-            />
-            <Text style={styles.summaryBoxTitle}>Income</Text>
-            <Text style={styles.summaryBoxAmount}>
-              {summaryData[selectedPeriod].income}
-            </Text>
+        {/* Income Categories */}
+        {incomeCategoryTotals.length > 0 && (
+          <View style={styles.categorySection}>
+            <Text style={styles.sectionTitle}>Income Categories</Text>
+            {incomeCategoryTotals.map((category) => (
+              <View key={category.id} style={styles.categoryItem}>
+                <View style={styles.categoryInfo}>
+                  <View style={[styles.categoryIcon, { backgroundColor: '#e3f2fd' }]}>
+                    <Ionicons name={category.icon} size={20} color="#2196F3" />
+                  </View>
+                  <Text style={styles.categoryName}>{category.name}</Text>
+                </View>
+                <Text style={styles.categoryAmount}>LKR {category.total.toFixed(2)}</Text>
+              </View>
+            ))}
           </View>
+        )}
 
-          <View style={styles.summaryBox}>
-            <Ionicons
-              name="arrow-down-circle-outline"
-              size={24}
-              color="#2196f3"
-            />
-            <Text style={styles.summaryBoxTitle}>Expense</Text>
-            <Text style={styles.summaryBoxAmountBlue}>
-              {summaryData[selectedPeriod].expense}
-            </Text>
+        {/* Expense Categories */}
+        {expenseCategoryTotals.length > 0 && (
+          <View style={styles.categorySection}>
+            <Text style={styles.sectionTitle}>Expense Categories</Text>
+            {expenseCategoryTotals.map((category) => (
+              <View key={category.id} style={styles.categoryItem}>
+                <View style={styles.categoryInfo}>
+                  <View style={[styles.categoryIcon, { backgroundColor: '#e8f5e9' }]}>
+                    <Ionicons name={category.icon} size={20} color="#4CAF50" />
+                  </View>
+                  <Text style={styles.categoryName}>{category.name}</Text>
+                </View>
+                <Text style={styles.categoryAmount}>LKR {category.total.toFixed(2)}</Text>
+              </View>
+            ))}
           </View>
-        </View>
+        )}
 
-
-        {/* Income & Expenses Chart */}
-        <View style={styles.chartSection}>
-          <View style={styles.chartHeader}>
-            <Text style={styles.chartTitle}>Income & Expenses</Text>
-            <View style={styles.chartActions}>
-              <TouchableOpacity style={styles.chartActionButton}>
-                <Ionicons name="search" size={22} color="#00cba0" />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.chartActionButton}>
-                <Ionicons name="calendar-outline" size={22} color="#00cba0" />
-              </TouchableOpacity>
-            </View>
+        {/* Empty state */}
+        {incomeCategoryTotals.length === 0 && expenseCategoryTotals.length === 0 && (
+          <View style={styles.emptyState}>
+            <Ionicons name="receipt-outline" size={48} color="#ccc" />
+            <Text style={styles.emptyStateText}>No transactions for this period</Text>
           </View>
+        )}
 
-          <BarChart period={selectedPeriod} />
-        </View>
-
-       
         {/* Empty space for bottom navigation */}
         <View style={styles.bottomSpace} />
       </ScrollView>
@@ -308,9 +255,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 8,
-  },
-  backButton: {
-    padding: 8,
   },
   headerTitle: {
     fontSize: 20,
@@ -362,57 +306,21 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#666",
   },
-  balanceAmount: {
+  incomeAmount: {
     fontSize: 22,
     fontWeight: "bold",
-    color: "#00cba0",
+    color: "#4CAF50",
   },
   expenseAmount: {
     fontSize: 22,
     fontWeight: "bold",
-    color: "#2196f3",
+    color: "#F44336",
   },
   divider: {
     width: 1,
     height: "80%",
     backgroundColor: "#eee",
     marginHorizontal: 8,
-  },
-  progressContainer: {
-    marginTop: 16,
-  },
-  progressBar: {
-    height: 10,
-    backgroundColor: "#f0f0f0",
-    borderRadius: 10,
-    overflow: "hidden",
-  },
-  progress: {
-    height: "100%",
-    backgroundColor: "#00cba0",
-    borderRadius: 10,
-  },
-  progressLabels: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 4,
-  },
-  progressPercentage: {
-    fontSize: 12,
-    color: "#666",
-  },
-  progressMaxAmount: {
-    fontSize: 12,
-    color: "#666",
-  },
-  progressStatus: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 12,
-  },
-  progressStatusText: {
-    fontSize: 14,
-    color: "#444",
   },
   periodSelector: {
     flexDirection: "row",
@@ -438,109 +346,54 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "bold",
   },
-  chartSection: {
-    backgroundColor: "#f0f8f5",
+  categorySection: {
+    backgroundColor: "white",
+    borderRadius: 16,
     margin: 16,
-    borderRadius: 20,
     padding: 16,
   },
-  chartHeader: {
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 16,
+  },
+  categoryItem: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: 16,
   },
-  chartTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#444",
-  },
-  chartActions: {
+  categoryInfo: {
     flexDirection: "row",
+    alignItems: "center",
   },
-  chartActionButton: {
+  categoryIcon: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "white",
     justifyContent: "center",
     alignItems: "center",
-    marginLeft: 8,
+    marginRight: 12,
   },
-  chartContainer: {
-    flexDirection: "row",
-    height: 200,
-    marginTop: 8,
+  categoryName: {
+    fontSize: 16,
+    color: "#333",
   },
-  yAxis: {
-    width: 40,
-    justifyContent: "space-between",
-    alignItems: "flex-end",
-    paddingRight: 4,
-    paddingVertical: 10,
-  },
-  yAxisLabel: {
-    fontSize: 12,
-    color: "#aaa",
-  },
-  barContainer: {
-    flex: 1,
-    flexDirection: "row",
-    justifyContent: "space-around",
-    alignItems: "flex-end",
-    paddingBottom: 20,
-  },
-  dayColumn: {
-    alignItems: "center",
-    justifyContent: "flex-end",
-    width: 30,
-  },
-  bar: {
-    width: 10,
-    borderRadius: 5,
-    marginHorizontal: 2,
-  },
-  incomeBar: {
-    backgroundColor: "#00cba0",
-  },
-  expenseBar: {
-    backgroundColor: "#2196f3",
-  },
-  dayLabel: {
-    fontSize: 12,
-    color: "#666",
-    marginTop: 4,
-    position: "absolute",
-    bottom: -20,
-  },
-  financialSummary: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginHorizontal: 16,
-    marginBottom: 30,
-  },
-  summaryBox: {
-    flex: 1,
-    backgroundColor: "white",
-    borderRadius: 16,
-    padding: 16,
-    alignItems: "center",
-    marginHorizontal: 4,
-  },
-  summaryBoxTitle: {
-    fontSize: 14,
-    color: "#666",
-    marginVertical: 8,
-  },
-  summaryBoxAmount: {
-    fontSize: 18,
+  categoryAmount: {
+    fontSize: 16,
     fontWeight: "bold",
     color: "#333",
   },
-  summaryBoxAmountBlue: {
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+  },
+  emptyStateText: {
     fontSize: 18,
-    fontWeight: "bold",
-    color: "#2196f3",
+    color: '#666',
+    marginTop: 16,
   },
   bottomSpace: {
     height: 40,
