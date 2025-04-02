@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   View,
   Text,
@@ -11,15 +11,13 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useTransactions } from '../context/TransactionContext';
 import { useCategories } from '../context/CategoryContext';
-import {
-  BarChart,
-  PieChart,
-  ProgressChart
-} from "react-native-chart-kit";
+import { BarChart, PieChart, ProgressChart } from "react-native-chart-kit";
+import * as Print from 'expo-print';
+import * as Sharing from 'expo-sharing';
+import { captureRef } from 'react-native-view-shot';
 
 const screenWidth = Dimensions.get("window").width;
 
-// Color generator for pie chart segments
 const getRandomColor = () => {
   const colors = [
     '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
@@ -38,8 +36,8 @@ const Analysis = () => {
   const [selectedPeriod, setSelectedPeriod] = useState("daily");
   const { transactions } = useTransactions();
   const { expenseCategories, incomeCategories } = useCategories();
+  const viewRef = useRef();
 
-  // Filter transactions based on selected period
   const filterTransactions = (period) => {
     const now = new Date();
     let startDate;
@@ -69,7 +67,6 @@ const Analysis = () => {
 
   const filteredTransactions = filterTransactions(selectedPeriod);
 
-  // Calculate totals
   const totalIncome = filteredTransactions
     .filter(t => t.amount > 0)
     .reduce((sum, t) => sum + t.amount, 0);
@@ -78,7 +75,6 @@ const Analysis = () => {
     .filter(t => t.amount < 0)
     .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
-  // Calculate category totals
   const getCategoryTotals = (type) => {
     const categories = type === 'expense' ? expenseCategories : incomeCategories;
     return categories.map(category => {
@@ -97,7 +93,6 @@ const Analysis = () => {
   const expenseCategoryTotals = getCategoryTotals('expense');
   const incomeCategoryTotals = getCategoryTotals('income');
 
-  // Prepare chart data
   const prepareBarChartData = () => {
     const days = [];
     const incomeData = [];
@@ -157,7 +152,6 @@ const Analysis = () => {
   const expensePieData = preparePieChartData(expenseCategoryTotals);
   const incomePieData = preparePieChartData(incomeCategoryTotals);
 
-  // Chart configuration
   const chartConfig = {
     backgroundColor: "#ffffff",
     backgroundGradientFrom: "#ffffff",
@@ -170,16 +164,118 @@ const Analysis = () => {
     }
   };
 
+  const generateReport = async () => {
+    try {
+      // Generate HTML content for the PDF
+      const html = `
+        <html>
+          <head>
+            <style>
+              body { font-family: Arial; padding: 20px; }
+              h1 { color: #00cba0; text-align: center; }
+              .header { margin-bottom: 20px; }
+              .section { margin-bottom: 30px; }
+              .section-title { font-weight: bold; font-size: 18px; color: #333; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 10px; }
+              .summary { display: flex; justify-content: space-between; margin-bottom: 20px; }
+              .summary-item { flex: 1; text-align: center; }
+              .income { color: #4CAF50; }
+              .expense { color: #F44336; }
+              .category-item { display: flex; justify-content: space-between; margin-bottom: 10px; }
+              .period { text-align: center; margin-bottom: 15px; font-weight: bold; }
+              .footer { margin-top: 30px; text-align: center; color: #666; font-size: 12px; }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <h1>My Fin Mate Financial Report</h1>
+              <div class="period">Period: ${selectedPeriod.charAt(0).toUpperCase() + selectedPeriod.slice(1)}</div>
+            </div>
+            
+            <div class="section">
+              <div class="section-title">Summary</div>
+              <div class="summary">
+                <div class="summary-item">
+                  <div>Total Income</div>
+                  <div class="income">LKR ${totalIncome.toFixed(2)}</div>
+                </div>
+                <div class="summary-item">
+                  <div>Total Expense</div>
+                  <div class="expense">LKR ${totalExpenses.toFixed(2)}</div>
+                </div>
+                <div class="summary-item">
+                  <div>Net Savings</div>
+                  <div class="${totalIncome - totalExpenses >= 0 ? 'income' : 'expense'}">
+                    LKR ${(totalIncome - totalExpenses).toFixed(2)}
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            ${incomeCategoryTotals.length > 0 ? `
+            <div class="section">
+              <div class="section-title">Income Categories</div>
+              ${incomeCategoryTotals.map(category => `
+                <div class="category-item">
+                  <div>${category.name}</div>
+                  <div>LKR ${category.total.toFixed(2)}</div>
+                </div>
+              `).join('')}
+            </div>
+            ` : ''}
+            
+            ${expenseCategoryTotals.length > 0 ? `
+            <div class="section">
+              <div class="section-title">Expense Categories</div>
+              ${expenseCategoryTotals.map(category => `
+                <div class="category-item">
+                  <div>${category.name}</div>
+                  <div>LKR ${category.total.toFixed(2)}</div>
+                </div>
+              `).join('')}
+            </div>
+            ` : ''}
+            
+            <div class="footer">
+              Generated on ${new Date().toLocaleDateString()} by MyFinance App
+            </div>
+          </body>
+        </html>
+      `;
+
+      // Generate PDF
+      const { uri } = await Print.printToFileAsync({ html });
+      
+      // Share the PDF
+      await Sharing.shareAsync(uri, {
+        mimeType: 'application/pdf',
+        dialogTitle: 'Share Financial Report',
+        UTI: 'com.adobe.pdf'
+      });
+    } catch (error) {
+      console.error('Error generating report:', error);
+      alert('Failed to generate report. Please try again.');
+    }
+  };
+
   return (
-    <View style={styles.container}>
+    <View style={styles.container} ref={viewRef}>
       <StatusBar barStyle="dark-content" backgroundColor="#00cba0" />
 
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Analysis</Text>
-        <TouchableOpacity style={styles.notificationButton}>
-          <Ionicons name="notifications-outline" size={24} color="white" />
-        </TouchableOpacity>
+        <View style={styles.headerActions}>
+          <TouchableOpacity 
+            style={styles.reportButton}
+            onPress={generateReport}
+          >
+            <Ionicons name="document-text-outline" size={20} color="white" />
+            <Text style={styles.reportButtonText}>Report</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.notificationButton}>
+            <Ionicons name="notifications-outline" size={24} color="white" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Summary Container */}
@@ -237,56 +333,8 @@ const Analysis = () => {
         style={styles.content}
         contentContainerStyle={styles.scrollContent}
       >
-        {/* Income vs Expenses Bar Chart
-        {filteredTransactions.length > 0 && (
-          <View style={styles.chartContainer}>
-            <Text style={styles.chartTitle}>Income vs Expenses</Text>
-            <BarChart
-              data={{
-                labels: days,
-                datasets: [
-                  {
-                    data: incomeData,
-                    color: (opacity = 1) => `rgba(76, 175, 80, ${opacity})`,
-                  },
-                  {
-                    data: expenseData,
-                    color: (opacity = 1) => `rgba(244, 67, 54, ${opacity})`,
-                  }
-                ]
-              }}
-              width={screenWidth - 32}
-              height={220}
-              chartConfig={chartConfig}
-              verticalLabelRotation={30}
-              fromZero
-              style={styles.chart}
-            />
-          </View>
-        )} */}
-
-        {/* Savings Progress Chart
-        {totalIncome > 0 && (
-          <View style={styles.chartContainer}>
-            <Text style={styles.chartTitle}>Savings Rate</Text>
-            <ProgressChart
-              data={{
-                labels: ["Savings"],
-                data: [(totalIncome - totalExpenses) / totalIncome]
-              }}
-              width={screenWidth - 32}
-              height={160}
-              chartConfig={chartConfig}
-              style={styles.chart}
-            />
-            <Text style={styles.savingsText}>
-              {((totalIncome - totalExpenses) / totalIncome * 100).toFixed(1)}% of income saved
-            </Text>
-          </View>
-        )} */}
-
-          {/* Category Lists */}
-          {incomeCategoryTotals.length > 0 && (
+        {/* Category Lists */}
+        {incomeCategoryTotals.length > 0 && (
           <View style={styles.categorySection}>
             <Text style={styles.sectionTitle}>Income Categories</Text>
             {incomeCategoryTotals.map((category) => (
@@ -327,7 +375,6 @@ const Analysis = () => {
           </View>
         )}
 
-
         {/* Expense Breakdown Pie Chart */}
         {expensePieData.length > 0 && (
           <View style={styles.chartContainer}>
@@ -364,7 +411,6 @@ const Analysis = () => {
           </View>
         )}
 
-      
         <View style={styles.bottomSpace} />
       </ScrollView>
     </View>
@@ -388,6 +434,24 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "bold",
     color: "white",
+  },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  reportButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    marginRight: 10,
+  },
+  reportButtonText: {
+    color: 'white',
+    marginLeft: 5,
+    fontWeight: '500',
   },
   notificationButton: {
     padding: 8,
