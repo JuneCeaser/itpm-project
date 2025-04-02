@@ -14,6 +14,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Animated,
   Dimensions
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -37,9 +38,10 @@ const Add = () => {
   const [iconError, setIconError] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [fadeAnim] = useState(new Animated.Value(0));
 
   const { addTransaction } = useTransactions();
-  const { expenseCategories, incomeCategories, addCategory, loading: categoriesLoading } = useCategories();
+  const { expenseCategories, incomeCategories, addCategory, refreshCategories, loading: categoriesLoading } = useCategories();
 
   const availableIcons = [
     "restaurant-outline",
@@ -111,6 +113,27 @@ const Add = () => {
     setNameError("");
     setIconError("");
   };
+  
+  const showSuccessMessage = () => {
+    setShowSuccess(true);
+    Animated.sequence([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.delay(1500),
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      })
+    ]).start(() => {
+      setShowSuccess(false);
+      closeCategoryModal();
+      fadeAnim.setValue(0);
+    });
+  };
 
   const handleSaveCategory = async () => {
     let isValid = true;
@@ -142,11 +165,10 @@ const Add = () => {
     const result = await addCategory(newCategory);
     if (result.success) {
       setSelectedCategory(newCategory.id);
-      setShowSuccess(true);
-      setTimeout(() => {
-        setShowSuccess(false);
-        closeCategoryModal();
-      }, 1500);
+      await refreshCategories();
+      
+      // Show animated success message
+      showSuccessMessage();
     }
   };
 
@@ -411,6 +433,21 @@ const Add = () => {
               {/* Icon Selection */}
               <View style={styles.inputContainer}>
                 <Text style={styles.inputLabel}>Select Icon</Text>
+                
+                {/* Selected Icon Preview */}
+                {selectedIcon && (
+                  <View style={styles.selectedIconPreview}>
+                    <View style={styles.previewIconContainer}>
+                      <Ionicons
+                        name={selectedIcon}
+                        size={30}
+                        color="#fff"
+                      />
+                    </View>
+                    <Text style={styles.selectedIconText}>Selected Icon</Text>
+                  </View>
+                )}
+                
                 <View style={styles.iconGrid}>
                   {availableIcons.map((icon, index) => (
                     <TouchableOpacity
@@ -454,15 +491,21 @@ const Add = () => {
         </KeyboardAvoidingView>
       </Modal>
 
-      {/* Success Message */}
+      {/* Success Message with Animation */}
       {showSuccess && (
-        <View style={[
-          styles.successMessage,
-          selectedType === "Income" && styles.successMessageIncome
-        ]}>
-          <Ionicons name="checkmark-circle" size={24} color="#fff"/>
-          <Text style={styles.successText}>Category saved successfully!</Text>
-        </View>
+        <Animated.View 
+          style={[
+            styles.successMessage,
+            { opacity: fadeAnim }
+          ]}
+        >
+          <View style={styles.successContent}>
+            <Ionicons name="checkmark-circle" size={24} color="#fff" />
+            <Text style={styles.successText}>
+              Category saved successfully!
+            </Text>
+          </View>
+        </Animated.View>
       )}
     </SafeAreaView>
   );
@@ -687,6 +730,31 @@ const styles = StyleSheet.create({
     padding: 14,
     fontSize: 16,
   },
+  // New styles for selected icon preview
+  selectedIconPreview: {
+    alignItems: "center",
+    marginBottom: 16,
+    flexDirection: "row",
+  },
+  previewIconContainer: {
+    width: 50,
+    height: 50,
+    backgroundColor: "#00c89c",
+    borderRadius: 25,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  selectedIconText: {
+    fontSize: 16,
+    color: "#333",
+    fontWeight: "500",
+  },
   iconGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -700,12 +768,17 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 10,
+    margin: 8,
+    borderWidth: 1,
+    borderColor: "#ddd",
   },
   selectedIconOption: {
     backgroundColor: "#00c89c",
+    borderColor: "#00c89c",
   },
   selectedIconOptionIncome: {
     backgroundColor: "#4CAF50",
+    borderColor: "#4CAF50",
   },
   modalSaveButton: {
     backgroundColor: "#00c89c",
@@ -722,21 +795,28 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
+  // New animated success message styles
   successMessage: {
     position: "absolute",
-    top: "50%",
-    left: "20%",
-    right: "20%",
+    top: 50,
+    left: 20,
+    right: 20,
+    alignItems: "center",
+    zIndex: 1000,
+  },
+  successContent: {
     backgroundColor: "#00c89c",
-    padding: 16,
-    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 50,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    zIndex: 1000,
-  },
-  successMessageIncome: {
-    backgroundColor: "#4CAF50",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
   },
   successText: {
     color: "#fff",
