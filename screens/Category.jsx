@@ -11,8 +11,11 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Alert,
+  Animated,
 } from "react-native";
-import { Ionicons, MaterialCommunityIcons, FontAwesome5, Feather } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
+import { useCategories } from '../context/CategoryContext';
 
 const Category = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -21,8 +24,17 @@ const Category = () => {
   const [showSuccess, setShowSuccess] = useState(false);
   const [nameError, setNameError] = useState("");
   const [iconError, setIconError] = useState("");
-  const [activeTab, setActiveTab] = useState("expense"); // 'expense' or 'income'
-  const [categoryType, setCategoryType] = useState("expense");
+  const [activeTab, setActiveTab] = useState("expense");
+  const [editingCategory, setEditingCategory] = useState(null);
+  const [fadeAnim] = useState(new Animated.Value(0));
+  
+  const { 
+    expenseCategories, 
+    incomeCategories, 
+    addCategory,
+    deleteCategory,
+    refresh: refreshCategories 
+  } = useCategories();
 
   // Icons for selection
   const availableIcons = [
@@ -48,8 +60,19 @@ const Category = () => {
     "color-palette-outline"
   ];
 
-  const openModal = (type) => {
-    setCategoryType(type);
+  const openModal = (category = null) => {
+    if (category) {
+      setEditingCategory(category);
+      setCategoryName(category.name);
+      setSelectedIcon(category.icon);
+      // Set the active tab to match the category type
+      setActiveTab(category.type);
+    } else {
+      setEditingCategory(null);
+      setCategoryName("");
+      setSelectedIcon(null);
+      // Tab remains as is for new categories
+    }
     setIsModalVisible(true);
   };
 
@@ -59,172 +82,148 @@ const Category = () => {
     setSelectedIcon(null);
     setNameError("");
     setIconError("");
+    setEditingCategory(null);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     // Validation
     let isValid = true;
-    
+
     if (!categoryName.trim()) {
       setNameError("Category name is required");
       isValid = false;
     } else {
       setNameError("");
     }
-    
+
     if (!selectedIcon) {
       setIconError("Please select an icon");
       isValid = false;
     } else {
       setIconError("");
     }
-    
+
     if (!isValid) return;
-    
-    // Show success message (UI only)
+
+    const categoryData = {
+      id: editingCategory ? editingCategory.id : null, // Pass null for new categories
+      name: categoryName,
+      emoji: editingCategory?.emoji || "📝",
+      icon: selectedIcon,
+      // Use the original category type when editing, otherwise use active tab
+      type: editingCategory ? editingCategory.type : activeTab,
+    };
+
+    await addCategory(categoryData);
+    await refreshCategories();
+
+    // Show success message with animation
+    showSuccessMessage();
+  };
+
+  const showSuccessMessage = () => {
     setShowSuccess(true);
-    setTimeout(() => {
+    Animated.sequence([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.delay(1500),
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      })
+    ]).start(() => {
       setShowSuccess(false);
       closeModal();
-    }, 1500);
+      fadeAnim.setValue(0);
+    });
+  };
+
+  const handleDelete = (category) => {
+    Alert.alert(
+      "Delete Category",
+      `Are you sure you want to delete "${category.name}"?`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        { 
+          text: "Delete", 
+          style: "destructive",
+          onPress: async () => {
+            await deleteCategory(category.id);
+            await refreshCategories();
+            showSuccessMessage();
+          }
+        }
+      ]
+    );
   };
 
   const renderIcon = (iconName) => {
     return <Ionicons name={iconName} size={24} color="#fff" />;
   };
 
-  // Expense Categories data
-  const expenseCategories = [
-    [
-      { name: "Food", icon: "restaurant-outline", color: "#FF6B6B" },
-      { name: "Transport", icon: "car-outline", color: "#4ECDC4" },
-      { name: "Shopping", icon: "cart-outline", color: "#FFD166" }
-    ],
-    [
-      { name: "Bills", icon: "receipt-outline", color: "#06D6A0" },
-      { name: "Entertainment", icon: "film-outline", color: "#118AB2" },
-      { name: "Health", icon: "medkit-outline", color: "#EF476F" }
-    ],
-    [
-      { name: "Education", icon: "school-outline", color: "#7209B7" },
-      { name: "Gifts", icon: "gift-outline", color: "#F15BB5" },
-      { name: "Investments", icon: "trending-up-outline", color: "#00BBF9" }
-    ],
-    [
-      { name: "Travel", icon: "airplane-outline", color: "#9B5DE5" },
-      { name: "Personal", icon: "person-outline", color: "#00F5D4" },
-      { name: "Others", icon: "ellipsis-horizontal", color: "#FEE440" }
-    ]
-  ];
-
-  // Income Categories data
-  const incomeCategories = [
-    [
-      { name: "Salary", icon: "cash-outline", color: "#4CAF50" },
-      { name: "Freelance", icon: "laptop-outline", color: "#2196F3" },
-      { name: "Investments", icon: "trending-up-outline", color: "#9C27B0" }
-    ],
-    [
-      { name: "Rental", icon: "home-outline", color: "#FF9800" },
-      { name: "Gifts", icon: "gift-outline", color: "#E91E63" },
-      { name: "Refunds", icon: "return-down-back-outline", color: "#3F51B5" }
-    ],
-    [
-      { name: "Dividends", icon: "pie-chart-outline", color: "#009688" },
-      { name: "Side Hustle", icon: "briefcase-outline", color: "#795548" },
-      { name: "Others", icon: "ellipsis-horizontal", color: "#607D8B" }
-    ]
-  ];
-
   const categories = activeTab === "expense" ? expenseCategories : incomeCategories;
+
+
+  const groupedCategories = [];
+  for (let i = 0; i < categories.length; i += 3) {
+    groupedCategories.push(categories.slice(i, i + 3));
+  }
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar backgroundColor="#00C49A" barStyle="light-content" />
-
+      <StatusBar backgroundColor="#00C49A" barStyle="light-content"/>
+      
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity>
-          <Ionicons name="arrow-back" size={24} color="#fff" />
+          
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Categories</Text>
         <TouchableOpacity>
-          <Ionicons name="notifications-outline" size={24} color="#fff" />
+          <Ionicons name="notifications-outline" size={24} color="#fff"/>
         </TouchableOpacity>
       </View>
 
-      {/* Balance Section */}
-      <View style={styles.balanceContainer}>
-        <View style={styles.balanceRow}>
-          <View style={styles.balanceItem}>
-            <View style={styles.balanceIconContainer}>
-              <Ionicons name="checkbox-outline" size={16} color="#00C49A" />
-            </View>
-            <Text style={styles.balanceLabel}>Total Balance</Text>
-            <Text style={styles.balanceValue}>LKR 7,783.00</Text>
-          </View>
-
-          <View style={styles.divider} />
-
-          <View style={styles.balanceItem}>
-            <View style={styles.balanceIconContainer}>
-              <Ionicons name="checkbox-outline" size={16} color="#00C49A" />
-            </View>
-            <Text style={styles.balanceLabel}>Total Expense</Text>
-            <Text style={[styles.balanceValue, styles.expenseValue]}>
-              LKR 1,187.40
-            </Text>
-          </View>
-        </View>
-
-        {/* Progress Bar */}
-        <View style={styles.progressContainer}>
-          <Text style={styles.progressText}>30%</Text>
-          <View style={styles.progressBar}>
-            <View style={styles.progressFill} />
-          </View>
-          <Text style={styles.maxAmount}>LKR 20,000.00</Text>
-        </View>
-
-        {/* Status Message */}
-        <View style={styles.statusContainer}>
-          <View style={styles.statusIconContainer}>
-            <Ionicons name="checkbox-outline" size={16} color="#00C49A" />
-          </View>
-          <Text style={styles.statusText}>
-            30% Of Your Expenses, Looks Good.
+      {/* Toggle Tabs */}
+      <View style={styles.tabContainer}>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === "expense" && styles.activeTab]}
+          onPress={() => setActiveTab("expense")}
+        >
+          <Text style={[styles.tabText, activeTab === "expense" && styles.activeTabText]}>
+            Expenses
           </Text>
-        </View>
+        </TouchableOpacity>
+        
+        <TouchableOpacity
+          style={[styles.tab, activeTab === "income" && styles.activeTab]}
+          onPress={() => setActiveTab("income")}
+        >
+          <Text style={[styles.tabText, activeTab === "income" && styles.activeTabText]}>
+            Income
+          </Text>
+        </TouchableOpacity>
       </View>
 
       {/* Categories Container */}
       <View style={styles.categoriesContainer}>
-        {/* Toggle Tabs */}
-        <View style={styles.tabContainer}>
-          <TouchableOpacity 
-            style={[styles.tab, activeTab === "expense" && styles.activeTab]}
-            onPress={() => setActiveTab("expense")}
-          >
-            <Text style={[styles.tabText, activeTab === "expense" && styles.activeTabText]}>
-              Expenses
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={[styles.tab, activeTab === "income" && styles.activeTab]}
-            onPress={() => setActiveTab("income")}
-          >
-            <Text style={[styles.tabText, activeTab === "income" && styles.activeTabText]}>
-              Income
-            </Text>
-          </TouchableOpacity>
-        </View>
-
         {/* Add Category Button */}
-        <TouchableOpacity 
-          style={[styles.addButton, activeTab === "income" && styles.addButtonIncome]} 
-          onPress={() => openModal(activeTab)}
+        <TouchableOpacity
+          style={[styles.addButton, activeTab === "income" && styles.addButtonIncome]}
+          onPress={() => openModal()}
         >
-          <Ionicons name="add" size={24} color={activeTab === "expense" ? "#00C49A" : "#4CAF50"} />
+          <Ionicons 
+            name="add" 
+            size={24} 
+            color={activeTab === "expense" ? "#00C49A" : "#00C49A"} 
+          />
           <Text style={[styles.addButtonText, activeTab === "income" && styles.addButtonTextIncome]}>
             Add {activeTab === "expense" ? "Expense" : "Income"} Category
           </Text>
@@ -232,12 +231,17 @@ const Category = () => {
 
         {/* Categories Grid */}
         <ScrollView showsVerticalScrollIndicator={false}>
-          {categories.map((row, rowIndex) => (
+          {groupedCategories.map((row, rowIndex) => (
             <View key={rowIndex} style={styles.categoriesRow}>
               {row.map((category, index) => (
-                <TouchableOpacity key={index} style={styles.categoryItem}>
-                  <View style={[styles.categoryIcon, { backgroundColor: category.color }]}>
-                    {renderIcon(category.icon)}
+                <TouchableOpacity 
+                  key={category.id} // Use category.id for better key uniqueness
+                  style={styles.categoryItem}
+                  onPress={() => openModal(category)}
+                  onLongPress={() => handleDelete(category)}
+                >
+                  <View style={[styles.categoryIcon, { backgroundColor: '#00c89c' }]}>
+                    <Ionicons name={category.icon} size={24} color="#fff"/>
                   </View>
                   <Text style={styles.categoryText}>{category.name}</Text>
                 </TouchableOpacity>
@@ -247,7 +251,7 @@ const Category = () => {
         </ScrollView>
       </View>
 
-      {/* Add Category Modal */}
+      {/* Add/Edit Category Modal */}
       <Modal
         visible={isModalVisible}
         animationType="slide"
@@ -261,10 +265,10 @@ const Category = () => {
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>
-                Add New {categoryType === "expense" ? "Expense" : "Income"} Category
+                {editingCategory ? "Edit" : "Add New"} {activeTab === "expense" ? "Expense" : "Income"} Category
               </Text>
               <TouchableOpacity onPress={closeModal}>
-                <Ionicons name="close" size={24} color="#666" />
+                <Ionicons name="close" size={24} color="#666"/>
               </TouchableOpacity>
             </View>
 
@@ -284,25 +288,32 @@ const Category = () => {
               {/* Icon Selection */}
               <View style={styles.inputContainer}>
                 <Text style={styles.inputLabel}>Select Icon</Text>
+                
+                {/* Selected Icon Preview */}
+                {selectedIcon && (
+                  <View style={styles.selectedIconPreview}>
+                    <View style={styles.previewIconContainer}>
+                      <Ionicons name={selectedIcon} size={30} color="#fff" />
+                    </View>
+                    <Text style={styles.selectedIconText}>Selected Icon</Text>
+                  </View>
+                )}
+                
+                {/* Icon Grid */}
                 <View style={styles.iconGrid}>
                   {availableIcons.map((icon, index) => (
                     <TouchableOpacity
                       key={index}
                       style={[
-                        styles.iconOption,
-                        selectedIcon === icon && styles.selectedIconOption,
-                        categoryType === "income" && selectedIcon === icon && styles.selectedIconOptionIncome
+                        styles.iconOption, 
+                        selectedIcon === icon && styles.selectedIconOption
                       ]}
                       onPress={() => setSelectedIcon(icon)}
                     >
                       <Ionicons
                         name={icon}
                         size={24}
-                        color={
-                          selectedIcon === icon 
-                            ? "#fff" 
-                            : categoryType === "expense" ? "#00C49A" : "#4CAF50"
-                        }
+                        color={selectedIcon === icon ? "#fff" : "#00C49A"}
                       />
                     </TouchableOpacity>
                   ))}
@@ -312,30 +323,33 @@ const Category = () => {
             </ScrollView>
 
             {/* Save Button */}
-            <TouchableOpacity 
-              style={[
-                styles.saveButton, 
-                categoryType === "income" && styles.saveButtonIncome
-              ]} 
+            <TouchableOpacity
+              style={[styles.saveButton, activeTab === "income" && styles.saveButtonIncome]}
               onPress={handleSave}
             >
               <Text style={styles.saveButtonText}>
-                Save {categoryType === "expense" ? "Expense" : "Income"} Category
+                {editingCategory ? "Update" : "Save"} {activeTab === "expense" ? "Expense" : "Income"} Category
               </Text>
             </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>
       </Modal>
 
-      {/* Success Message */}
+      {/* Modern Success Message */}
       {showSuccess && (
-        <View style={[
-          styles.successMessage,
-          categoryType === "income" && styles.successMessageIncome
-        ]}>
-          <Ionicons name="checkmark-circle" size={24} color="#fff" />
-          <Text style={styles.successText}>Category saved successfully!</Text>
-        </View>
+        <Animated.View 
+          style={[
+            styles.successMessage,
+            { opacity: fadeAnim }
+          ]}
+        >
+          <View style={styles.successContent}>
+            <Ionicons name="checkmark-circle" size={24} color="#fff" />
+            <Text style={styles.successText}>
+              Category {editingCategory ? "updated" : "saved"} successfully!
+            </Text>
+          </View>
+        </Animated.View>
       )}
     </SafeAreaView>
   );
@@ -358,84 +372,13 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#fff",
   },
-  balanceContainer: {
-    paddingHorizontal: 16,
-    paddingBottom: 20,
-  },
-  balanceRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  balanceItem: {
-    flex: 1,
-  },
-  balanceIconContainer: {
-    marginBottom: 4,
-  },
-  balanceLabel: {
-    fontSize: 14,
-    color: "#fff",
-    marginBottom: 4,
-  },
-  balanceValue: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: "#fff",
-  },
-  expenseValue: {
-    color: "#FF4F4F",
-  },
-  divider: {
-    width: 1,
-    height: "100%",
-    backgroundColor: "#ffffff40",
-  },
-  progressContainer: {
-    marginTop: 16,
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  progressText: {
-    color: "#fff",
-    fontSize: 12,
-    marginRight: 8,
-  },
-  progressBar: {
-    flex: 1,
-    height: 8,
-    backgroundColor: "#ffffff40",
-    borderRadius: 4,
-    overflow: "hidden",
-  },
-  progressFill: {
-    width: "30%",
-    height: "100%",
-    backgroundColor: "#fff",
-    borderRadius: 4,
-  },
-  maxAmount: {
-    color: "#fff",
-    fontSize: 12,
-    marginLeft: 8,
-  },
-  statusContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 10,
-  },
-  statusIconContainer: {
-    marginRight: 8,
-  },
-  statusText: {
-    color: "#fff",
-    fontSize: 14,
-  },
   tabContainer: {
     flexDirection: "row",
     marginBottom: 16,
     backgroundColor: "#fff",
     borderRadius: 12,
     padding: 4,
+    marginHorizontal: 16,
   },
   tab: {
     flex: 1,
@@ -477,30 +420,13 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 8,
+    backgroundColor: '#00c89c', 
   },
   categoryText: {
     fontSize: 14,
     color: "#333",
     fontWeight: "500",
     textAlign: "center",
-  },
-  bottomNav: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    backgroundColor: "#EAEFF5",
-    paddingVertical: 12,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-  },
-  navItem: {
-    alignItems: "center",
-    justifyContent: "center",
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-  },
-  activeNavItem: {
-    backgroundColor: "#00C49A",
   },
   addButton: {
     flexDirection: "row",
@@ -514,7 +440,7 @@ const styles = StyleSheet.create({
     borderColor: "#00C49A",
   },
   addButtonIncome: {
-    borderColor: "#4CAF50",
+    borderColor: "#00C49A",
   },
   addButtonText: {
     color: "#00C49A",
@@ -523,19 +449,19 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   addButtonTextIncome: {
-    color: "#4CAF50",
+    color: "#00C49A",
   },
   modalContainer: {
     flex: 1,
     justifyContent: "flex-end",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: "rgba(0, 0, 0, 0.01)",
   },
   modalContent: {
     backgroundColor: "#fff",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 20,
-    maxHeight: "80%",
+    maxHeight: '80%',
   },
   modalHeader: {
     flexDirection: "row",
@@ -546,21 +472,47 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#333",
   },
   inputContainer: {
-    marginBottom: 20,
+    marginBottom: 16,
   },
   inputLabel: {
-    fontSize: 14,
-    color: "#666",
+    fontSize: 16,
+    color: "#333",
     marginBottom: 8,
   },
   input: {
-    backgroundColor: "#f5f5f7",
-    borderRadius: 12,
-    padding: 14,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 8,
+    padding: 12,
     fontSize: 16,
+    color: "#333",
+  },
+  
+  selectedIconPreview: {
+    alignItems: "center",
+    marginBottom: 16,
+    flexDirection: "row",
+  },
+  previewIconContainer: {
+    width: 50,
+    height: 50,
+    backgroundColor: "#00C49A",
+    borderRadius: 25,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  selectedIconText: {
+    fontSize: 16,
+    color: "#333",
+    fontWeight: "500",
   },
   iconGrid: {
     flexDirection: "row",
@@ -568,58 +520,64 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   iconOption: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: "#f5f5f7",
+    margin: 8,
+    width: 48,
+    height: 48,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#ddd",
   },
   selectedIconOption: {
     backgroundColor: "#00C49A",
+    borderColor: "#00C49A",
   },
-  selectedIconOptionIncome: {
-    backgroundColor: "#4CAF50",
+  errorText: {
+    color: "red",
+    fontSize: 12,
+    marginTop: 4,
   },
   saveButton: {
     backgroundColor: "#00C49A",
-    padding: 16,
+    paddingVertical: 12,
     borderRadius: 12,
     alignItems: "center",
     marginTop: 10,
   },
   saveButtonIncome: {
-    backgroundColor: "#4CAF50",
+    backgroundColor: "#00C49A",
   },
   saveButtonText: {
-    color: "#fff",
     fontSize: 16,
     fontWeight: "600",
+    color: "#fff",
   },
-  errorText: {
-    color: "#FF4F4F",
-    fontSize: 12,
-    marginTop: 4,
-  },
+ 
   successMessage: {
     position: "absolute",
-    top: "50%",
-    left: "20%",
-    right: "20%",
-    backgroundColor: "#00C49A",
-    padding: 16,
-    borderRadius: 12,
+    top: 50,
+    left: 20,
+    right: 20,
+    alignItems: "center",
+    zIndex: 1000,
+  },
+  successContent: {
+    backgroundColor: "#fff",
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 50,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    zIndex: 1000,
-  },
-  successMessageIncome: {
-    backgroundColor: "#4CAF50",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
   },
   successText: {
-    color: "#fff",
+    color: "#00C49A",
     fontSize: 16,
     fontWeight: "600",
     marginLeft: 8,

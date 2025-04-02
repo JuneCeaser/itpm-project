@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useContext } from "react";
 import {
   StyleSheet,
   Text,
@@ -8,95 +9,136 @@ import {
   TouchableOpacity,
   ScrollView,
   Image,
+  ActivityIndicator,
+  Alert,
+  Modal,
+  TextInput
 } from "react-native";
-import {
-  Ionicons,
-  MaterialCommunityIcons,
-  FontAwesome5,
-  Feather,
-  MaterialIcons,
-} from "@expo/vector-icons";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { useTransactions } from '../context/TransactionContext';
+import { useCategories } from '../context/CategoryContext';
+import { AuthContext } from '../context/AuthContext';
 
 const Home = () => {
   const [activeTab, setActiveTab] = useState("Daily");
+  const { transactions, balance, loading, updateTransaction, deleteTransaction } = useTransactions();
+  const { expenseCategories, incomeCategories } = useCategories();
+  const { user } = useContext(AuthContext);
+  const [editingTransaction, setEditingTransaction] = useState(null);
+  const [editAmount, setEditAmount] = useState("");
+  const [editNote, setEditNote] = useState("");
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
 
-
-  const transactionData = {
-    Daily: [
-      { id: 1, title: "Coffee", amount: -400.50, category: "Food", time: "08:15 - Today", icon: "☕" },
-      { id: 2, title: "Lunch", amount: -1200.75, category: "Food", time: "12:30 - Today", icon: "🍔" },
-      { id: 3, title: "Gas", amount: -3500.20, category: "Transport", time: "17:45 - Today", icon: "⛽" },
-      { id: 4, title: "Grocery", amount: -2800.90, category: "Shopping", time: "18:20 - Today", icon: "🛒" },
-      { id: 5, title: "Movie", amount: -1500.00, category: "Entertainment", time: "20:00 - Today", icon: "🎬" },
-      { id: 6, title: "Freelance", amount: 12000.00, category: "Income", time: "09:00 - Today", icon: "💻" },
-      { id: 7, title: "Parking", amount: -800.00, category: "Transport", time: "10:15 - Today", icon: "🅿️" },
-      { id: 8, title: "Snacks", amount: -500.25, category: "Food", time: "15:30 - Today", icon: "🍫" },
-      { id: 9, title: "Book", amount: -2200.40, category: "Education", time: "16:45 - Today", icon: "📚" },
-      { id: 10, title: "Donation", amount: -1000.00, category: "Other", time: "19:00 - Today", icon: "❤️" }
-    ],
-    Weekly: [
-      { id: 1, title: "Weekly Grocery", amount: -8500.60, category: "Shopping", time: "Mon - 10:30", icon: "🛒" },
-      { id: 2, title: "Electric Bill", amount: -4500.75, category: "Utilities", time: "Tue - 08:00", icon: "💡" },
-      { id: 3, title: "Salary", amount: 120000.00, category: "Income", time: "Wed - 09:00", icon: "💰" },
-      { id: 4, title: "Dinner Out", amount: -3200.50, category: "Food", time: "Wed - 19:30", icon: "🍽️" },
-      { id: 5, title: "Gym Membership", amount: -2500.00, category: "Health", time: "Thu - 07:00", icon: "🏋️" },
-      { id: 6, title: "Uber Rides", amount: -4200.30, category: "Transport", time: "Thu - 18:15", icon: "🚖" },
-      { id: 7, title: "Phone Bill", amount: -3500.99, category: "Utilities", time: "Fri - 10:00", icon: "📱" },
-      { id: 8, title: "Weekend Trip", amount: -15000.00, category: "Travel", time: "Sat - 08:00", icon: "✈️" },
-      { id: 9, title: "Gifts", amount: -4500.25, category: "Shopping", time: "Sun - 14:00", icon: "🎁" },
-      { id: 10, title: "Freelance Work", amount: 35000.00, category: "Income", time: "Sun - 20:00", icon: "💼" }
-    ],
-    Monthly: [
-      { id: 1, title: "Rent", amount: -120000.00, category: "Housing", time: "1st - 00:00", icon: "🏠" },
-      { id: 2, title: "Salary", amount: 450000.00, category: "Income", time: "1st - 09:00", icon: "💰" },
-      { id: 3, title: "Car Payment", amount: -35000.00, category: "Transport", time: "5th - 00:00", icon: "🚗" },
-      { id: 4, title: "Internet", amount: -6500.99, category: "Utilities", time: "10th - 00:00", icon: "🌐" },
-      { id: 5, title: "Health Insurance", amount: -28000.00, category: "Health", time: "15th - 00:00", icon: "🏥" },
-      { id: 6, title: "Credit Card", amount: -42000.50, category: "Finance", time: "20th - 00:00", icon: "💳" },
-      { id: 7, title: "Investment", amount: -50000.00, category: "Savings", time: "22nd - 10:00", icon: "📈" },
-      { id: 8, title: "Side Project", amount: 80000.00, category: "Income", time: "25th - 15:00", icon: "🛠️" },
-      { id: 9, title: "Student Loan", amount: -30000.00, category: "Education", time: "28th - 00:00", icon: "🎓" },
-      { id: 10, title: "Savings Deposit", amount: -100000.00, category: "Savings", time: "30th - 00:00", icon: "💰" }
-    ]
+  const getCategoryColor = (category) => {
+    const colors = {
+      "Food": "#FF6384",
+      "Transport": "#36A2EB",
+      "Shopping": "#FFCE56",
+      "Bills": "#4BC0C0",
+      "Entertainment": "#9966FF",
+      "Salary": "#4CAF50",
+      "Freelance": "#2196F3",
+      "Investments": "#9C27B0",
+      "Gifts": "#FF9800",
+      "Other": "#607D8B"
+    };
+    return colors[category] || "#607D8B";
   };
 
-  const renderTransactionIcon = (icon) => (
-    <View style={[styles.transactionIcon, { backgroundColor: getRandomColor() }]}>
-      <Text style={styles.transactionIconText}>{icon}</Text>
-    </View>
-  );
-
-  const getRandomColor = () => {
-    const colors = ["#e3f2fd", "#e1f5fe", "#e8eaf6", "#f3e5f5", "#e0f7fa", "#f1f8e9", "#fff3e0"];
-    return colors[Math.floor(Math.random() * colors.length)];
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const time = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const day = date.toLocaleDateString([], { day: 'numeric', month: 'short' });
+    return `${time} • ${day}`;
   };
 
-  const handleVoiceInput = () => {
-   
-    console.log("Voice input activated");
-   
+  const calculateTotalExpenses = () => {
+    return transactions
+      .filter(t => t.amount < 0)
+      .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+  };
+
+  const calculateTotalIncome = () => {
+    return transactions
+      .filter(t => t.amount > 0)
+      .reduce((sum, t) => sum + t.amount, 0);
+  };
+
+  const handleEditTransaction = (transaction) => {
+    setEditingTransaction(transaction);
+    setEditAmount(Math.abs(transaction.amount).toString());
+    setEditNote(transaction.note || "");
+    setIsEditModalVisible(true);
+  };
+
+  const handleUpdateTransaction = async () => {
+    if (!editAmount || isNaN(parseFloat(editAmount))) {
+      Alert.alert("Error", "Please enter a valid amount");
+      return;
+    }
+
+    const updatedTransaction = {
+      ...editingTransaction,
+      amount: parseFloat(editAmount) * (editingTransaction.amount < 0 ? -1 : 1),
+      note: editNote.trim() || undefined
+    };
+
+    const result = await updateTransaction(editingTransaction.id, updatedTransaction);
+    if (result.success) {
+      setIsEditModalVisible(false);
+      Alert.alert("Success", "Transaction updated successfully");
+    } else {
+      Alert.alert("Error", "Failed to update transaction");
+    }
+  };
+
+  const handleDeleteTransaction = async (id) => {
+    Alert.alert(
+      "Confirm Delete",
+      "Are you sure you want to delete this transaction?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        { 
+          text: "Delete", 
+          style: "destructive",
+          onPress: async () => {
+            const result = await deleteTransaction(id);
+            if (result.success) {
+              Alert.alert("Success", "Transaction deleted successfully");
+            } else {
+              Alert.alert("Error", "Failed to delete transaction");
+            }
+          }
+        }
+      ]
+    );
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#00c89c" />
-
+      
       {/* Header Section */}
       <View style={styles.header}>
-        
-      <View style={styles.headerLeft}>
-          <Image 
-            source={require('../assets/fin.png')} 
+        <View style={styles.headerLeft}>
+          <Image
+            source={require('../assets/fin.png')}
             style={styles.logo}
             resizeMode="contain"
           />
-          <View>
-            <Text style={styles.welcomeText}>Hi, Ceaser</Text>
-            <Text style={styles.greetingText}>Good Morning</Text>
-          </View>
+        </View>
+        <View>
+          <Text style={styles.welcomeText}>Hi, {user?.name || 'User'}</Text>
+          <Text style={styles.greetingText}>
+            {new Date().getHours() < 12 ? 'Good Morning' : 
+             new Date().getHours() < 18 ? 'Good Afternoon' : 'Good Evening'}
+          </Text>
         </View>
         <TouchableOpacity style={styles.notificationButton}>
-          <Ionicons name="notifications-outline" size={24} color="white" />
+          <Ionicons name="notifications-outline" size={24} color="white"/>
         </TouchableOpacity>
       </View>
 
@@ -110,11 +152,11 @@ const Home = () => {
               </View>
               <Text style={styles.summaryLabel}>Total Balance</Text>
             </View>
-            <Text style={styles.balanceAmount}>LKR 158,130.00</Text>
+            <Text style={styles.balanceAmount}>LKR {balance.toFixed(2)}</Text>
           </View>
-
-          <View style={styles.divider} />
-
+          
+          <View style={styles.divider}/>
+          
           <View style={styles.summaryItem}>
             <View style={styles.labelContainer}>
               <View style={styles.checkboxIcon}>
@@ -122,27 +164,18 @@ const Home = () => {
               </View>
               <Text style={styles.summaryLabel}>Total Expense</Text>
             </View>
-            <Text style={styles.expenseAmount}>-LKR 41,870.00</Text>
-          </View>
-        </View>
-
-        {/* Progress Bar */}
-        <View style={styles.progressContainer}>
-          <View style={styles.progressBar}>
-            <View style={[styles.progress, { width: "20%" }]} />
-          </View>
-          <View style={styles.progressLabels}>
-            <Text style={styles.progressPercentage}>20.93%</Text>
-            <Text style={styles.progressMaxAmount}>Rs 200 000.00</Text>
+            <Text style={styles.expenseAmount}>
+              LKR {calculateTotalExpenses().toFixed(2)}
+            </Text>
           </View>
         </View>
       </View>
 
       {/* Time Period Selector */}
       <View style={styles.timeSelector}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[
-            styles.timeOption, 
+            styles.timeOption,
             activeTab === "Daily" && styles.activeTimeOption
           ]}
           onPress={() => setActiveTab("Daily")}
@@ -154,10 +187,10 @@ const Home = () => {
             Daily
           </Text>
         </TouchableOpacity>
-
-        <TouchableOpacity 
+        
+        <TouchableOpacity
           style={[
-            styles.timeOption, 
+            styles.timeOption,
             activeTab === "Weekly" && styles.activeTimeOption
           ]}
           onPress={() => setActiveTab("Weekly")}
@@ -169,10 +202,10 @@ const Home = () => {
             Weekly
           </Text>
         </TouchableOpacity>
-
-        <TouchableOpacity 
+        
+        <TouchableOpacity
           style={[
-            styles.timeOption, 
+            styles.timeOption,
             activeTab === "Monthly" && styles.activeTimeOption
           ]}
           onPress={() => setActiveTab("Monthly")}
@@ -186,37 +219,113 @@ const Home = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Transactions */}
-      <ScrollView 
+      {/* Transactions List */}
+      <ScrollView
         style={styles.transactionsContainer}
         showsVerticalScrollIndicator={false}
       >
-        {transactionData[activeTab].map((transaction) => (
-          <View key={transaction.id} style={styles.transaction}>
-            {renderTransactionIcon(transaction.icon)}
-            <View style={styles.transactionDetails}>
-              <Text style={styles.transactionTitle}>{transaction.title}</Text>
-              <Text style={styles.transactionTime}>{transaction.time}</Text>
-            </View>
-            <View style={styles.transactionCategory}>
-              <Text style={styles.categoryText}>{transaction.category}</Text>
-            </View>
-            <Text style={[
-              styles.transactionAmount,
-              transaction.amount < 0 && styles.transactionExpense
-            ]}>
-              {transaction.amount < 0 ? `-Rs${Math.abs(transaction.amount).toFixed(2)}` : `Rs${transaction.amount.toFixed(2)}`}
-            </Text>
+        {loading ? (
+          <ActivityIndicator size="large" color="#00c89c" style={styles.loadingIndicator} />
+        ) : transactions.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Ionicons name="receipt-outline" size={48} color="#ccc" />
+            <Text style={styles.emptyStateText}>No transactions yet</Text>
+            <Text style={styles.emptyStateSubtext}>Add your first transaction to get started</Text>
           </View>
-        ))}
+        ) : (
+          transactions.map((transaction) => (
+            <TouchableOpacity
+              key={transaction.id}
+              style={styles.transaction}
+              onPress={() => handleEditTransaction(transaction)}
+              onLongPress={() => handleDeleteTransaction(transaction.id)}
+            >
+              <View style={[
+                styles.transactionIcon,
+                { backgroundColor: getCategoryColor(transaction.category) }
+              ]}>
+                <Ionicons 
+                  name={transaction.categoryIcon || "pricetag-outline"} 
+                  size={24} 
+                  color="#fff" 
+                />
+              </View>
+              
+              <View style={styles.transactionDetails}>
+                <Text style={styles.transactionTitle}>{transaction.category}</Text>
+                {transaction.note && (
+                  <Text style={styles.transactionNote}>{transaction.note}</Text>
+                )}
+                <Text style={styles.transactionTime}>{formatDate(transaction.date)}</Text>
+              </View>
+              
+              <Text style={[
+                styles.transactionAmount,
+                transaction.amount < 0 ? styles.transactionExpense : styles.transactionIncome
+              ]}>
+                {transaction.amount < 0 
+                  ? `-Rs${Math.abs(transaction.amount).toFixed(2)}` 
+                  : `+Rs${transaction.amount.toFixed(2)}`}
+              </Text>
+            </TouchableOpacity>
+          ))
+        )}
       </ScrollView>
 
-      {/* Voice Input Floating Button */}
-      <TouchableOpacity 
-        style={styles.voiceInputButton} 
-        onPress={handleVoiceInput}
+      {/* Edit Transaction Modal */}
+      <Modal
+        visible={isEditModalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setIsEditModalVisible(false)}
       >
-        <MaterialIcons name="keyboard-voice" size={28} color="white" />
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Edit Transaction</Text>
+              <TouchableOpacity onPress={() => setIsEditModalVisible(false)}>
+                <Ionicons name="close" size={24} color="#666" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Amount (Rs)</Text>
+              <TextInput
+                style={styles.input}
+                keyboardType="decimal-pad"
+                value={editAmount}
+                onChangeText={setEditAmount}
+                placeholder="Enter amount"
+              />
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Note (Optional)</Text>
+              <TextInput
+                style={[styles.input, styles.noteInput]}
+                value={editNote}
+                onChangeText={setEditNote}
+                placeholder="Add a note"
+                multiline
+              />
+            </View>
+
+            <TouchableOpacity
+              style={styles.saveButton}
+              onPress={handleUpdateTransaction}
+            >
+              <Text style={styles.saveButtonText}>Update Transaction</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Voice Input Floating Button */}
+      <TouchableOpacity
+        style={styles.voiceInputButton}
+        onPress={() => console.log("Voice input")}
+      >
+        <MaterialIcons name="keyboard-voice" size={28} color="white"/>
       </TouchableOpacity>
     </SafeAreaView>
   );
@@ -296,40 +405,13 @@ const styles = StyleSheet.create({
   expenseAmount: {
     fontSize: 22,
     fontWeight: "bold",
-    color: "#2196f3",
+    color: "#F44336",
   },
   divider: {
     width: 1,
     height: "80%",
     backgroundColor: "#eee",
     marginHorizontal: 8,
-  },
-  progressContainer: {
-    marginTop: 16,
-  },
-  progressBar: {
-    height: 10,
-    backgroundColor: "#f0f0f0",
-    borderRadius: 10,
-    overflow: "hidden",
-  },
-  progress: {
-    height: "100%",
-    backgroundColor: "#00c89c",
-    borderRadius: 10,
-  },
-  progressLabels: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 4,
-  },
-  progressPercentage: {
-    fontSize: 12,
-    color: "#666",
-  },
-  progressMaxAmount: {
-    fontSize: 12,
-    color: "#666",
   },
   timeSelector: {
     flexDirection: "row",
@@ -363,6 +445,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 20,
   },
+  loadingIndicator: {
+    marginTop: 40,
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+  },
+  emptyStateText: {
+    fontSize: 18,
+    color: '#666',
+    marginTop: 16,
+  },
+  emptyStateSubtext: {
+    fontSize: 14,
+    color: '#999',
+    marginTop: 8,
+  },
   transaction: {
     flexDirection: "row",
     alignItems: "center",
@@ -372,53 +472,46 @@ const styles = StyleSheet.create({
     borderBottomColor: "#f0f0f0",
   },
   transactionIcon: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 15,
-  },
-  transactionIconText: {
-    fontSize: 24,
+    marginRight: 12,
   },
   transactionDetails: {
     flex: 1,
+    marginRight: 10,
   },
   transactionTitle: {
     fontSize: 16,
-    fontWeight: "bold",
-    color: "#333",
+    fontWeight: '600',
+    color: '#333',
   },
   transactionTime: {
     fontSize: 12,
-    color: "#888",
+    color: '#888',
+    marginTop: 2,
   },
-  transactionCategory: {
-    backgroundColor: "#f5f5f5",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 10,
-    marginRight: 10,
-  },
-  categoryText: {
-    fontSize: 12,
-    color: "#555",
+  transactionNote: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 4,
+    fontStyle: 'italic',
   },
   transactionAmount: {
     fontSize: 16,
-    fontWeight: "bold",
-    color: "#333",
+    fontWeight: 'bold',
+  },
+  transactionIncome: {
+    color: '#4CAF50',
   },
   transactionExpense: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#f44336",
+    color: '#F44336',
   },
-  
   voiceInputButton: {
     position: 'absolute',
-    bottom: 90, 
+    bottom: 90,
     right: 20,
     width: 60,
     height: 60,
@@ -431,6 +524,59 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 3,
     elevation: 5,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 20,
+    width: '90%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  inputContainer: {
+    marginBottom: 15,
+  },
+  inputLabel: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 8,
+  },
+  input: {
+    backgroundColor: '#f5f5f5',
+    borderRadius: 10,
+    padding: 15,
+    fontSize: 16,
+  },
+  noteInput: {
+    minHeight: 100,
+    textAlignVertical: 'top',
+  },
+  saveButton: {
+    backgroundColor: '#00c89c',
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  saveButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 

@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import axios from "axios";
 import { AntDesign, Feather } from "@expo/vector-icons";
-import { AuthContext } from "../AuthContext";
+import { AuthContext } from "../context/AuthContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const AuthScreen = ({ navigation }) => {

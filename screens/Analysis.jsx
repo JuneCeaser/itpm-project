@@ -107,7 +107,7 @@ const Analysis = () => {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="white" />
+         
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Analysis</Text>
         <TouchableOpacity style={styles.notificationButton}>

@@ -10,8 +10,16 @@ import {
   StatusBar,
   Alert,
   Keyboard,
+  Modal,
+  KeyboardAvoidingView,
+  Platform,
+  ActivityIndicator,
+  Animated,
+  Dimensions
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useTransactions } from '../context/TransactionContext';
+import { useCategories } from '../context/CategoryContext';
 
 const Add = () => {
   const [selectedType, setSelectedType] = useState("Expenses");
@@ -23,22 +31,40 @@ const Add = () => {
     category: "",
   });
   const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const [isCategoryModalVisible, setIsCategoryModalVisible] = useState(false);
+  const [categoryName, setCategoryName] = useState("");
+  const [selectedIcon, setSelectedIcon] = useState(null);
+  const [nameError, setNameError] = useState("");
+  const [iconError, setIconError] = useState("");
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [fadeAnim] = useState(new Animated.Value(0));
 
-  const [expenseCategories, setExpenseCategories] = useState([
-    { id: 1, name: "Food", emoji: "🍽️" },
-    { id: 2, name: "Transport", emoji: "🚗" },
-    { id: 3, name: "Entertainment", emoji: "🍿" },
-    { id: 4, name: "Shopping", emoji: "🛍️" },
-    { id: 5, name: "Bills", emoji: "💸" },
-  ]);
+  const { addTransaction } = useTransactions();
+  const { expenseCategories, incomeCategories, addCategory, refreshCategories, loading: categoriesLoading } = useCategories();
 
-  const [incomeCategories, setIncomeCategories] = useState([
-    { id: 6, name: "Salary", emoji: "💰" },
-    { id: 7, name: "Freelance", emoji: "🖥️" },
-    { id: 8, name: "Investments", emoji: "📈" },
-    { id: 9, name: "Gifts", emoji: "🎁" },
-    { id: 10, name: "Other", emoji: "🔄" },
-  ]);
+  const availableIcons = [
+    "restaurant-outline",
+    "car-outline",
+    "cart-outline",
+    "receipt-outline",
+    "film-outline",
+    "medkit-outline",
+    "school-outline",
+    "gift-outline",
+    "trending-up-outline",
+    "airplane-outline",
+    "person-outline",
+    "home-outline",
+    "wifi-outline",
+    "cafe-outline",
+    "fitness-outline",
+    "musical-notes-outline",
+    "book-outline",
+    "paw-outline",
+    "beer-outline",
+    "color-palette-outline"
+  ];
 
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener(
@@ -76,81 +102,121 @@ const Add = () => {
     return valid;
   };
 
-  const handleAddCategory = () => {
-    Alert.prompt(
-      "New Category",
-      "Enter category name:",
-      (categoryName) => {
-        if (!categoryName || categoryName.trim() === "") {
-          Alert.alert("Error", "Category name cannot be empty");
-          return;
-        }
-
-        if (categoryName.length > 15) {
-          Alert.alert("Error", "Category name is too long (max 15 characters)");
-          return;
-        }
-
-        const newCategory = {
-          id: Date.now(),
-          name: categoryName,
-          emoji: "➕",
-        };
-
-        if (selectedType === "Expenses") {
-          setExpenseCategories([...expenseCategories, newCategory]);
-        } else {
-          setIncomeCategories([...incomeCategories, newCategory]);
-        }
-
-        setSelectedCategory(newCategory.id);
-      },
-      "plain-text",
-      "",
-      ["Cancel", "Add"]
-    );
+  const openCategoryModal = () => {
+    setIsCategoryModalVisible(true);
   };
 
-  const handleSave = () => {
-    if (validateForm()) {
-      // Here you would typically save to your database/state
+  const closeCategoryModal = () => {
+    setIsCategoryModalVisible(false);
+    setCategoryName("");
+    setSelectedIcon(null);
+    setNameError("");
+    setIconError("");
+  };
+  
+  const showSuccessMessage = () => {
+    setShowSuccess(true);
+    Animated.sequence([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.delay(1500),
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      })
+    ]).start(() => {
+      setShowSuccess(false);
+      closeCategoryModal();
+      fadeAnim.setValue(0);
+    });
+  };
+
+  const handleSaveCategory = async () => {
+    let isValid = true;
+
+    if (!categoryName.trim()) {
+      setNameError("Category name is required");
+      isValid = false;
+    } else {
+      setNameError("");
+    }
+
+    if (!selectedIcon) {
+      setIconError("Please select an icon");
+      isValid = false;
+    } else {
+      setIconError("");
+    }
+
+    if (!isValid) return;
+
+    const newCategory = {
+      id: Date.now().toString(),
+      name: categoryName,
+      emoji: "📝",
+      icon: selectedIcon,
+      type: selectedType === "Expenses" ? "expense" : "income"
+    };
+
+    const result = await addCategory(newCategory);
+    if (result.success) {
+      setSelectedCategory(newCategory.id);
+      await refreshCategories();
+      
+      // Show animated success message
+      showSuccessMessage();
+    }
+  };
+
+  const handleSaveTransaction = async () => {
+    if (!validateForm()) return;
+
+    setIsSaving(true);
+    try {
+      const selectedCat = categories.find(c => c.id === selectedCategory);
       const transaction = {
-        type: selectedType,
-        category: categories.find(c => c.id === selectedCategory),
-        amount: parseFloat(amount),
-        note: note,
+        title: selectedCat?.name || "Transaction",
+        amount: parseFloat(amount) * (selectedType === "Expenses" ? -1 : 1),
+        category: selectedCat?.name || "Other",
+        categoryIcon: selectedCat?.icon || "pricetag-outline",
         date: new Date().toISOString(),
+        note: note.trim() || undefined,
       };
 
-      Alert.alert(
-        "Success",
-        `Transaction saved successfully!\n\n${transaction.type}: $${transaction.amount.toFixed(2)}\nCategory: ${transaction.category.name}`,
-        [
-          {
+      const result = await addTransaction(transaction);
+      if (result.success) {
+        Alert.alert(
+          "Success",
+          `Transaction saved successfully!\n\n${selectedType}: Rs${amount}\nCategory: ${transaction.category}`,
+          [{
             text: "OK",
             onPress: () => {
-              // Reset form after successful save
               setAmount("");
               setNote("");
               setSelectedCategory(null);
             },
-          },
-        ]
-      );
+          }]
+        );
+      }
+    } catch (error) {
+      Alert.alert("Error", "Failed to save transaction. Please try again.");
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const formatAmount = (text) => {
-    // Remove all non-digit characters except decimal point
     let cleanedText = text.replace(/[^0-9.]/g, '');
-    
-    // Ensure only one decimal point
     const decimalParts = cleanedText.split('.');
+    
     if (decimalParts.length > 2) {
       cleanedText = decimalParts[0] + '.' + decimalParts.slice(1).join('');
     }
     
-    // Limit to 2 decimal places
     if (decimalParts.length === 2 && decimalParts[1].length > 2) {
       cleanedText = decimalParts[0] + '.' + decimalParts[1].substring(0, 2);
     }
@@ -158,116 +224,288 @@ const Add = () => {
     setAmount(cleanedText);
   };
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#00c89c" />
-
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="white" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Add Transaction</Text>
-        <View style={styles.placeholder} />
-      </View>
-
-      {/* Type Selector */}
-      <View style={styles.typeSelectorContainer}>
-        <TouchableOpacity
-          style={[styles.typeSelector, selectedType === "Expenses" && styles.activeTypeSelector]}
-          onPress={() => {
-            setSelectedType("Expenses");
-            setSelectedCategory(null);
-            setErrors({...errors, category: ""});
-          }}
-        >
-          <Text style={selectedType === "Expenses" ? styles.typeSelectorText : styles.typeSelectorTextInactive}>
-            Expenses
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.typeSelector, selectedType === "Income" && styles.activeTypeSelector]}
-          onPress={() => {
-            setSelectedType("Income");
-            setSelectedCategory(null);
-            setErrors({...errors, category: ""});
-          }}
-        >
-          <Text style={selectedType === "Income" ? styles.typeSelectorText : styles.typeSelectorTextInactive}>
-            Income
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Amount Input */}
-      <View style={styles.amountContainer}>
-        <Text style={styles.currencySymbol}>LKR</Text>
-        <TextInput 
-          placeholder="0.00" 
-          placeholderTextColor="#666"
-          style={styles.amountInput} 
-          keyboardType="decimal-pad"
-          value={amount}
-          onChangeText={formatAmount}
-          onBlur={() => {
-            if (amount && !isNaN(parseFloat(amount))) {
-              setAmount(parseFloat(amount).toFixed(2));
-            }
-          }}
+  const renderCategoryIcon = (category) => {
+    return (
+      <View style={[
+        styles.categoryIconContainer,
+        selectedCategory === category.id && styles.selectedCategoryIcon
+      ]}>
+        <Ionicons 
+          name={category.icon} 
+          size={24} 
+          color={selectedCategory === category.id ? "white" : "#00c89c"} 
         />
       </View>
-      {errors.amount ? <Text style={styles.errorText}>{errors.amount}</Text> : null}
+    );
+  };
 
-      {/* Category Selection */}
-      <View style={styles.categoryContainer}>
-        <Text style={styles.sectionTitle}>Select Category</Text>
-        {errors.category ? <Text style={styles.errorText}>{errors.category}</Text> : null}
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false} 
-          style={styles.categoriesScrollView}
-          contentContainerStyle={styles.categoriesScrollContent}
+  if (categoriesLoading) {
+    return (
+      <SafeAreaView style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#00c89c" />
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#00c89c"/>
+      
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.keyboardAvoidingContainer}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollViewContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
-          {categories.map((category) => (
+          {/* Header */}
+          <View style={styles.header}>
+            <TouchableOpacity style={styles.backButton} />
+            <Text style={styles.headerTitle}>Add Transaction</Text>
+            <View style={styles.placeholder}/>
+          </View>
+
+          {/* Type Selector */}
+          <View style={styles.typeSelectorContainer}>
             <TouchableOpacity
-              key={category.id}
-              style={[
-                styles.categoryItem,
-                selectedCategory === category.id && styles.selectedCategory
-              ]}
+              style={[styles.typeSelector, selectedType === "Expenses" && styles.activeTypeSelector]}
               onPress={() => {
-                setSelectedCategory(category.id);
+                setSelectedType("Expenses");
+                setSelectedCategory(null);
                 setErrors({...errors, category: ""});
               }}
             >
-              <Text style={styles.categoryEmoji}>{category.emoji}</Text>
-              <Text style={[
-                styles.categoryText,
-                selectedCategory === category.id && styles.selectedCategoryText
-              ]}>
-                {category.name}
+              <Text style={selectedType === "Expenses" ? styles.typeSelectorText : styles.typeSelectorTextInactive}>
+                Expenses
               </Text>
             </TouchableOpacity>
-          ))}
-          {/* Add New Category Button */}
-          <TouchableOpacity 
-            style={styles.addCategoryItem} 
-            onPress={handleAddCategory}
-            disabled={keyboardVisible}
-          >
-            <Ionicons name="add-circle" size={36} color="#00c89c" />
-            <Text style={styles.categoryText}>New</Text>
-          </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[styles.typeSelector, selectedType === "Income" && styles.activeTypeSelector]}
+              onPress={() => {
+                setSelectedType("Income");
+                setSelectedCategory(null);
+                setErrors({...errors, category: ""});
+              }}
+            >
+              <Text style={selectedType === "Income" ? styles.typeSelectorText : styles.typeSelectorTextInactive}>
+                Income
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Amount Input */}
+          <View style={styles.amountContainer}>
+            <Text style={styles.currencySymbol}>LKR</Text>
+            <TextInput
+              placeholder="0.00"
+              placeholderTextColor="#666"
+              style={styles.amountInput}
+              keyboardType="decimal-pad"
+              value={amount}
+              onChangeText={formatAmount}
+              onBlur={() => {
+                if (amount && !isNaN(parseFloat(amount))) {
+                  setAmount(parseFloat(amount).toFixed(2));
+                }
+              }}
+            />
+          </View>
+          {errors.amount ? <Text style={styles.errorText}>{errors.amount}</Text> : null}
+
+          {/* Category Selection */}
+          <View style={styles.categoryContainer}>
+            <Text style={styles.sectionTitle}>Select Category</Text>
+            {errors.category ? <Text style={styles.errorText}>{errors.category}</Text> : null}
+            
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.categoriesScrollView}
+              contentContainerStyle={styles.categoriesScrollContent}
+            >
+              {categories.map((category) => (
+                <TouchableOpacity
+                  key={category.id}
+                  style={[
+                    styles.categoryItem,
+                    selectedCategory === category.id && styles.selectedCategory
+                  ]}
+                  onPress={() => {
+                    setSelectedCategory(category.id);
+                    setErrors({...errors, category: ""});
+                  }}
+                >
+                  {renderCategoryIcon(category)}
+                  <Text style={[
+                    styles.categoryText,
+                    selectedCategory === category.id && styles.selectedCategoryText
+                  ]}>
+                    {category.name}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+              
+              {/* Add New Category Button */}
+              <TouchableOpacity
+                style={styles.addCategoryItem}
+                onPress={openCategoryModal}
+                disabled={keyboardVisible}
+              >
+                <View style={styles.categoryIconContainer}>
+                  <Ionicons name="add-circle" size={24} color="#00c89c"/>
+                </View>
+                <Text style={styles.categoryText}>New</Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+
+          {/* Note Input */}
+          <View style={styles.noteContainer}>
+            <Text style={styles.sectionTitle}>Note (Optional)</Text>
+            <TextInput
+              placeholder="Add a note..."
+              placeholderTextColor="#888"
+              style={styles.noteInput}
+              value={note}
+              onChangeText={setNote}
+              multiline
+              scrollEnabled={false}
+            />
+          </View>
+
+          {/* Save Button */}
+          {!keyboardVisible && (
+            <View style={styles.saveButtonContainer}>
+              <TouchableOpacity
+                style={styles.saveButton}
+                onPress={handleSaveTransaction}
+                disabled={isSaving}
+              >
+                {isSaving ? (
+                  <ActivityIndicator color="white" />
+                ) : (
+                  <Text style={styles.saveButtonText}>Save Transaction</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          )}
         </ScrollView>
-      </View>
-      {/* Save Button - Only show when keyboard is not visible */}
-      {!keyboardVisible && (
-        <TouchableOpacity 
-          style={styles.saveButton}
-          onPress={handleSave}
+      </KeyboardAvoidingView>
+
+      {/* Add Category Modal */}
+      <Modal
+        visible={isCategoryModalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={closeCategoryModal}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={styles.modalContainer}
         >
-          <Text style={styles.saveButtonText}>Save Transaction</Text>
-        </TouchableOpacity>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>
+                Add New {selectedType === "Expenses" ? "Expense" : "Income"} Category
+              </Text>
+              <TouchableOpacity onPress={closeCategoryModal}>
+                <Ionicons name="close" size={24} color="#666"/>
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView>
+              {/* Category Name Input */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Category Name</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter category name"
+                  value={categoryName}
+                  onChangeText={setCategoryName}
+                />
+                {nameError ? <Text style={styles.errorText}>{nameError}</Text> : null}
+              </View>
+
+              {/* Icon Selection */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Select Icon</Text>
+                
+                {/* Selected Icon Preview */}
+                {selectedIcon && (
+                  <View style={styles.selectedIconPreview}>
+                    <View style={styles.previewIconContainer}>
+                      <Ionicons
+                        name={selectedIcon}
+                        size={30}
+                        color="#fff"
+                      />
+                    </View>
+                    <Text style={styles.selectedIconText}>Selected Icon</Text>
+                  </View>
+                )}
+                
+                <View style={styles.iconGrid}>
+                  {availableIcons.map((icon, index) => (
+                    <TouchableOpacity
+                      key={index}
+                      style={[
+                        styles.iconOption,
+                        selectedIcon === icon && styles.selectedIconOption,
+                        selectedType === "Income" && selectedIcon === icon && styles.selectedIconOptionIncome
+                      ]}
+                      onPress={() => setSelectedIcon(icon)}
+                    >
+                      <Ionicons
+                        name={icon}
+                        size={24}
+                        color={
+                          selectedIcon === icon
+                            ? "#fff"
+                            : selectedType === "Expenses" ? "#00c89c" : "#4CAF50"
+                        }
+                      />
+                    </TouchableOpacity>
+                  ))}
+                </View>
+                {iconError ? <Text style={styles.errorText}>{iconError}</Text> : null}
+              </View>
+            </ScrollView>
+
+            {/* Save Button */}
+            <TouchableOpacity
+              style={[
+                styles.modalSaveButton,
+                selectedType === "Income" && styles.modalSaveButtonIncome
+              ]}
+              onPress={handleSaveCategory}
+            >
+              <Text style={styles.modalSaveButtonText}>
+                Save {selectedType === "Expenses" ? "Expense" : "Income"} Category
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      {/* Success Message with Animation */}
+      {showSuccess && (
+        <Animated.View 
+          style={[
+            styles.successMessage,
+            { opacity: fadeAnim }
+          ]}
+        >
+          <View style={styles.successContent}>
+            <Ionicons name="checkmark-circle" size={24} color="#fff" />
+            <Text style={styles.successText}>
+              Category saved successfully!
+            </Text>
+          </View>
+        </Animated.View>
       )}
     </SafeAreaView>
   );
@@ -276,6 +514,19 @@ const Add = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#00c89c",
+  },
+  keyboardAvoidingContainer: {
+    flex: 1,
+  },
+  scrollViewContent: {
+    flexGrow: 1,
+    paddingBottom: 30,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
     backgroundColor: "#00c89c",
   },
   header: {
@@ -345,11 +596,27 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
     marginBottom: 20,
   },
+  noteContainer: {
+    backgroundColor: "white",
+    borderRadius: 20,
+    padding: 20,
+    marginHorizontal: 10,
+    marginBottom: 20,
+  },
   sectionTitle: {
     fontSize: 16,
     fontWeight: "bold",
     color: "#333",
     marginBottom: 10,
+  },
+  noteInput: {
+    backgroundColor: "#f5f5f5",
+    borderRadius: 10,
+    padding: 15,
+    fontSize: 16,
+    minHeight: 100,
+    maxHeight: 150,
+    textAlignVertical: 'top',
   },
   categoriesScrollView: {
     paddingVertical: 10,
@@ -372,6 +639,18 @@ const styles = StyleSheet.create({
   selectedCategoryText: {
     color: "white",
   },
+  categoryIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "white",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  selectedCategoryIcon: {
+    backgroundColor: "#00c89c",
+  },
   addCategoryItem: {
     alignItems: "center",
     justifyContent: "center",
@@ -379,19 +658,19 @@ const styles = StyleSheet.create({
     marginRight: 15,
     minWidth: 80,
   },
-  categoryEmoji: {
-    fontSize: 28,
-  },
   categoryText: {
     fontSize: 14,
     color: "#333",
     marginTop: 5,
     textAlign: "center",
   },
+  saveButtonContainer: {
+    paddingHorizontal: 20,
+    marginBottom: 20,
+  },
   saveButton: {
     backgroundColor: "white",
     paddingVertical: 15,
-    marginHorizontal: 20,
     borderRadius: 15,
     alignItems: "center",
     shadowColor: "#000",
@@ -413,6 +692,137 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 5,
     marginLeft: 20,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 20,
+    maxHeight: "80%",
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  inputContainer: {
+    marginBottom: 20,
+  },
+  inputLabel: {
+    fontSize: 14,
+    color: "#666",
+    marginBottom: 8,
+  },
+  input: {
+    backgroundColor: "#f5f5f7",
+    borderRadius: 12,
+    padding: 14,
+    fontSize: 16,
+  },
+  // New styles for selected icon preview
+  selectedIconPreview: {
+    alignItems: "center",
+    marginBottom: 16,
+    flexDirection: "row",
+  },
+  previewIconContainer: {
+    width: 50,
+    height: 50,
+    backgroundColor: "#00c89c",
+    borderRadius: 25,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  selectedIconText: {
+    fontSize: 16,
+    color: "#333",
+    fontWeight: "500",
+  },
+  iconGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+  },
+  iconOption: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: "#f5f5f7",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 10,
+    margin: 8,
+    borderWidth: 1,
+    borderColor: "#ddd",
+  },
+  selectedIconOption: {
+    backgroundColor: "#00c89c",
+    borderColor: "#00c89c",
+  },
+  selectedIconOptionIncome: {
+    backgroundColor: "#4CAF50",
+    borderColor: "#4CAF50",
+  },
+  modalSaveButton: {
+    backgroundColor: "#00c89c",
+    padding: 16,
+    borderRadius: 12,
+    alignItems: "center",
+    marginTop: 10,
+  },
+  modalSaveButtonIncome: {
+    backgroundColor: "#4CAF50",
+  },
+  modalSaveButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  // New animated success message styles
+  successMessage: {
+    position: "absolute",
+    top: 50,
+    left: 20,
+    right: 20,
+    alignItems: "center",
+    zIndex: 1000,
+  },
+  successContent: {
+    backgroundColor: "#00c89c",
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 50,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  successText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+    marginLeft: 8,
   },
 });
 
