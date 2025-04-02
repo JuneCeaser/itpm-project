@@ -11,6 +11,8 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Alert,
+  ActivityIndicator
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useCategories } from '../context/CategoryContext';
@@ -23,10 +25,18 @@ const Category = () => {
   const [nameError, setNameError] = useState("");
   const [iconError, setIconError] = useState("");
   const [activeTab, setActiveTab] = useState("expense");
+  const [editingCategory, setEditingCategory] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false);
   
-  const { expenseCategories, incomeCategories, addCategory } = useCategories();
+  const { 
+    expenseCategories, 
+    incomeCategories, 
+    addCategory,
+    updateCategory,
+    deleteCategory,
+    loading: categoriesLoading 
+  } = useCategories();
 
-  // Icons for selection
   const availableIcons = [
     "restaurant-outline",
     "car-outline",
@@ -50,7 +60,16 @@ const Category = () => {
     "color-palette-outline"
   ];
 
-  const openModal = () => {
+  const openModal = (category = null) => {
+    if (category) {
+      setEditingCategory(category);
+      setCategoryName(category.name);
+      setSelectedIcon(category.icon);
+    } else {
+      setEditingCategory(null);
+      setCategoryName("");
+      setSelectedIcon(null);
+    }
     setIsModalVisible(true);
   };
 
@@ -60,10 +79,10 @@ const Category = () => {
     setSelectedIcon(null);
     setNameError("");
     setIconError("");
+    setEditingCategory(null);
   };
 
-  const handleSave = () => {
-    // Validation
+  const handleSave = async () => {
     let isValid = true;
 
     if (!categoryName.trim()) {
@@ -82,44 +101,90 @@ const Category = () => {
 
     if (!isValid) return;
 
-    const newCategory = {
-      id: Date.now(),
+    setIsProcessing(true);
+
+    const categoryData = {
+      id: editingCategory ? editingCategory.id : Date.now(),
       name: categoryName,
       emoji: "📝",
       icon: selectedIcon,
       type: activeTab,
     };
 
-    addCategory(newCategory);
+    try {
+      let result;
+      if (editingCategory) {
+        result = await updateCategory(categoryData);
+      } else {
+        result = await addCategory(categoryData);
+      }
 
-    // Show success message
-    setShowSuccess(true);
-    setTimeout(() => {
-      setShowSuccess(false);
-      closeModal();
-    }, 1500);
+      if (result.success) {
+        setShowSuccess(true);
+        setTimeout(() => {
+          setShowSuccess(false);
+          closeModal();
+        }, 1500);
+      }
+    } catch (error) {
+      Alert.alert("Error", "Failed to save category. Please try again.");
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
-  const renderIcon = (iconName) => {
-    return <Ionicons name={iconName} size={24} color="#fff" />;
+  const handleDelete = (category) => {
+    Alert.alert(
+      "Delete Category",
+      `Are you sure you want to delete "${category.name}"?`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        { 
+          text: "Delete", 
+          style: "destructive",
+          onPress: async () => {
+            setIsProcessing(true);
+            try {
+              const result = await deleteCategory(category.id);
+              if (!result.success) {
+                Alert.alert("Error", "Failed to delete category");
+              }
+            } catch (error) {
+              Alert.alert("Error", "Failed to delete category");
+            } finally {
+              setIsProcessing(false);
+            }
+          }
+        }
+      ]
+    );
   };
 
   const categories = activeTab === "expense" ? expenseCategories : incomeCategories;
 
-  // Group categories into rows of 3 for grid layout
   const groupedCategories = [];
   for (let i = 0; i < categories.length; i += 3) {
     groupedCategories.push(categories.slice(i, i + 3));
+  }
+
+  if (categoriesLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <ActivityIndicator size="large" color="#00C49A" />
+      </SafeAreaView>
+    );
   }
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar backgroundColor="#00C49A" barStyle="light-content"/>
       
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity>
-          
+          <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Categories</Text>
         <TouchableOpacity>
@@ -127,7 +192,6 @@ const Category = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Toggle Tabs */}
       <View style={styles.tabContainer}>
         <TouchableOpacity
           style={[styles.tab, activeTab === "expense" && styles.activeTab]}
@@ -148,32 +212,31 @@ const Category = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Categories Container */}
       <View style={styles.categoriesContainer}>
-        {/* Add Category Button */}
         <TouchableOpacity
           style={[styles.addButton, activeTab === "income" && styles.addButtonIncome]}
-          onPress={openModal}
+          onPress={() => openModal()}
         >
           <Ionicons 
             name="add" 
             size={24} 
-            color={activeTab === "expense" ? "#00C49A" : "#00C49A"} 
+            color="#00C49A" 
           />
-          <Text style={[
-            styles.addButtonText, 
-            activeTab === "income" && styles.addButtonTextIncome
-          ]}>
+          <Text style={styles.addButtonText}>
             Add {activeTab === "expense" ? "Expense" : "Income"} Category
           </Text>
         </TouchableOpacity>
 
-        {/* Categories Grid */}
         <ScrollView showsVerticalScrollIndicator={false}>
           {groupedCategories.map((row, rowIndex) => (
             <View key={rowIndex} style={styles.categoriesRow}>
               {row.map((category, index) => (
-                <TouchableOpacity key={index} style={styles.categoryItem}>
+                <TouchableOpacity 
+                  key={index} 
+                  style={styles.categoryItem}
+                  onPress={() => openModal(category)}
+                  onLongPress={() => handleDelete(category)}
+                >
                   <View style={[styles.categoryIcon, { backgroundColor: '#00c89c' }]}>
                     <Ionicons name={category.icon} size={24} color="#fff"/>
                   </View>
@@ -185,7 +248,6 @@ const Category = () => {
         </ScrollView>
       </View>
 
-      {/* Add Category Modal */}
       <Modal
         visible={isModalVisible}
         animationType="slide"
@@ -199,7 +261,7 @@ const Category = () => {
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>
-                Add New {activeTab === "expense" ? "Expense" : "Income"} Category
+                {editingCategory ? "Edit" : "Add New"} {activeTab === "expense" ? "Expense" : "Income"} Category
               </Text>
               <TouchableOpacity onPress={closeModal}>
                 <Ionicons name="close" size={24} color="#666"/>
@@ -207,7 +269,6 @@ const Category = () => {
             </View>
 
             <ScrollView>
-              {/* Category Name Input */}
               <View style={styles.inputContainer}>
                 <Text style={styles.inputLabel}>Category Name</Text>
                 <TextInput
@@ -219,7 +280,6 @@ const Category = () => {
                 {nameError ? <Text style={styles.errorText}>{nameError}</Text> : null}
               </View>
 
-              {/* Icon Selection */}
               <View style={styles.inputContainer}>
                 <Text style={styles.inputLabel}>Select Icon</Text>
                 <View style={styles.iconGrid}>
@@ -229,18 +289,13 @@ const Category = () => {
                       style={[
                         styles.iconOption,
                         selectedIcon === icon && styles.selectedIconOption,
-                        activeTab === "income" && selectedIcon === icon && styles.selectedIconOptionIncome
                       ]}
                       onPress={() => setSelectedIcon(icon)}
                     >
                       <Ionicons
                         name={icon}
                         size={24}
-                        color={
-                          selectedIcon === icon
-                            ? "#fff"
-                            : activeTab === "expense" ? "#00C49A" : "#00C49A"
-                        }
+                        color={selectedIcon === icon ? "#fff" : "#00C49A"}
                       />
                     </TouchableOpacity>
                   ))}
@@ -249,30 +304,29 @@ const Category = () => {
               </View>
             </ScrollView>
 
-            {/* Save Button */}
             <TouchableOpacity
-              style={[
-                styles.saveButton,
-                activeTab === "income" && styles.saveButtonIncome
-              ]}
+              style={styles.saveButton}
               onPress={handleSave}
+              disabled={isProcessing}
             >
-              <Text style={styles.saveButtonText}>
-                Save {activeTab === "expense" ? "Expense" : "Income"} Category
-              </Text>
+              {isProcessing ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <Text style={styles.saveButtonText}>
+                  {editingCategory ? "Update" : "Save"} Category
+                </Text>
+              )}
             </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>
       </Modal>
 
-      {/* Success Message */}
       {showSuccess && (
-        <View style={[
-          styles.successMessage,
-          activeTab === "income" && styles.successMessageIncome
-        ]}>
+        <View style={styles.successMessage}>
           <Ionicons name="checkmark-circle" size={24} color="#fff"/>
-          <Text style={styles.successText}>Category saved successfully!</Text>
+          <Text style={styles.successText}>
+            Category {editingCategory ? "updated" : "saved"} successfully!
+          </Text>
         </View>
       )}
     </SafeAreaView>
@@ -344,7 +398,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 8,
-    backgroundColor: '#00c89c', 
   },
   categoryText: {
     fontSize: 14,
@@ -363,17 +416,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#00C49A",
   },
-  addButtonIncome: {
-    borderColor: "#00C49A",
-  },
   addButtonText: {
     color: "#00C49A",
     fontSize: 16,
     fontWeight: "600",
     marginLeft: 8,
-  },
-  addButtonTextIncome: {
-    color: "#00C49A",
   },
   modalContainer: {
     flex: 1,
@@ -429,18 +476,12 @@ const styles = StyleSheet.create({
   selectedIconOption: {
     backgroundColor: "#00C49A",
   },
-  selectedIconOptionIncome: {
-    backgroundColor: "#00C49A",
-  },
   saveButton: {
     backgroundColor: "#00C49A",
     padding: 16,
     borderRadius: 12,
     alignItems: "center",
     marginTop: 10,
-  },
-  saveButtonIncome: {
-    backgroundColor: "#00C49A",
   },
   saveButtonText: {
     color: "#fff",
@@ -464,9 +505,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     zIndex: 1000,
-  },
-  successMessageIncome: {
-    backgroundColor: "#00C49A",
   },
   successText: {
     color: "#fff",
