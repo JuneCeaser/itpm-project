@@ -795,7 +795,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
-  // New animated success message styles
+
   successMessage: {
     position: "absolute",
     top: 50,
