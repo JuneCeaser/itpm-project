@@ -102,6 +102,7 @@ const Analysis = () => {
     
     switch (selectedPeriod) {
       case "daily":
+        // For daily view, show hourly breakdown
         for (let i = 0; i <= 23; i++) {
           days.push(i.toString());
           const hourTransactions = filteredTransactions.filter(
@@ -115,7 +116,67 @@ const Analysis = () => {
           );
         }
         break;
+      case "weekly":
+        // For weekly view, show last 7 days
+        for (let i = 6; i >= 0; i--) {
+          const date = new Date();
+          date.setDate(date.getDate() - i);
+          days.push(date.toLocaleDateString('en-US', { weekday: 'short' }));
+          
+          const dayTransactions = filteredTransactions.filter(
+            t => new Date(t.date).toDateString() === date.toDateString()
+          );
+          
+          incomeData.push(
+            dayTransactions.filter(t => t.amount > 0).reduce((sum, t) => sum + t.amount, 0)
+          );
+          expenseData.push(
+            dayTransactions.filter(t => t.amount < 0).reduce((sum, t) => sum + Math.abs(t.amount), 0)
+          );
+        }
+        break;
+      case "monthly":
+        // For monthly view, show days of current month
+        const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+        for (let i = 1; i <= daysInMonth; i++) {
+          const date = new Date(now.getFullYear(), now.getMonth(), i);
+          days.push(i.toString());
+          
+          const dayTransactions = filteredTransactions.filter(
+            t => new Date(t.date).getDate() === i && 
+                 new Date(t.date).getMonth() === now.getMonth() &&
+                 new Date(t.date).getFullYear() === now.getFullYear()
+          );
+          
+          incomeData.push(
+            dayTransactions.filter(t => t.amount > 0).reduce((sum, t) => sum + t.amount, 0)
+          );
+          expenseData.push(
+            dayTransactions.filter(t => t.amount < 0).reduce((sum, t) => sum + Math.abs(t.amount), 0)
+          );
+        }
+        break;
+      case "yearly":
+        // For yearly view, show months
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        for (let i = 0; i < 12; i++) {
+          days.push(monthNames[i]);
+          
+          const monthTransactions = filteredTransactions.filter(
+            t => new Date(t.date).getMonth() === i && 
+                 new Date(t.date).getFullYear() === now.getFullYear()
+          );
+          
+          incomeData.push(
+            monthTransactions.filter(t => t.amount > 0).reduce((sum, t) => sum + t.amount, 0)
+          );
+          expenseData.push(
+            monthTransactions.filter(t => t.amount < 0).reduce((sum, t) => sum + Math.abs(t.amount), 0)
+          );
+        }
+        break;
       default:
+        // Default to weekly view if something goes wrong
         for (let i = 6; i >= 0; i--) {
           const date = new Date();
           date.setDate(date.getDate() - i);
@@ -236,7 +297,7 @@ const Analysis = () => {
             ` : ''}
             
             <div class="footer">
-              Generated on ${new Date().toLocaleDateString()} by MyFinance App
+              Generated on ${new Date().toLocaleDateString()} by My Fin Mate App
             </div>
           </body>
         </html>
@@ -278,6 +339,30 @@ const Analysis = () => {
         </View>
       </View>
 
+      {/* Time Period Selector */}
+      <View style={styles.periodSelector}>
+        {["daily", "weekly", "monthly", "yearly"].map((period) => (
+          <TouchableOpacity
+            key={period}
+            style={[
+              styles.periodButton,
+              selectedPeriod === period && styles.activeButton,
+            ]}
+            onPress={() => setSelectedPeriod(period)}
+          >
+            <Text
+              style={
+                selectedPeriod === period
+                  ? styles.activePeriodText
+                  : styles.periodText
+              }
+            >
+              {period.charAt(0).toUpperCase() + period.slice(1)}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
       {/* Summary Container */}
       <View style={styles.summaryContainer}>
         <View style={styles.balanceSection}>
@@ -305,34 +390,11 @@ const Analysis = () => {
         </View>
       </View>
 
-      {/* Time Period Selector */}
-      <View style={styles.periodSelector}>
-        {["daily", "weekly", "monthly", "yearly"].map((period) => (
-          <TouchableOpacity
-            key={period}
-            style={[
-              styles.periodButton,
-              selectedPeriod === period && styles.activeButton,
-            ]}
-            onPress={() => setSelectedPeriod(period)}
-          >
-            <Text
-              style={
-                selectedPeriod === period
-                  ? styles.activePeriodText
-                  : styles.periodText
-              }
-            >
-              {period.charAt(0).toUpperCase() + period.slice(1)}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
       <ScrollView
         style={styles.content}
         contentContainerStyle={styles.scrollContent}
       >
+
         {/* Category Lists */}
         {incomeCategoryTotals.length > 0 && (
           <View style={styles.categorySection}>
