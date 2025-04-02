@@ -6,6 +6,7 @@ import {
   updateTransaction as updateTransactionInStorage,
   deleteTransaction as deleteTransactionFromStorage
 } from '../data/transactions';
+import { resetAppData } from '../data/storage';
 
 const TransactionContext = createContext();
 
@@ -29,6 +30,27 @@ export const TransactionProvider = ({ children }) => {
       setLoading(false);
     }
   };
+
+  // Inside your TransactionProvider component:
+const resetAllData = async () => {
+  try {
+    setLoading(true);
+    const result = await resetAppData();
+    if (result.success) {
+      // Reload with empty state
+      setTransactions([]);
+      setBalance(0);
+      return { success: true };
+    }
+    return { success: false };
+  } catch (error) {
+    console.error('Error resetting data:', error);
+    return { success: false, error };
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const addTransaction = async (transaction) => {
     try {
@@ -84,7 +106,8 @@ export const TransactionProvider = ({ children }) => {
       addTransaction,
       updateTransaction,
       deleteTransaction,
-      refresh: loadTransactions 
+      refresh: loadTransactions,
+      resetAllData // Add this
     }}>
       {children}
     </TransactionContext.Provider>
