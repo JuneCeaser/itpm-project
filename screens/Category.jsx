@@ -12,7 +12,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
-  ActivityIndicator
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useCategories } from '../context/CategoryContext';
@@ -26,17 +25,16 @@ const Category = () => {
   const [iconError, setIconError] = useState("");
   const [activeTab, setActiveTab] = useState("expense");
   const [editingCategory, setEditingCategory] = useState(null);
-  const [isProcessing, setIsProcessing] = useState(false);
   
   const { 
     expenseCategories, 
     incomeCategories, 
     addCategory,
-    updateCategory,
     deleteCategory,
-    loading: categoriesLoading 
+    refresh: refreshCategories 
   } = useCategories();
 
+  // Icons for selection
   const availableIcons = [
     "restaurant-outline",
     "car-outline",
@@ -65,10 +63,13 @@ const Category = () => {
       setEditingCategory(category);
       setCategoryName(category.name);
       setSelectedIcon(category.icon);
+      // Set the active tab to match the category type
+      setActiveTab(category.type);
     } else {
       setEditingCategory(null);
       setCategoryName("");
       setSelectedIcon(null);
+      // Tab remains as is for new categories
     }
     setIsModalVisible(true);
   };
@@ -83,6 +84,7 @@ const Category = () => {
   };
 
   const handleSave = async () => {
+    // Validation
     let isValid = true;
 
     if (!categoryName.trim()) {
@@ -101,36 +103,24 @@ const Category = () => {
 
     if (!isValid) return;
 
-    setIsProcessing(true);
-
     const categoryData = {
-      id: editingCategory ? editingCategory.id : Date.now(),
+      id: editingCategory ? editingCategory.id : null, // Pass null for new categories
       name: categoryName,
-      emoji: "📝",
+      emoji: editingCategory?.emoji || "📝",
       icon: selectedIcon,
-      type: activeTab,
+      // Use the original category type when editing, otherwise use active tab
+      type: editingCategory ? editingCategory.type : activeTab,
     };
 
-    try {
-      let result;
-      if (editingCategory) {
-        result = await updateCategory(categoryData);
-      } else {
-        result = await addCategory(categoryData);
-      }
+    await addCategory(categoryData);
+    await refreshCategories();
 
-      if (result.success) {
-        setShowSuccess(true);
-        setTimeout(() => {
-          setShowSuccess(false);
-          closeModal();
-        }, 1500);
-      }
-    } catch (error) {
-      Alert.alert("Error", "Failed to save category. Please try again.");
-    } finally {
-      setIsProcessing(false);
-    }
+    // Show success message
+    setShowSuccess(true);
+    setTimeout(() => {
+      setShowSuccess(false);
+      closeModal();
+    }, 1500);
   };
 
   const handleDelete = (category) => {
@@ -146,45 +136,34 @@ const Category = () => {
           text: "Delete", 
           style: "destructive",
           onPress: async () => {
-            setIsProcessing(true);
-            try {
-              const result = await deleteCategory(category.id);
-              if (!result.success) {
-                Alert.alert("Error", "Failed to delete category");
-              }
-            } catch (error) {
-              Alert.alert("Error", "Failed to delete category");
-            } finally {
-              setIsProcessing(false);
-            }
+            await deleteCategory(category.id);
+            await refreshCategories();
           }
         }
       ]
     );
   };
 
+  const renderIcon = (iconName) => {
+    return <Ionicons name={iconName} size={24} color="#fff" />;
+  };
+
   const categories = activeTab === "expense" ? expenseCategories : incomeCategories;
 
+  // Group categories into rows of 3 for grid layout
   const groupedCategories = [];
   for (let i = 0; i < categories.length; i += 3) {
     groupedCategories.push(categories.slice(i, i + 3));
-  }
-
-  if (categoriesLoading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <ActivityIndicator size="large" color="#00C49A" />
-      </SafeAreaView>
-    );
   }
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar backgroundColor="#00C49A" barStyle="light-content"/>
       
+      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity>
-          <Ionicons name="arrow-back" size={24} color="#fff" />
+          
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Categories</Text>
         <TouchableOpacity>
@@ -192,6 +171,7 @@ const Category = () => {
         </TouchableOpacity>
       </View>
 
+      {/* Toggle Tabs */}
       <View style={styles.tabContainer}>
         <TouchableOpacity
           style={[styles.tab, activeTab === "expense" && styles.activeTab]}
@@ -212,7 +192,9 @@ const Category = () => {
         </TouchableOpacity>
       </View>
 
+      {/* Categories Container */}
       <View style={styles.categoriesContainer}>
+        {/* Add Category Button */}
         <TouchableOpacity
           style={[styles.addButton, activeTab === "income" && styles.addButtonIncome]}
           onPress={() => openModal()}
@@ -220,19 +202,23 @@ const Category = () => {
           <Ionicons 
             name="add" 
             size={24} 
-            color="#00C49A" 
+            color={activeTab === "expense" ? "#00C49A" : "#00C49A"} 
           />
-          <Text style={styles.addButtonText}>
+          <Text style={[
+            styles.addButtonText, 
+            activeTab === "income" && styles.addButtonTextIncome
+          ]}>
             Add {activeTab === "expense" ? "Expense" : "Income"} Category
           </Text>
         </TouchableOpacity>
 
+        {/* Categories Grid */}
         <ScrollView showsVerticalScrollIndicator={false}>
           {groupedCategories.map((row, rowIndex) => (
             <View key={rowIndex} style={styles.categoriesRow}>
               {row.map((category, index) => (
                 <TouchableOpacity 
-                  key={index} 
+                  key={category.id} // Use category.id for better key uniqueness
                   style={styles.categoryItem}
                   onPress={() => openModal(category)}
                   onLongPress={() => handleDelete(category)}
@@ -248,6 +234,7 @@ const Category = () => {
         </ScrollView>
       </View>
 
+      {/* Add/Edit Category Modal */}
       <Modal
         visible={isModalVisible}
         animationType="slide"
@@ -269,6 +256,7 @@ const Category = () => {
             </View>
 
             <ScrollView>
+              {/* Category Name Input */}
               <View style={styles.inputContainer}>
                 <Text style={styles.inputLabel}>Category Name</Text>
                 <TextInput
@@ -280,6 +268,7 @@ const Category = () => {
                 {nameError ? <Text style={styles.errorText}>{nameError}</Text> : null}
               </View>
 
+              {/* Icon Selection */}
               <View style={styles.inputContainer}>
                 <Text style={styles.inputLabel}>Select Icon</Text>
                 <View style={styles.iconGrid}>
@@ -289,13 +278,18 @@ const Category = () => {
                       style={[
                         styles.iconOption,
                         selectedIcon === icon && styles.selectedIconOption,
+                        activeTab === "income" && selectedIcon === icon && styles.selectedIconOptionIncome
                       ]}
                       onPress={() => setSelectedIcon(icon)}
                     >
                       <Ionicons
                         name={icon}
                         size={24}
-                        color={selectedIcon === icon ? "#fff" : "#00C49A"}
+                        color={
+                          selectedIcon === icon
+                            ? "#fff"
+                            : activeTab === "expense" ? "#00C49A" : "#00C49A"
+                        }
                       />
                     </TouchableOpacity>
                   ))}
@@ -304,25 +298,28 @@ const Category = () => {
               </View>
             </ScrollView>
 
+            {/* Save Button */}
             <TouchableOpacity
-              style={styles.saveButton}
+              style={[
+                styles.saveButton,
+                activeTab === "income" && styles.saveButtonIncome
+              ]}
               onPress={handleSave}
-              disabled={isProcessing}
             >
-              {isProcessing ? (
-                <ActivityIndicator color="white" />
-              ) : (
-                <Text style={styles.saveButtonText}>
-                  {editingCategory ? "Update" : "Save"} Category
-                </Text>
-              )}
+              <Text style={styles.saveButtonText}>
+                {editingCategory ? "Update" : "Save"} {activeTab === "expense" ? "Expense" : "Income"} Category
+              </Text>
             </TouchableOpacity>
           </View>
         </KeyboardAvoidingView>
       </Modal>
 
+      {/* Success Message */}
       {showSuccess && (
-        <View style={styles.successMessage}>
+        <View style={[
+          styles.successMessage,
+          activeTab === "income" && styles.successMessageIncome
+        ]}>
           <Ionicons name="checkmark-circle" size={24} color="#fff"/>
           <Text style={styles.successText}>
             Category {editingCategory ? "updated" : "saved"} successfully!
@@ -398,6 +395,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 8,
+    backgroundColor: '#00c89c', 
   },
   categoryText: {
     fontSize: 14,
@@ -416,11 +414,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#00C49A",
   },
+  addButtonIncome: {
+    borderColor: "#00C49A",
+  },
   addButtonText: {
     color: "#00C49A",
     fontSize: 16,
     fontWeight: "600",
     marginLeft: 8,
+  },
+  addButtonTextIncome: {
+    color: "#00C49A",
   },
   modalContainer: {
     flex: 1,
@@ -476,12 +480,18 @@ const styles = StyleSheet.create({
   selectedIconOption: {
     backgroundColor: "#00C49A",
   },
+  selectedIconOptionIncome: {
+    backgroundColor: "#00C49A",
+  },
   saveButton: {
     backgroundColor: "#00C49A",
     padding: 16,
     borderRadius: 12,
     alignItems: "center",
     marginTop: 10,
+  },
+  saveButtonIncome: {
+    backgroundColor: "#00C49A",
   },
   saveButtonText: {
     color: "#fff",
@@ -505,6 +515,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     zIndex: 1000,
+  },
+  successMessageIncome: {
+    backgroundColor: "#00C49A",
   },
   successText: {
     color: "#fff",

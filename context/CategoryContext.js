@@ -3,7 +3,6 @@ import {
   getExpenseCategories, 
   getIncomeCategories, 
   addCategory as addCategoryToStorage,
-  updateCategory as updateCategoryInStorage,
   deleteCategory as deleteCategoryFromStorage
 } from '../data/categories';
 
@@ -44,23 +43,9 @@ export const CategoryProvider = ({ children }) => {
     }
   };
 
-  const updateCategory = async (category) => {
+  const deleteCategory = async (categoryId) => {
     try {
-      const result = await updateCategoryInStorage(category);
-      if (result.success) {
-        await loadCategories();
-        return { success: true, category: result.category };
-      }
-      return { success: false };
-    } catch (error) {
-      console.error('Error updating category:', error);
-      return { success: false, error };
-    }
-  };
-
-  const deleteCategory = async (id) => {
-    try {
-      const result = await deleteCategoryFromStorage(id);
+      const result = await deleteCategoryFromStorage(categoryId);
       if (result.success) {
         await loadCategories();
         return { success: true };
@@ -82,7 +67,6 @@ export const CategoryProvider = ({ children }) => {
       incomeCategories, 
       loading, 
       addCategory,
-      updateCategory,
       deleteCategory,
       refresh: loadCategories 
     }}>
