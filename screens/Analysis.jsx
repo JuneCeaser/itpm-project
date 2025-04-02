@@ -24,8 +24,13 @@ const getRandomColor = () => {
   const colors = [
     '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
     '#FF9F40', '#8AC24A', '#F06292', '#7986CB', '#E57373',
-    '#64B5F6', '#81C784', '#FFD54F', '#BA68C8', '#4DB6AC'
+    '#64B5F6', '#81C784', '#FFD54F', '#BA68C8', '#4DB6AC',
+    '#D32F2F', '#1976D2', '#388E3C', '#FBC02D', '#5E35B1',
+    '#FF7043', '#C2185B', '#7B1FA2', '#0288D1', '#009688',
+    '#8E24AA', '#43A047', '#F57C00', '#455A64', '#D81B60',
+    '#7C4DFF', '#0097A7', '#C0CA33', '#E53935', '#6D4C41'
   ];
+  
   return colors[Math.floor(Math.random() * colors.length)];
 };
 
