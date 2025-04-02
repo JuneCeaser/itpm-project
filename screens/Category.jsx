@@ -12,6 +12,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  Animated,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useCategories } from '../context/CategoryContext';
@@ -25,6 +26,7 @@ const Category = () => {
   const [iconError, setIconError] = useState("");
   const [activeTab, setActiveTab] = useState("expense");
   const [editingCategory, setEditingCategory] = useState(null);
+  const [fadeAnim] = useState(new Animated.Value(0));
   
   const { 
     expenseCategories, 
@@ -115,12 +117,29 @@ const Category = () => {
     await addCategory(categoryData);
     await refreshCategories();
 
-    // Show success message
+    // Show success message with animation
+    showSuccessMessage();
+  };
+
+  const showSuccessMessage = () => {
     setShowSuccess(true);
-    setTimeout(() => {
+    Animated.sequence([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.delay(1500),
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      })
+    ]).start(() => {
       setShowSuccess(false);
       closeModal();
-    }, 1500);
+      fadeAnim.setValue(0);
+    });
   };
 
   const handleDelete = (category) => {
@@ -138,6 +157,7 @@ const Category = () => {
           onPress: async () => {
             await deleteCategory(category.id);
             await refreshCategories();
+            showSuccessMessage();
           }
         }
       ]
@@ -204,10 +224,7 @@ const Category = () => {
             size={24} 
             color={activeTab === "expense" ? "#00C49A" : "#00C49A"} 
           />
-          <Text style={[
-            styles.addButtonText, 
-            activeTab === "income" && styles.addButtonTextIncome
-          ]}>
+          <Text style={[styles.addButtonText, activeTab === "income" && styles.addButtonTextIncome]}>
             Add {activeTab === "expense" ? "Expense" : "Income"} Category
           </Text>
         </TouchableOpacity>
@@ -271,25 +288,32 @@ const Category = () => {
               {/* Icon Selection */}
               <View style={styles.inputContainer}>
                 <Text style={styles.inputLabel}>Select Icon</Text>
+                
+                {/* Selected Icon Preview */}
+                {selectedIcon && (
+                  <View style={styles.selectedIconPreview}>
+                    <View style={styles.previewIconContainer}>
+                      <Ionicons name={selectedIcon} size={30} color="#fff" />
+                    </View>
+                    <Text style={styles.selectedIconText}>Selected Icon</Text>
+                  </View>
+                )}
+                
+                {/* Icon Grid */}
                 <View style={styles.iconGrid}>
                   {availableIcons.map((icon, index) => (
                     <TouchableOpacity
                       key={index}
                       style={[
-                        styles.iconOption,
-                        selectedIcon === icon && styles.selectedIconOption,
-                        activeTab === "income" && selectedIcon === icon && styles.selectedIconOptionIncome
+                        styles.iconOption, 
+                        selectedIcon === icon && styles.selectedIconOption
                       ]}
                       onPress={() => setSelectedIcon(icon)}
                     >
                       <Ionicons
                         name={icon}
                         size={24}
-                        color={
-                          selectedIcon === icon
-                            ? "#fff"
-                            : activeTab === "expense" ? "#00C49A" : "#00C49A"
-                        }
+                        color={selectedIcon === icon ? "#fff" : "#00C49A"}
                       />
                     </TouchableOpacity>
                   ))}
@@ -300,10 +324,7 @@ const Category = () => {
 
             {/* Save Button */}
             <TouchableOpacity
-              style={[
-                styles.saveButton,
-                activeTab === "income" && styles.saveButtonIncome
-              ]}
+              style={[styles.saveButton, activeTab === "income" && styles.saveButtonIncome]}
               onPress={handleSave}
             >
               <Text style={styles.saveButtonText}>
@@ -314,17 +335,21 @@ const Category = () => {
         </KeyboardAvoidingView>
       </Modal>
 
-      {/* Success Message */}
+      {/* Modern Success Message */}
       {showSuccess && (
-        <View style={[
-          styles.successMessage,
-          activeTab === "income" && styles.successMessageIncome
-        ]}>
-          <Ionicons name="checkmark-circle" size={24} color="#fff"/>
-          <Text style={styles.successText}>
-            Category {editingCategory ? "updated" : "saved"} successfully!
-          </Text>
-        </View>
+        <Animated.View 
+          style={[
+            styles.successMessage,
+            { opacity: fadeAnim }
+          ]}
+        >
+          <View style={styles.successContent}>
+            <Ionicons name="checkmark-circle" size={24} color="#fff" />
+            <Text style={styles.successText}>
+              Category {editingCategory ? "updated" : "saved"} successfully!
+            </Text>
+          </View>
+        </Animated.View>
       )}
     </SafeAreaView>
   );
@@ -429,14 +454,14 @@ const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
     justifyContent: "flex-end",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: "rgba(0, 0, 0, 0.01)",
   },
   modalContent: {
     backgroundColor: "#fff",
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 20,
-    maxHeight: "80%",
+    maxHeight: '80%',
   },
   modalHeader: {
     flexDirection: "row",
@@ -447,21 +472,47 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#333",
   },
   inputContainer: {
-    marginBottom: 20,
+    marginBottom: 16,
   },
   inputLabel: {
-    fontSize: 14,
-    color: "#666",
+    fontSize: 16,
+    color: "#333",
     marginBottom: 8,
   },
   input: {
-    backgroundColor: "#f5f5f7",
-    borderRadius: 12,
-    padding: 14,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 8,
+    padding: 12,
     fontSize: 16,
+    color: "#333",
+  },
+  
+  selectedIconPreview: {
+    alignItems: "center",
+    marginBottom: 16,
+    flexDirection: "row",
+  },
+  previewIconContainer: {
+    width: 50,
+    height: 50,
+    backgroundColor: "#00C49A",
+    borderRadius: 25,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  selectedIconText: {
+    fontSize: 16,
+    color: "#333",
+    fontWeight: "500",
   },
   iconGrid: {
     flexDirection: "row",
@@ -469,23 +520,27 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   iconOption: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: "#f5f5f7",
+    margin: 8,
+    width: 48,
+    height: 48,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#ddd",
   },
   selectedIconOption: {
     backgroundColor: "#00C49A",
+    borderColor: "#00C49A",
   },
-  selectedIconOptionIncome: {
-    backgroundColor: "#00C49A",
+  errorText: {
+    color: "red",
+    fontSize: 12,
+    marginTop: 4,
   },
   saveButton: {
     backgroundColor: "#00C49A",
-    padding: 16,
+    paddingVertical: 12,
     borderRadius: 12,
     alignItems: "center",
     marginTop: 10,
@@ -494,33 +549,35 @@ const styles = StyleSheet.create({
     backgroundColor: "#00C49A",
   },
   saveButtonText: {
-    color: "#fff",
     fontSize: 16,
     fontWeight: "600",
+    color: "#fff",
   },
-  errorText: {
-    color: "#FF4F4F",
-    fontSize: 12,
-    marginTop: 4,
-  },
+ 
   successMessage: {
     position: "absolute",
-    top: "50%",
-    left: "20%",
-    right: "20%",
-    backgroundColor: "#00C49A",
-    padding: 16,
-    borderRadius: 12,
+    top: 50,
+    left: 20,
+    right: 20,
+    alignItems: "center",
+    zIndex: 1000,
+  },
+  successContent: {
+    backgroundColor: "#fff",
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 50,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    zIndex: 1000,
-  },
-  successMessageIncome: {
-    backgroundColor: "#00C49A",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
   },
   successText: {
-    color: "#fff",
+    color: "#00C49A",
     fontSize: 16,
     fontWeight: "600",
     marginLeft: 8,
