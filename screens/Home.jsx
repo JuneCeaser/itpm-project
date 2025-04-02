@@ -123,13 +123,13 @@ const Home = () => {
       
       {/* Header Section */}
       <View style={styles.header}>
-        <View style={styles.headerLeft}>
+        
           <Image
             source={require('../assets/fin.png')}
             style={styles.logo}
             resizeMode="contain"
           />
-        </View>
+        
         <View>
           <Text style={styles.welcomeText}>Hi, {user?.name || 'User'}</Text>
           <Text style={styles.greetingText}>
@@ -351,7 +351,7 @@ const styles = StyleSheet.create({
   logo: {
     width: 40,
     height: 40,
-    marginRight: 10,
+    marginRight: -110,
   },
   welcomeText: {
     fontSize: 20,
@@ -527,7 +527,7 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
   },
