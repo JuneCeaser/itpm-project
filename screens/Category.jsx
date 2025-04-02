@@ -170,7 +170,7 @@ const Category = () => {
 
   const categories = activeTab === "expense" ? expenseCategories : incomeCategories;
 
-  // Group categories into rows of 3 for grid layout
+
   const groupedCategories = [];
   for (let i = 0; i < categories.length; i += 3) {
     groupedCategories.push(categories.slice(i, i + 3));
