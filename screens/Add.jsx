@@ -151,19 +151,19 @@ const Add = () => {
   };
 
  // screens/Add.jsx
-const handleSaveTransaction = async () => {
+ const handleSaveTransaction = async () => {
   if (!validateForm()) return;
 
   setIsSaving(true);
   try {
     const selectedCat = categories.find(c => c.id === selectedCategory);
     const transaction = {
-      title: note || selectedCat?.name || "Transaction",
+      title: selectedCat?.name || "Transaction", 
       amount: parseFloat(amount) * (selectedType === "Expenses" ? -1 : 1),
       category: selectedCat?.name || "Other",
       categoryIcon: selectedCat?.icon || "pricetag-outline", 
       date: new Date().toISOString(),
-      note: note || undefined,
+      note: note.trim() || undefined, 
     };
 
     const result = await addTransaction(transaction);

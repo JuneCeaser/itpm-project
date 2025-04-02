@@ -9,16 +9,25 @@ import {
   TouchableOpacity,
   ScrollView,
   Image,
-  ActivityIndicator
+  ActivityIndicator,
+  Alert,
+  Modal,
+  TextInput
 } from "react-native";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { useTransactions } from '../context/TransactionContext';
+import { useCategories } from '../context/CategoryContext';
 import { AuthContext } from '../context/AuthContext';
 
 const Home = () => {
   const [activeTab, setActiveTab] = useState("Daily");
-  const { transactions, balance, loading } = useTransactions();
+  const { transactions, balance, loading, updateTransaction, deleteTransaction } = useTransactions();
+  const { expenseCategories, incomeCategories } = useCategories();
   const { user } = useContext(AuthContext);
+  const [editingTransaction, setEditingTransaction] = useState(null);
+  const [editAmount, setEditAmount] = useState("");
+  const [editNote, setEditNote] = useState("");
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
 
   const getCategoryColor = (category) => {
     const colors = {
@@ -53,6 +62,59 @@ const Home = () => {
     return transactions
       .filter(t => t.amount > 0)
       .reduce((sum, t) => sum + t.amount, 0);
+  };
+
+  const handleEditTransaction = (transaction) => {
+    setEditingTransaction(transaction);
+    setEditAmount(Math.abs(transaction.amount).toString());
+    setEditNote(transaction.note || "");
+    setIsEditModalVisible(true);
+  };
+
+  const handleUpdateTransaction = async () => {
+    if (!editAmount || isNaN(parseFloat(editAmount))) {
+      Alert.alert("Error", "Please enter a valid amount");
+      return;
+    }
+
+    const updatedTransaction = {
+      ...editingTransaction,
+      amount: parseFloat(editAmount) * (editingTransaction.amount < 0 ? -1 : 1),
+      note: editNote.trim() || undefined
+    };
+
+    const result = await updateTransaction(editingTransaction.id, updatedTransaction);
+    if (result.success) {
+      setIsEditModalVisible(false);
+      Alert.alert("Success", "Transaction updated successfully");
+    } else {
+      Alert.alert("Error", "Failed to update transaction");
+    }
+  };
+
+  const handleDeleteTransaction = async (id) => {
+    Alert.alert(
+      "Confirm Delete",
+      "Are you sure you want to delete this transaction?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        { 
+          text: "Delete", 
+          style: "destructive",
+          onPress: async () => {
+            const result = await deleteTransaction(id);
+            if (result.success) {
+              Alert.alert("Success", "Transaction deleted successfully");
+            } else {
+              Alert.alert("Error", "Failed to delete transaction");
+            }
+          }
+        }
+      ]
+    );
   };
 
   return (
@@ -172,7 +234,12 @@ const Home = () => {
           </View>
         ) : (
           transactions.map((transaction) => (
-            <View key={transaction.id} style={styles.transaction}>
+            <TouchableOpacity
+              key={transaction.id}
+              style={styles.transaction}
+              onPress={() => handleEditTransaction(transaction)}
+              onLongPress={() => handleDeleteTransaction(transaction.id)}
+            >
               <View style={[
                 styles.transactionIcon,
                 { backgroundColor: getCategoryColor(transaction.category) }
@@ -185,11 +252,11 @@ const Home = () => {
               </View>
               
               <View style={styles.transactionDetails}>
-                <Text style={styles.transactionTitle}>{transaction.title}</Text>
-                <Text style={styles.transactionTime}>{formatDate(transaction.date)}</Text>
+                <Text style={styles.transactionTitle}>{transaction.category}</Text>
                 {transaction.note && (
                   <Text style={styles.transactionNote}>{transaction.note}</Text>
                 )}
+                <Text style={styles.transactionTime}>{formatDate(transaction.date)}</Text>
               </View>
               
               <Text style={[
@@ -200,10 +267,58 @@ const Home = () => {
                   ? `-Rs${Math.abs(transaction.amount).toFixed(2)}` 
                   : `+Rs${transaction.amount.toFixed(2)}`}
               </Text>
-            </View>
+            </TouchableOpacity>
           ))
         )}
       </ScrollView>
+
+      {/* Edit Transaction Modal */}
+      <Modal
+        visible={isEditModalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setIsEditModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Edit Transaction</Text>
+              <TouchableOpacity onPress={() => setIsEditModalVisible(false)}>
+                <Ionicons name="close" size={24} color="#666" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Amount (Rs)</Text>
+              <TextInput
+                style={styles.input}
+                keyboardType="decimal-pad"
+                value={editAmount}
+                onChangeText={setEditAmount}
+                placeholder="Enter amount"
+              />
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Note (Optional)</Text>
+              <TextInput
+                style={[styles.input, styles.noteInput]}
+                value={editNote}
+                onChangeText={setEditNote}
+                placeholder="Add a note"
+                multiline
+              />
+            </View>
+
+            <TouchableOpacity
+              style={styles.saveButton}
+              onPress={handleUpdateTransaction}
+            >
+              <Text style={styles.saveButtonText}>Update Transaction</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       {/* Voice Input Floating Button */}
       <TouchableOpacity
@@ -409,6 +524,59 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 3,
     elevation: 5,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 20,
+    width: '90%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  inputContainer: {
+    marginBottom: 15,
+  },
+  inputLabel: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 8,
+  },
+  input: {
+    backgroundColor: '#f5f5f5',
+    borderRadius: 10,
+    padding: 15,
+    fontSize: 16,
+  },
+  noteInput: {
+    minHeight: 100,
+    textAlignVertical: 'top',
+  },
+  saveButton: {
+    backgroundColor: '#00c89c',
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  saveButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 

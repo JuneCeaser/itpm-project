@@ -1,5 +1,11 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { getRecentTransactions, addTransaction as addTransactionToStorage, getBalance } from '../data/transactions';
+import { 
+  getRecentTransactions, 
+  addTransaction as addTransactionToStorage, 
+  getBalance,
+  updateTransaction as updateTransactionInStorage,
+  deleteTransaction as deleteTransactionFromStorage
+} from '../data/transactions';
 
 const TransactionContext = createContext();
 
@@ -38,6 +44,34 @@ export const TransactionProvider = ({ children }) => {
     }
   };
 
+  const updateTransaction = async (id, updatedTransaction) => {
+    try {
+      const result = await updateTransactionInStorage(id, updatedTransaction);
+      if (result.success) {
+        await loadTransactions();
+        return { success: true, transaction: result.transaction };
+      }
+      return { success: false };
+    } catch (error) {
+      console.error('Error updating transaction:', error);
+      return { success: false, error };
+    }
+  };
+
+  const deleteTransaction = async (id) => {
+    try {
+      const result = await deleteTransactionFromStorage(id);
+      if (result.success) {
+        await loadTransactions();
+        return { success: true };
+      }
+      return { success: false };
+    } catch (error) {
+      console.error('Error deleting transaction:', error);
+      return { success: false, error };
+    }
+  };
+
   useEffect(() => {
     loadTransactions();
   }, []);
@@ -48,6 +82,8 @@ export const TransactionProvider = ({ children }) => {
       balance, 
       loading, 
       addTransaction,
+      updateTransaction,
+      deleteTransaction,
       refresh: loadTransactions 
     }}>
       {children}
