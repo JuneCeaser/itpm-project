@@ -27,6 +27,7 @@ const Category = () => {
   const [activeTab, setActiveTab] = useState("expense");
   const [editingCategory, setEditingCategory] = useState(null);
   const [fadeAnim] = useState(new Animated.Value(0));
+  const [successMessage, setSuccessMessage] = useState("");
   
   const { 
     expenseCategories, 
@@ -65,13 +66,11 @@ const Category = () => {
       setEditingCategory(category);
       setCategoryName(category.name);
       setSelectedIcon(category.icon);
-      // Set the active tab to match the category type
       setActiveTab(category.type);
     } else {
       setEditingCategory(null);
       setCategoryName("");
       setSelectedIcon(null);
-      // Tab remains as is for new categories
     }
     setIsModalVisible(true);
   };
@@ -106,18 +105,21 @@ const Category = () => {
     if (!isValid) return;
 
     const categoryData = {
-      id: editingCategory ? editingCategory.id : null, // Pass null for new categories
+      id: editingCategory ? editingCategory.id : null,
       name: categoryName,
       emoji: editingCategory?.emoji || "📝",
       icon: selectedIcon,
-      // Use the original category type when editing, otherwise use active tab
       type: editingCategory ? editingCategory.type : activeTab,
     };
 
     await addCategory(categoryData);
     await refreshCategories();
 
-    // Show success message with animation
+    setSuccessMessage(
+      editingCategory 
+        ? "Category updated successfully!" 
+        : "Category saved successfully!"
+    );
     showSuccessMessage();
   };
 
@@ -157,7 +159,24 @@ const Category = () => {
           onPress: async () => {
             await deleteCategory(category.id);
             await refreshCategories();
-            showSuccessMessage();
+            setSuccessMessage("Category deleted successfully!");
+            setShowSuccess(true);
+            Animated.sequence([
+              Animated.timing(fadeAnim, {
+                toValue: 1,
+                duration: 300,
+                useNativeDriver: true,
+              }),
+              Animated.delay(1500),
+              Animated.timing(fadeAnim, {
+                toValue: 0,
+                duration: 300,
+                useNativeDriver: true,
+              })
+            ]).start(() => {
+              setShowSuccess(false);
+              fadeAnim.setValue(0);
+            });
           }
         }
       ]
@@ -169,7 +188,6 @@ const Category = () => {
   };
 
   const categories = activeTab === "expense" ? expenseCategories : incomeCategories;
-
 
   const groupedCategories = [];
   for (let i = 0; i < categories.length; i += 3) {
@@ -235,7 +253,7 @@ const Category = () => {
             <View key={rowIndex} style={styles.categoriesRow}>
               {row.map((category, index) => (
                 <TouchableOpacity 
-                  key={category.id} // Use category.id for better key uniqueness
+                  key={category.id}
                   style={styles.categoryItem}
                   onPress={() => openModal(category)}
                   onLongPress={() => handleDelete(category)}
@@ -335,7 +353,7 @@ const Category = () => {
         </KeyboardAvoidingView>
       </Modal>
 
-      {/* Modern Success Message */}
+      {/* Success Message */}
       {showSuccess && (
         <Animated.View 
           style={[
@@ -346,7 +364,7 @@ const Category = () => {
           <View style={styles.successContent}>
             <Ionicons name="checkmark-circle" size={24} color="#fff" />
             <Text style={styles.successText}>
-              Category {editingCategory ? "updated" : "saved"} successfully!
+              {successMessage}
             </Text>
           </View>
         </Animated.View>
@@ -489,7 +507,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#333",
   },
-  
   selectedIconPreview: {
     alignItems: "center",
     marginBottom: 16,
@@ -553,7 +570,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#fff",
   },
- 
   successMessage: {
     position: "absolute",
     top: 50,

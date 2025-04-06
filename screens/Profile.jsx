@@ -13,12 +13,15 @@ import {
 } from "react-native";
 import axios from "axios";
 import { AuthContext } from "../context/AuthContext";
+import { useTransactions } from "../context/TransactionContext";
 import { Ionicons } from "@expo/vector-icons";
 
 const Profile = ({ navigation }) => {
   const [userDetails, setUserDetails] = useState(null);
   const [loading, setLoading] = useState(true);
-  const { token, logout } = useContext(AuthContext);
+  const [resetting, setResetting] = useState(false);
+  const { token, logout, hasPin, removePin } = useContext(AuthContext);
+  const { resetAllData } = useTransactions();
 
   const fetchUserDetails = async () => {
     try {
@@ -38,7 +41,7 @@ const Profile = ({ navigation }) => {
 
   const handleDeleteAccount = async () => {
     try {
-      console.log("Token being sent:", token); // Log the token
+      console.log("Token being sent:", token);
       const response = await axios.delete(
         "https://mobile-backend-news.vercel.app/api/users/delete",
         {
@@ -55,7 +58,7 @@ const Profile = ({ navigation }) => {
     } catch (error) {
       if (error.response && error.response.status === 401) {
         Alert.alert("Session Expired", "Please log in again.");
-        logout(); // Clear the token and user data
+        logout();
         navigation.reset({
           index: 0,
           routes: [{ name: "Auth" }],
@@ -85,19 +88,68 @@ const Profile = ({ navigation }) => {
     );
   };
 
-  useEffect(() => {
-    if (token) {
-      fetchUserDetails();
-    }
-  }, [token]);
-
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#6366f1" />
-      </View>
+  const handleReset = async () => {
+    Alert.alert(
+      "Reset All Data",
+      "Are you sure you want to reset all transaction data? This cannot be undone.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Reset",
+          onPress: async () => {
+            setResetting(true);
+            const result = await resetAllData();
+            setResetting(false);
+            if (result.success) {
+              Alert.alert("Success", "All transaction data has been reset.");
+            } else {
+              Alert.alert("Error", "Failed to reset data. Please try again.");
+            }
+          },
+          style: "destructive"
+        }
+      ]
     );
+  };
+
+  const handleRemovePin = async () => {
+    Alert.alert(
+      "Remove PIN",
+      "Are you sure you want to remove your login PIN?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Remove",
+          onPress: async () => {
+            const success = await removePin();
+            if (success) {
+              Alert.alert("Success", "Your PIN has been removed successfully.");
+            } else {
+              Alert.alert("Error", "Failed to remove PIN. Please try again.");
+            }
+          },
+          style: "destructive"
+        }
+      ]
+    );
+  };
+
+// In Profile.jsx
+useEffect(() => {
+  console.log("Current token:", token);
+  console.log("Current user:", userDetails);
+  
+  if (token) {
+    fetchUserDetails();
   }
+}, [token]);
+
 
   return (
     <SafeAreaView style={styles.container}>
@@ -174,15 +226,37 @@ const Profile = ({ navigation }) => {
 
             <TouchableOpacity
               style={styles.actionButton}
-              onPress={() => console.log("Settings")}
+              onPress={hasPin ? handleRemovePin : () => navigation.navigate('SetPin')}
             >
               <Ionicons
-                name="settings-outline"
+                name={hasPin ? "lock-open-outline" : "lock-closed-outline"}
                 size={22}
                 color="#6366f1"
                 style={styles.buttonIcon}
               />
-              <Text style={styles.actionButtonText}>Settings</Text>
+              <Text style={styles.actionButtonText}>
+                {hasPin ? "Remove Login PIN" : "Set Login PIN"}
+              </Text>
+              <Ionicons name="chevron-forward" size={20} color="#c7c7c7" />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={handleReset}
+            >
+              {resetting ? (
+                <ActivityIndicator size="small" color="#6366f1" style={styles.buttonIcon} />
+              ) : (
+                <Ionicons
+                  name="refresh-outline"
+                  size={22}
+                  color="#6366f1"
+                  style={styles.buttonIcon}
+                />
+              )}
+              <Text style={styles.actionButtonText}>
+                {resetting ? "Resetting..." : "Reset All Data"}
+              </Text>
               <Ionicons name="chevron-forward" size={20} color="#c7c7c7" />
             </TouchableOpacity>
 
@@ -372,6 +446,7 @@ const styles = StyleSheet.create({
   },
   buttonIcon: {
     marginRight: 14,
+    width: 22,
   },
   actionButtonText: {
     flex: 1,

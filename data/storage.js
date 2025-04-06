@@ -24,6 +24,18 @@ export const getData = async (key) => {
   }
 };
 
+// storage.js
+export const resetAppData = async () => {
+  try {
+    // Clear transactions and balance
+    await AsyncStorage.multiRemove([TRANSACTIONS_KEY, BALANCE_KEY]);
+    return { success: true };
+  } catch (e) {
+    console.error('Error resetting app data:', e);
+    return { success: false, error: e };
+  }
+};
+
 export const saveTransactions = async (transactions) => {
   await storeData(TRANSACTIONS_KEY, transactions);
 };
