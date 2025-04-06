@@ -114,7 +114,7 @@ const verifyPin = async () => {
       
       <View style={styles.header}>
         <TouchableOpacity onPress={navigateToEmailLogin} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#333" />
+          <Ionicons name="arrow-back" size={24} color="#ffffff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Enter PIN</Text>
         <View style={styles.placeholder} />
@@ -178,8 +178,8 @@ const verifyPin = async () => {
           </TouchableOpacity>
         </View>
         <View style={styles.keypadRow}>
-          <TouchableOpacity style={styles.keypadButton} onPress={handleClearAll}>
-            <Text style={styles.keypadButtonText}>Clear</Text>
+          <TouchableOpacity style={styles.keypadButtonEmpty} onPress={handleClearAll}>
+            <Text style={styles.keypadButtonText}></Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.keypadButton} onPress={() => handlePinInput('0')}>
             <Text style={styles.keypadButtonText}>0</Text>
@@ -289,6 +289,14 @@ const styles = StyleSheet.create({
     height: 70,
     borderRadius: 35,
     backgroundColor: '#f5f5f5',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  keypadButtonEmpty: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: '#ffffff',
     justifyContent: 'center',
     alignItems: 'center',
   },
