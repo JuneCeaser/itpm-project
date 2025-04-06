@@ -12,6 +12,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { AuthContext } from '../context/AuthContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Image } from 'react-native';
 
 const PinLogin = ({ navigation }) => {
   const [pin, setPin] = useState('');
@@ -109,13 +110,11 @@ const verifyPin = async () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { borderRadius: 10 }]}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       
       <View style={styles.header}>
-        <TouchableOpacity onPress={navigateToEmailLogin} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#ffffff" />
-        </TouchableOpacity>
+       
         <Text style={styles.headerTitle}>Enter PIN</Text>
         <View style={styles.placeholder} />
       </View>
@@ -123,7 +122,10 @@ const verifyPin = async () => {
       <View style={styles.content}>
         <View style={styles.logoContainer}>
           <View style={styles.logo}>
-            <Text style={styles.logoText}>MyApp</Text>
+            <Image
+              source={require('../assets/icon.png')}
+              style={{ width: 170, height: 110,borderRadius: 20 }} 
+            />
           </View>
         </View>
         
@@ -205,13 +207,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 15,
   },
-  backButton: {
-    padding: 5,
-  },
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
     color: '#333',
+    marginLeft: 136,
+    
   },
   placeholder: {
     width: 24,
@@ -224,19 +225,6 @@ const styles = StyleSheet.create({
   },
   logoContainer: {
     marginBottom: 30,
-  },
-  logo: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#00c89c',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  logoText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
   },
   welcomeText: {
     fontSize: 24,
