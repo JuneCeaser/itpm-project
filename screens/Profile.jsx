@@ -20,7 +20,7 @@ const Profile = ({ navigation }) => {
   const [userDetails, setUserDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [resetting, setResetting] = useState(false);
-  const { token, logout } = useContext(AuthContext);
+  const { token, logout, hasPin, removePin } = useContext(AuthContext);
   const { resetAllData } = useTransactions();
 
   const fetchUserDetails = async () => {
@@ -115,19 +115,41 @@ const Profile = ({ navigation }) => {
     );
   };
 
-  useEffect(() => {
-    if (token) {
-      fetchUserDetails();
-    }
-  }, [token]);
-
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#6366f1" />
-      </View>
+  const handleRemovePin = async () => {
+    Alert.alert(
+      "Remove PIN",
+      "Are you sure you want to remove your login PIN?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Remove",
+          onPress: async () => {
+            const success = await removePin();
+            if (success) {
+              Alert.alert("Success", "Your PIN has been removed successfully.");
+            } else {
+              Alert.alert("Error", "Failed to remove PIN. Please try again.");
+            }
+          },
+          style: "destructive"
+        }
+      ]
     );
+  };
+
+// In Profile.jsx
+useEffect(() => {
+  console.log("Current token:", token);
+  console.log("Current user:", userDetails);
+  
+  if (token) {
+    fetchUserDetails();
   }
+}, [token]);
+
 
   return (
     <SafeAreaView style={styles.container}>
@@ -199,6 +221,22 @@ const Profile = ({ navigation }) => {
                 style={styles.buttonIcon}
               />
               <Text style={styles.actionButtonText}>Edit Profile</Text>
+              <Ionicons name="chevron-forward" size={20} color="#c7c7c7" />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={hasPin ? handleRemovePin : () => navigation.navigate('SetPin')}
+            >
+              <Ionicons
+                name={hasPin ? "lock-open-outline" : "lock-closed-outline"}
+                size={22}
+                color="#6366f1"
+                style={styles.buttonIcon}
+              />
+              <Text style={styles.actionButtonText}>
+                {hasPin ? "Remove Login PIN" : "Set Login PIN"}
+              </Text>
               <Ionicons name="chevron-forward" size={20} color="#c7c7c7" />
             </TouchableOpacity>
 
