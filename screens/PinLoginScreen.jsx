@@ -27,7 +27,7 @@ const PinLogin = ({ navigation }) => {
         if (storedPin) {
           setSavedPin(storedPin);
         } else {
-          // No PIN set, redirect to regular login
+        
           navigation.replace('Auth');
         }
       } catch (error) {
