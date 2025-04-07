@@ -10,6 +10,7 @@ import {
   SafeAreaView,
   StatusBar,
   Alert,
+  BackHandler,
 } from "react-native";
 import axios from "axios";
 import { AuthContext } from "../context/AuthContext";
@@ -20,8 +21,24 @@ const Profile = ({ navigation }) => {
   const [userDetails, setUserDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [resetting, setResetting] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const { token, logout, hasPin, removePin } = useContext(AuthContext);
   const { resetAllData } = useTransactions();
+
+  // Add BackHandler for hardware back button
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      () => {
+        if (isLoggingOut) {
+          return true; // Prevents default back button behavior
+        }
+        return false; // Allows default back button behavior
+      }
+    );
+
+    return () => backHandler.remove();
+  }, [isLoggingOut]);
 
   const fetchUserDetails = async () => {
     try {
@@ -39,8 +56,18 @@ const Profile = ({ navigation }) => {
     }
   };
 
+  const handleLogout = () => {
+    setIsLoggingOut(true);
+    logout();
+    navigation.reset({
+      index: 0,
+      routes: [{ name: "Auth" }],
+    });
+  };
+
   const handleDeleteAccount = async () => {
     try {
+      setIsLoggingOut(true);
       console.log("Token being sent:", token);
       const response = await axios.delete(
         "https://mobile-backend-news.vercel.app/api/users/delete",
@@ -56,6 +83,7 @@ const Profile = ({ navigation }) => {
         routes: [{ name: "Auth" }],
       });
     } catch (error) {
+      setIsLoggingOut(false);
       if (error.response && error.response.status === 401) {
         Alert.alert("Session Expired", "Please log in again.");
         logout();
@@ -140,16 +168,14 @@ const Profile = ({ navigation }) => {
     );
   };
 
-// In Profile.jsx
-useEffect(() => {
-  console.log("Current token:", token);
-  console.log("Current user:", userDetails);
-  
-  if (token) {
-    fetchUserDetails();
-  }
-}, [token]);
-
+  useEffect(() => {
+    console.log("Current token:", token);
+    console.log("Current user:", userDetails);
+    
+    if (token) {
+      fetchUserDetails();
+    }
+  }, [token]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -262,10 +288,7 @@ useEffect(() => {
 
             <TouchableOpacity
               style={styles.actionButton}
-              onPress={() => {
-                logout();
-                navigation.navigate("Auth");
-              }}
+              onPress={handleLogout}
             >
               <Ionicons
                 name="log-out-outline"
