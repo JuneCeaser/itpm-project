@@ -15,7 +15,7 @@ import { AuthContext } from '../context/AuthContext';
 const SetPin = ({ navigation }) => {
   const [pin, setPin] = useState('');
   const [confirmPin, setConfirmPin] = useState('');
-  const [stage, setStage] = useState('create'); // 'create' or 'confirm'
+  const [stage, setStage] = useState('create'); 
   const [loading, setLoading] = useState(false);
   const { setPin: savePin } = useContext(AuthContext);
 
