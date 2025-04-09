@@ -29,6 +29,65 @@ const Home = () => {
   const [editNote, setEditNote] = useState("");
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
 
+  // Filter transactions based on active tab
+  const getFilteredTransactions = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Set to beginning of today
+    
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(today.getDate() - 7);
+    oneWeekAgo.setHours(0, 0, 0, 0);
+    
+    const oneMonthAgo = new Date();
+    oneMonthAgo.setDate(today.getDate() - 30);
+    oneMonthAgo.setHours(0, 0, 0, 0);
+    
+    switch(activeTab) {
+      case "Daily":
+        // Filter transactions from today only
+        return transactions.filter(transaction => {
+          const transactionDate = new Date(transaction.date);
+          return transactionDate >= today;
+        });
+      
+      case "Weekly":
+        // Filter transactions from the last 7 days
+        return transactions.filter(transaction => {
+          const transactionDate = new Date(transaction.date);
+          return transactionDate >= oneWeekAgo;
+        });
+      
+      case "Monthly":
+        // Filter transactions from the last 30 days
+        return transactions.filter(transaction => {
+          const transactionDate = new Date(transaction.date);
+          return transactionDate >= oneMonthAgo;
+        });
+      
+      default:
+        return transactions;
+    }
+  };
+
+  // Function to calculate balance based on filtered transactions
+  const getFilteredBalance = () => {
+    return getFilteredTransactions().reduce((sum, t) => sum + t.amount, 0);
+  };
+
+  // Calculate filtered expenses
+  const calculateFilteredTotalExpenses = () => {
+    return getFilteredTransactions()
+      .filter(t => t.amount < 0)
+      .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+  };
+
+  // Calculate filtered income
+  const calculateFilteredTotalIncome = () => {
+    return getFilteredTransactions()
+      .filter(t => t.amount > 0)
+      .reduce((sum, t) => sum + t.amount, 0);
+  };
+
   const getCategoryColor = (category) => {
     const colors = {
       "Food": "#FF6384",
@@ -50,18 +109,6 @@ const Home = () => {
     const time = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const day = date.toLocaleDateString([], { day: 'numeric', month: 'short' });
     return `${time} • ${day}`;
-  };
-
-  const calculateTotalExpenses = () => {
-    return transactions
-      .filter(t => t.amount < 0)
-      .reduce((sum, t) => sum + Math.abs(t.amount), 0);
-  };
-
-  const calculateTotalIncome = () => {
-    return transactions
-      .filter(t => t.amount > 0)
-      .reduce((sum, t) => sum + t.amount, 0);
   };
 
   const handleEditTransaction = (transaction) => {
@@ -123,13 +170,11 @@ const Home = () => {
       
       {/* Header Section */}
       <View style={styles.header}>
-        
-          <Image
-            source={require('../assets/fin.png')}
-            style={styles.logo}
-            resizeMode="contain"
-          />
-        
+        <Image
+          source={require('../assets/fin.png')}
+          style={styles.logo}
+          resizeMode="contain"
+        />
         <View>
           <Text style={styles.welcomeText}>Hi, {user?.name || 'User'}</Text>
           <Text style={styles.greetingText}>
@@ -144,32 +189,35 @@ const Home = () => {
 
       {/* Summary Container */}
       <View style={styles.summaryContainer}>
-        <View style={styles.balanceSection}>
-          <View style={styles.summaryItem}>
-            <View style={styles.labelContainer}>
-              <View style={styles.checkboxIcon}>
-                <Ionicons name="checkmark" size={16} color="white" />
-              </View>
-              <Text style={styles.summaryLabel}>Total Balance</Text>
+      <View style={styles.balanceSection}>
+        <View style={styles.summaryItem}>
+          <View style={styles.labelContainer}>
+            <View style={styles.checkboxIcon}>
+              <Ionicons name="checkmark" size={16} color="white" />
             </View>
-            <Text style={styles.balanceAmount}>LKR {balance.toFixed(2)}</Text>
+            <Text style={styles.summaryLabel}>Total Balance</Text>
           </View>
-          
-          <View style={styles.divider}/>
-          
-          <View style={styles.summaryItem}>
-            <View style={styles.labelContainer}>
-              <View style={styles.checkboxIcon}>
-                <Ionicons name="checkmark" size={16} color="white" />
-              </View>
-              <Text style={styles.summaryLabel}>Total Expense</Text>
+          <Text style={styles.balanceAmount}>LKR {balance.toFixed(2)}</Text>
+        </View>
+        
+        <View style={styles.divider}/>
+        
+        <View style={styles.summaryItem}>
+          <View style={styles.labelContainer}>
+            <View style={styles.checkboxIcon}>
+              <Ionicons name="checkmark" size={16} color="white" />
             </View>
-            <Text style={styles.expenseAmount}>
-              LKR {calculateTotalExpenses().toFixed(2)}
+            <Text style={styles.summaryLabel}>
+              {activeTab === "Daily" ? "Today's Expense" : 
+               activeTab === "Weekly" ? "Weekly Expense" : "Monthly Expense"}
             </Text>
           </View>
+          <Text style={styles.expenseAmount}>
+            LKR {calculateFilteredTotalExpenses().toFixed(2)}
+          </Text>
         </View>
       </View>
+    </View>
 
       {/* Time Period Selector */}
       <View style={styles.timeSelector}>
@@ -226,14 +274,18 @@ const Home = () => {
       >
         {loading ? (
           <ActivityIndicator size="large" color="#00c89c" style={styles.loadingIndicator} />
-        ) : transactions.length === 0 ? (
+        ) : getFilteredTransactions().length === 0 ? (
           <View style={styles.emptyState}>
             <Ionicons name="receipt-outline" size={48} color="#ccc" />
-            <Text style={styles.emptyStateText}>No transactions yet</Text>
-            <Text style={styles.emptyStateSubtext}>Add your first transaction to get started</Text>
+            <Text style={styles.emptyStateText}>No transactions for this period</Text>
+            <Text style={styles.emptyStateSubtext}>
+              {activeTab === "Daily" ? "No transactions today" : 
+               activeTab === "Weekly" ? "No transactions in the last 7 days" : 
+               "No transactions in the last 30 days"}
+            </Text>
           </View>
         ) : (
-          transactions.map((transaction) => (
+          getFilteredTransactions().map((transaction) => (
             <TouchableOpacity
               key={transaction.id}
               style={styles.transaction}
