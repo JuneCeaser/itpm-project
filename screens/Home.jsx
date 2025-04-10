@@ -29,45 +29,47 @@ const Home = () => {
   const [editNote, setEditNote] = useState("");
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
 
-  // Function to generate random colors
-  const getRandomColor = () => {
-    const colors = [
-      "#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0", "#9966FF",
-      "#4CAF50", "#2196F3", "#9C27B0", "#FF9800", "#607D8B",
-      "#E91E63", "#00BCD4", "#8BC34A", "#FF5722", "#795548",
-      "#3F51B5", "#009688", "#CDDC39", "#673AB7", "#FFC107"
-    ];
-    return colors[Math.floor(Math.random() * colors.length)];
+  // Consistent color mapping for all categories
+  const categoryColors = {
+    // Expense Categories
+    "Food": "#FF6384",
+    "Transport": "#36A2EB",
+    "Shopping": "#FFCE56",
+    "Bills": "#4BC0C0",
+    "Entertainment": "#9966FF",
+    "Healthcare": "#FF5252",
+    "Education": "#FF4081",
+    "Travel": "#7C4DFF",
+    "Groceries": "#FFAB40",
+    
+    // Income Categories
+    "Salary": "#4CAF50",
+    "Freelance": "#2196F3",
+    "Investments": "#9C27B0",
+    "Gifts": "#FF9800",
+    "Bonus": "#FF5722",
+    "Rental": "#795548",
+    
+    // Default
+    "Other": "#607D8B"
   };
 
-  // Get color for category - uses predefined colors if available, otherwise generates random but consistent color
-  const getCategoryColor = (category, transactionId) => {
-    // Predefined colors for common categories
-    const predefinedColors = {
-      "Food": "#FF6384",
-      "Transport": "#36A2EB",
-      "Shopping": "#FFCE56",
-      "Bills": "#4BC0C0",
-      "Entertainment": "#9966FF",
-      "Salary": "#4CAF50",
-      "Freelance": "#2196F3",
-      "Investments": "#9C27B0",
-      "Gifts": "#FF9800",
-      "Other": "#607D8B"
-    };
-    
-    // If we have a predefined color for this category, use it
-    if (predefinedColors[category]) {
-      return predefinedColors[category];
+  // Get consistent color for category
+  const getCategoryColor = (category) => {
+    // Return predefined color if exists
+    if (categoryColors[category]) {
+      return categoryColors[category];
     }
     
-    // For other categories, generate a consistent random color based on category name
-    // This ensures same category always gets same color
-    const hash = Array.from(category).reduce((hash, char) => {
-      return char.charCodeAt(0) + ((hash << 5) - hash);
-    }, 0);
-    const index = Math.abs(hash) % 20;
-    return getRandomColor();
+    // Generate consistent color for unknown categories
+    let hash = 0;
+    for (let i = 0; i < category.length; i++) {
+      hash = category.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    
+    // Convert hash to HSL color
+    const h = Math.abs(hash) % 360;
+    return `hsl(${h}, 70%, 60%)`;
   };
 
   // Filter transactions based on active tab
@@ -313,7 +315,7 @@ const Home = () => {
             >
               <View style={[
                 styles.transactionIcon,
-                { backgroundColor: transaction.color || getCategoryColor(transaction.category, transaction.id) }
+                { backgroundColor: getCategoryColor(transaction.category) }
               ]}>
                 <Ionicons 
                   name={transaction.categoryIcon || "pricetag-outline"} 
@@ -402,7 +404,6 @@ const Home = () => {
   );
 };
 
-// ... (keep your existing styles object)
 const styles = StyleSheet.create({
   container: {
     flex: 1,
