@@ -29,10 +29,51 @@ const Home = () => {
   const [editNote, setEditNote] = useState("");
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
 
+  // Function to generate random colors
+  const getRandomColor = () => {
+    const colors = [
+      "#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0", "#9966FF",
+      "#4CAF50", "#2196F3", "#9C27B0", "#FF9800", "#607D8B",
+      "#E91E63", "#00BCD4", "#8BC34A", "#FF5722", "#795548",
+      "#3F51B5", "#009688", "#CDDC39", "#673AB7", "#FFC107"
+    ];
+    return colors[Math.floor(Math.random() * colors.length)];
+  };
+
+  // Get color for category - uses predefined colors if available, otherwise generates random but consistent color
+  const getCategoryColor = (category, transactionId) => {
+    // Predefined colors for common categories
+    const predefinedColors = {
+      "Food": "#FF6384",
+      "Transport": "#36A2EB",
+      "Shopping": "#FFCE56",
+      "Bills": "#4BC0C0",
+      "Entertainment": "#9966FF",
+      "Salary": "#4CAF50",
+      "Freelance": "#2196F3",
+      "Investments": "#9C27B0",
+      "Gifts": "#FF9800",
+      "Other": "#607D8B"
+    };
+    
+    // If we have a predefined color for this category, use it
+    if (predefinedColors[category]) {
+      return predefinedColors[category];
+    }
+    
+    // For other categories, generate a consistent random color based on category name
+    // This ensures same category always gets same color
+    const hash = Array.from(category).reduce((hash, char) => {
+      return char.charCodeAt(0) + ((hash << 5) - hash);
+    }, 0);
+    const index = Math.abs(hash) % 20;
+    return getRandomColor();
+  };
+
   // Filter transactions based on active tab
   const getFilteredTransactions = () => {
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // Set to beginning of today
+    today.setHours(0, 0, 0, 0);
     
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(today.getDate() - 7);
@@ -44,32 +85,26 @@ const Home = () => {
     
     switch(activeTab) {
       case "Daily":
-        // Filter transactions from today only
         return transactions.filter(transaction => {
           const transactionDate = new Date(transaction.date);
           return transactionDate >= today;
         });
-      
       case "Weekly":
-        // Filter transactions from the last 7 days
         return transactions.filter(transaction => {
           const transactionDate = new Date(transaction.date);
           return transactionDate >= oneWeekAgo;
         });
-      
       case "Monthly":
-        // Filter transactions from the last 30 days
         return transactions.filter(transaction => {
           const transactionDate = new Date(transaction.date);
           return transactionDate >= oneMonthAgo;
         });
-      
       default:
         return transactions;
     }
   };
 
-  // Function to calculate balance based on filtered transactions
+  // Calculate filtered balance
   const getFilteredBalance = () => {
     return getFilteredTransactions().reduce((sum, t) => sum + t.amount, 0);
   };
@@ -86,22 +121,6 @@ const Home = () => {
     return getFilteredTransactions()
       .filter(t => t.amount > 0)
       .reduce((sum, t) => sum + t.amount, 0);
-  };
-
-  const getCategoryColor = (category) => {
-    const colors = {
-      "Food": "#FF6384",
-      "Transport": "#36A2EB",
-      "Shopping": "#FFCE56",
-      "Bills": "#4BC0C0",
-      "Entertainment": "#9966FF",
-      "Salary": "#4CAF50",
-      "Freelance": "#2196F3",
-      "Investments": "#9C27B0",
-      "Gifts": "#FF9800",
-      "Other": "#607D8B"
-    };
-    return colors[category] || "#607D8B";
   };
 
   const formatDate = (dateString) => {
@@ -189,35 +208,35 @@ const Home = () => {
 
       {/* Summary Container */}
       <View style={styles.summaryContainer}>
-      <View style={styles.balanceSection}>
-        <View style={styles.summaryItem}>
-          <View style={styles.labelContainer}>
-            <View style={styles.checkboxIcon}>
-              <Ionicons name="checkmark" size={16} color="white" />
+        <View style={styles.balanceSection}>
+          <View style={styles.summaryItem}>
+            <View style={styles.labelContainer}>
+              <View style={styles.checkboxIcon}>
+                <Ionicons name="checkmark" size={16} color="white" />
+              </View>
+              <Text style={styles.summaryLabel}>Total Balance</Text>
             </View>
-            <Text style={styles.summaryLabel}>Total Balance</Text>
+            <Text style={styles.balanceAmount}>LKR {balance.toFixed(2)}</Text>
           </View>
-          <Text style={styles.balanceAmount}>LKR {balance.toFixed(2)}</Text>
-        </View>
-        
-        <View style={styles.divider}/>
-        
-        <View style={styles.summaryItem}>
-          <View style={styles.labelContainer}>
-            <View style={styles.checkboxIcon}>
-              <Ionicons name="checkmark" size={16} color="white" />
+          
+          <View style={styles.divider}/>
+          
+          <View style={styles.summaryItem}>
+            <View style={styles.labelContainer}>
+              <View style={styles.checkboxIcon}>
+                <Ionicons name="checkmark" size={16} color="white" />
+              </View>
+              <Text style={styles.summaryLabel}>
+                {activeTab === "Daily" ? "Today's Expense" : 
+                 activeTab === "Weekly" ? "Weekly Expense" : "Monthly Expense"}
+              </Text>
             </View>
-            <Text style={styles.summaryLabel}>
-              {activeTab === "Daily" ? "Today's Expense" : 
-               activeTab === "Weekly" ? "Weekly Expense" : "Monthly Expense"}
+            <Text style={styles.expenseAmount}>
+              LKR {calculateFilteredTotalExpenses().toFixed(2)}
             </Text>
           </View>
-          <Text style={styles.expenseAmount}>
-            LKR {calculateFilteredTotalExpenses().toFixed(2)}
-          </Text>
         </View>
       </View>
-    </View>
 
       {/* Time Period Selector */}
       <View style={styles.timeSelector}>
@@ -294,7 +313,7 @@ const Home = () => {
             >
               <View style={[
                 styles.transactionIcon,
-                { backgroundColor: getCategoryColor(transaction.category) }
+                { backgroundColor: transaction.color || getCategoryColor(transaction.category, transaction.id) }
               ]}>
                 <Ionicons 
                   name={transaction.categoryIcon || "pricetag-outline"} 
@@ -383,6 +402,7 @@ const Home = () => {
   );
 };
 
+// ... (keep your existing styles object)
 const styles = StyleSheet.create({
   container: {
     flex: 1,

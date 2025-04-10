@@ -91,7 +91,7 @@ const Analysis = () => {
   };
 
   const expenseCategoryTotals = getCategoryTotals('expense');
-  const incomeCategoryTotals = getCategoryTotals('income');
+  const incomeCategoryTotals = getCategoryTotals('income');  
 
   const prepareBarChartData = () => {
     const days = [];
