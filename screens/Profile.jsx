@@ -15,6 +15,7 @@ import {
   FlatList,
 } from "react-native";
 import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AuthContext } from "../context/AuthContext";
 import { useTransactions } from "../context/TransactionContext";
 import { Ionicons } from "@expo/vector-icons";
@@ -29,6 +30,9 @@ const avatar6 = require('../assets/avatars/avatar6.png');
 const avatar7 = require('../assets/avatars/avatar7.png');
 const avatar8 = require('../assets/avatars/avatar8.png');
 const avatar9 = require('../assets/avatars/avatar9.png');
+
+// Avatar storage key
+const AVATAR_STORAGE_KEY = "user_avatar";
 
 const Profile = ({ navigation }) => {
   const [userDetails, setUserDetails] = useState(null);
@@ -68,13 +72,39 @@ const Profile = ({ navigation }) => {
 
   const fetchUserDetails = async () => {
     try {
+      // First try to get user data from API
       const response = await axios.get(
         "https://mobile-backend-news.vercel.app/api/users/me",
         { headers: { "x-auth-token": token } }
       );
+      
+      // Get locally stored avatar
+      const savedAvatar = await AsyncStorage.getItem(AVATAR_STORAGE_KEY);
+      
+      // If we have a locally saved avatar, use it instead of the server one
+      if (savedAvatar) {
+        response.data.avatar = savedAvatar;
+      }
+      
       setUserDetails(response.data);
     } catch (error) {
       console.error("Error fetching user details:", error);
+      
+      // Even if API fails, try to get saved user data and avatar from local storage
+      try {
+        const savedUserData = await AsyncStorage.getItem("user_data");
+        const savedAvatar = await AsyncStorage.getItem(AVATAR_STORAGE_KEY);
+        
+        if (savedUserData) {
+          const userData = JSON.parse(savedUserData);
+          if (savedAvatar) {
+            userData.avatar = savedAvatar;
+          }
+          setUserDetails(userData);
+        }
+      } catch (storageError) {
+        console.error("Error retrieving from storage:", storageError);
+      }
     } finally {
       setLoading(false);
     }
@@ -90,6 +120,11 @@ const Profile = ({ navigation }) => {
         throw new Error("Avatar not found");
       }
 
+      const avatarKey = `avatar_${avatarId}`;
+      
+      // Save avatar to local storage
+      await AsyncStorage.setItem(AVATAR_STORAGE_KEY, avatarKey);
+
       // Try to update on backend
       try {
         const response = await axios.put(
@@ -98,14 +133,20 @@ const Profile = ({ navigation }) => {
           { headers: { "x-auth-token": token } }
         );
       } catch (err) {
-        console.warn("Avatar update failed, saving locally only", err);
+        console.warn("Avatar update failed on backend, saved locally only", err);
       }
 
-      // Update local state regardless of backend success
+      // Update local state
       setUserDetails({
         ...userDetails,
-        avatar: `avatar_${avatarId}`
+        avatar: avatarKey
       });
+      
+      // Save full user data to local storage
+      await AsyncStorage.setItem("user_data", JSON.stringify({
+        ...userDetails,
+        avatar: avatarKey
+      }));
       
       setAvatarModalVisible(false);
       Alert.alert("Success", "Avatar updated!");
@@ -137,8 +178,12 @@ const Profile = ({ navigation }) => {
     return null;
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setIsLoggingOut(true);
+    
+    // Don't clear avatar on logout
+    // We'll keep AVATAR_STORAGE_KEY intact
+    
     logout();
     navigation.reset({
       index: 0,
@@ -149,15 +194,24 @@ const Profile = ({ navigation }) => {
   const handleDeleteAccount = async () => {
     try {
       setIsLoggingOut(true);
-      console.log("Token being sent:", token);
-      const response = await axios.delete(
-        "https://mobile-backend-news.vercel.app/api/users/delete",
-        {
-          headers: { "x-auth-token": token },
-        }
-      );
+      
+      // Clear all local storage including avatar
+      await AsyncStorage.removeItem(AVATAR_STORAGE_KEY);
+      await AsyncStorage.removeItem("user_data");
+      
+      try {
+        const response = await axios.delete(
+          "https://mobile-backend-news.vercel.app/api/users/delete",
+          {
+            headers: { "x-auth-token": token },
+          }
+        );
+        Alert.alert("Success", response.data.msg);
+      } catch (apiError) {
+        console.error("Error deleting account on server:", apiError);
+        // Continue with local deletion even if server fails
+      }
 
-      Alert.alert("Success", response.data.msg);
       logout();
       navigation.reset({
         index: 0,
@@ -165,17 +219,8 @@ const Profile = ({ navigation }) => {
       });
     } catch (error) {
       setIsLoggingOut(false);
-      if (error.response && error.response.status === 401) {
-        Alert.alert("Session Expired", "Please log in again.");
-        logout();
-        navigation.reset({
-          index: 0,
-          routes: [{ name: "Auth" }],
-        });
-      } else {
-        console.error("Error deleting account:", error);
-        Alert.alert("Error", "Failed to delete account. Please try again.");
-      }
+      console.error("Error deleting account:", error);
+      Alert.alert("Error", "Failed to delete account. Please try again.");
     }
   };
 
@@ -250,9 +295,27 @@ const Profile = ({ navigation }) => {
   };
 
   useEffect(() => {
-    if (token) {
-      fetchUserDetails();
-    }
+    const loadProfileData = async () => {
+      // Check for locally saved avatar first
+      try {
+        const savedAvatar = await AsyncStorage.getItem(AVATAR_STORAGE_KEY);
+        if (savedAvatar && userDetails) {
+          setUserDetails({
+            ...userDetails,
+            avatar: savedAvatar
+          });
+        }
+      } catch (error) {
+        console.error("Error loading saved avatar:", error);
+      }
+      
+      // Fetch user details from server
+      if (token) {
+        fetchUserDetails();
+      }
+    };
+    
+    loadProfileData();
   }, [token]);
 
   if (loading) {
