@@ -11,19 +11,46 @@ import {
   StatusBar,
   Alert,
   BackHandler,
+  Modal,
+  FlatList,
 } from "react-native";
 import axios from "axios";
 import { AuthContext } from "../context/AuthContext";
 import { useTransactions } from "../context/TransactionContext";
 import { Ionicons } from "@expo/vector-icons";
 
+// Import local avatar images
+const avatar1 = require('../assets/avatars/avatar1.png');
+const avatar2 = require('../assets/avatars/avatar2.png');
+const avatar3 = require('../assets/avatars/avatar3.png');
+const avatar4 = require('../assets/avatars/avatar4.png');
+const avatar5 = require('../assets/avatars/avatar5.png');
+const avatar6 = require('../assets/avatars/avatar6.png');
+const avatar7 = require('../assets/avatars/avatar7.png');
+const avatar8 = require('../assets/avatars/avatar8.png');
+const avatar9 = require('../assets/avatars/avatar9.png');
+
 const Profile = ({ navigation }) => {
   const [userDetails, setUserDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [resetting, setResetting] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [avatarModalVisible, setAvatarModalVisible] = useState(false);
   const { token, logout, hasPin, removePin } = useContext(AuthContext);
   const { resetAllData } = useTransactions();
+
+  // Sample avatars using local images
+  const sampleAvatars = [
+    { id: 1, source: avatar1 },
+    { id: 2, source: avatar2 },
+    { id: 3, source: avatar3 },
+    { id: 4, source: avatar4 },
+    { id: 5, source: avatar5 },
+    { id: 6, source: avatar6 },
+    { id: 7, source: avatar7 },
+    { id: 8, source: avatar8 },
+    { id: 9, source: avatar9 },
+  ];
 
   // Add BackHandler for hardware back button
   useEffect(() => {
@@ -31,12 +58,11 @@ const Profile = ({ navigation }) => {
       'hardwareBackPress',
       () => {
         if (isLoggingOut) {
-          return true; // Prevents default back button behavior
+          return true;
         }
-        return false; // Allows default back button behavior
+        return false;
       }
     );
-
     return () => backHandler.remove();
   }, [isLoggingOut]);
 
@@ -44,9 +70,7 @@ const Profile = ({ navigation }) => {
     try {
       const response = await axios.get(
         "https://mobile-backend-news.vercel.app/api/users/me",
-        {
-          headers: { "x-auth-token": token },
-        }
+        { headers: { "x-auth-token": token } }
       );
       setUserDetails(response.data);
     } catch (error) {
@@ -54,6 +78,63 @@ const Profile = ({ navigation }) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Function to update user's avatar
+  const selectAvatar = async (avatarId) => {
+    try {
+      setLoading(true);
+      
+      const selectedAvatar = sampleAvatars.find(avatar => avatar.id === avatarId);
+      if (!selectedAvatar) {
+        throw new Error("Avatar not found");
+      }
+
+      // Try to update on backend
+      try {
+        const response = await axios.put(
+          "https://mobile-backend-news.vercel.app/api/users/update-avatar",
+          { avatarId },
+          { headers: { "x-auth-token": token } }
+        );
+      } catch (err) {
+        console.warn("Avatar update failed, saving locally only", err);
+      }
+
+      // Update local state regardless of backend success
+      setUserDetails({
+        ...userDetails,
+        avatar: `avatar_${avatarId}`
+      });
+      
+      setAvatarModalVisible(false);
+      Alert.alert("Success", "Avatar updated!");
+    } catch (error) {
+      console.error("Error updating avatar:", error);
+      Alert.alert("Error", "Failed to update avatar. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Helper function to get avatar source
+  const getAvatarSource = (avatar) => {
+    if (!avatar) return null;
+    
+    // If it's a stored avatar ID (avatar_1, etc.)
+    if (typeof avatar === 'string' && avatar.startsWith('avatar_')) {
+      const avatarId = parseInt(avatar.split('_')[1]);
+      const foundAvatar = sampleAvatars.find(a => a.id === avatarId);
+      return foundAvatar ? foundAvatar.source : null;
+    }
+    
+    // If it's a URL (http)
+    if (typeof avatar === 'string' && avatar.startsWith('http')) {
+      return { uri: avatar };
+    }
+    
+    // Default case (shouldn't normally happen)
+    return null;
   };
 
   const handleLogout = () => {
@@ -169,19 +250,25 @@ const Profile = ({ navigation }) => {
   };
 
   useEffect(() => {
-    console.log("Current token:", token);
-    console.log("Current user:", userDetails);
-    
     if (token) {
       fetchUserDetails();
     }
   }, [token]);
 
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#00c89c" />
+      </View>
+    );
+  }
+
+  const avatarSource = getAvatarSource(userDetails?.avatar);
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#00D09E" />
 
-      {/* Header with gradient effect */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>My Profile</Text>
         <TouchableOpacity
@@ -192,21 +279,26 @@ const Profile = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        style={styles.contentScroll}
-      >
-        {/* Profile Card */}
+      <ScrollView style={styles.contentScroll}>
         <View style={styles.profileCard}>
-          {userDetails?.avatar ? (
-            <Image source={{ uri: userDetails.avatar }} style={styles.avatar} />
-          ) : (
-            <View style={styles.avatarPlaceholder}>
-              <Text style={styles.avatarText}>
-                {userDetails?.name?.charAt(0).toUpperCase() || "U"}
-              </Text>
-            </View>
-          )}
+          <View style={styles.avatarContainer}>
+            {avatarSource ? (
+              <Image source={avatarSource} style={styles.avatar} />
+            ) : (
+              <View style={styles.avatarPlaceholder}>
+                <Text style={styles.avatarText}>
+                  {userDetails?.name?.charAt(0).toUpperCase() || "U"}
+                </Text>
+              </View>
+            )}
+            
+            <TouchableOpacity 
+              style={styles.changeAvatarButton}
+              onPress={() => setAvatarModalVisible(true)}
+            >
+              <Ionicons name="image-outline" size={18} color="#DEDEDE" />
+            </TouchableOpacity>
+          </View>
 
           <View style={styles.profileInfo}>
             <Text style={styles.name}>{userDetails?.name || "User Name"}</Text>
@@ -231,7 +323,6 @@ const Profile = ({ navigation }) => {
           )}
         </View>
 
-        {/* Action Buttons Section */}
         <View style={styles.actionSection}>
           <Text style={styles.sectionTitle}>Account Management</Text>
 
@@ -318,10 +409,45 @@ const Profile = ({ navigation }) => {
           </View>
         </View>
       </ScrollView>
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={avatarModalVisible}
+        onRequestClose={() => setAvatarModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Choose an Avatar</Text>
+            
+            <FlatList
+              data={sampleAvatars}
+              numColumns={3}
+              keyExtractor={(item) => item.id.toString()}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.avatarOption}
+                  onPress={() => selectAvatar(item.id)}
+                >
+                  <Image source={item.source} style={styles.avatarOptionImage} />
+                </TouchableOpacity>
+              )}
+            />
+            
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setAvatarModalVisible(false)}
+            >
+              <Text style={styles.closeButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
 
+// Keep all your existing styles
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -376,6 +502,10 @@ const styles = StyleSheet.create({
     elevation: 4,
     alignItems: "center",
   },
+  avatarContainer: {
+    position: 'relative',
+    marginBottom: 10,
+  },
   avatar: {
     width: 100,
     height: 100,
@@ -391,12 +521,25 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 4,
-    borderColor: "#00c89c",
+    borderColor: "#f8fafc",
   },
   avatarText: {
     color: "white",
     fontSize: 36,
     fontWeight: "bold",
+  },
+  changeAvatarButton: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    backgroundColor: '#ffffff',
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#DEDEDE',
   },
   profileInfo: {
     alignItems: "center",
@@ -485,6 +628,56 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#e74c3c",
     fontWeight: "500",
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  modalContent: {
+    width: '85%',
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 20,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#0f172a',
+    marginBottom: 20,
+  },
+  avatarOption: {
+    margin: 8,
+    borderRadius: 40,
+    borderWidth: 2,
+    borderColor: '#f1f5f9',
+    overflow: 'hidden',
+  },
+  avatarOptionImage: {
+    width: 70,
+    height: 70,
+  },
+  closeButton: {
+    marginTop: 20,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    backgroundColor: '#f1f5f9',
+    borderRadius: 10,
+  },
+  closeButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#0f172a',
   },
 });
 
