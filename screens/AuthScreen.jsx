@@ -94,7 +94,7 @@ const AuthScreen = ({ navigation }) => {
   };
 
   const handleForgotPassword = () => {
-    // Placeholder function - does nothing when pressed
+   
     console.log("Forgot password pressed");
   };
 

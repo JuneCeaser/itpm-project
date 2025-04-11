@@ -27,7 +27,7 @@ const PinLogin = ({ navigation }) => {
         if (storedPin) {
           setSavedPin(storedPin);
         } else {
-          // No PIN set, redirect to regular login
+        
           navigation.replace('Auth');
         }
       } catch (error) {
@@ -60,19 +60,21 @@ const PinLogin = ({ navigation }) => {
   }, [pin]);
 
  // In PinLogin.jsx
-const verifyPin = async () => {
+ const verifyPin = async () => {
   setLoading(true);
   
   try {
     if (pin === savedPin) {
-      // This will set both token and user data from AsyncStorage
       const success = await loginWithPin();
       
       if (success) {
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'HomeTabs' }],
-        });
+        // Give a small delay to ensure context updates propagate
+        setTimeout(() => {
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'HomeTabs' }],
+          });
+        }, 100);
       } else {
         Alert.alert('Login Failed', 'Could not retrieve your account data. Please login with email and password.');
         navigation.replace('Auth');

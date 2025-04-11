@@ -47,12 +47,10 @@ export const AuthProvider = ({ children }) => {
 
   const loginWithPin = async () => {
     try {
-      // Get stored user data and token
       const storedToken = await AsyncStorage.getItem('token');
       const storedUser = await AsyncStorage.getItem('user');
       
       if (storedToken && storedUser) {
-        // Set the user and token in context
         setToken(storedToken);
         setUser(JSON.parse(storedUser));
         return true;

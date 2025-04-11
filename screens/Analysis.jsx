@@ -38,6 +38,43 @@ const Analysis = () => {
   const { expenseCategories, incomeCategories } = useCategories();
   const viewRef = useRef();
 
+  const getDateRangeText = () => {
+    const now = new Date();
+    
+    switch (selectedPeriod) {
+      case "daily":
+        // For daily view, just show today's date
+        return now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+      
+      case "weekly":
+        // For weekly view, show Monday to Sunday of current week
+        const day = now.getDay();
+        const diff = now.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
+        const monday = new Date(now);
+        monday.setDate(diff);
+        monday.setHours(0, 0, 0, 0);
+        
+        const sunday = new Date(monday);
+        sunday.setDate(monday.getDate() + 6);
+        
+        return `${monday.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })} - ${sunday.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`;
+      
+      case "monthly":
+        // For monthly view, show full month name and year
+        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+        const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        
+        return `${firstDay.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })} - ${lastDay.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`;
+      
+      case "yearly":
+        // For yearly view, show the full year
+        return `January 1 - December 31, ${now.getFullYear()}`;
+      
+      default:
+        return "";
+    }
+  };
+
   const filterTransactions = (period) => {
     const now = new Date();
     let startDate;
@@ -91,7 +128,7 @@ const Analysis = () => {
   };
 
   const expenseCategoryTotals = getCategoryTotals('expense');
-  const incomeCategoryTotals = getCategoryTotals('income');
+  const incomeCategoryTotals = getCategoryTotals('income');  
 
   const prepareBarChartData = () => {
     const days = [];
@@ -249,7 +286,7 @@ const Analysis = () => {
           <body>
             <div class="header">
               <h1>My Fin Mate Financial Report</h1>
-              <div class="period">Period: ${selectedPeriod.charAt(0).toUpperCase() + selectedPeriod.slice(1)}</div>
+              <div class="period">${selectedPeriod.charAt(0).toUpperCase() + selectedPeriod.slice(1)}: ${getDateRangeText()}</div>
             </div>
             
             <div class="section">
@@ -361,6 +398,11 @@ const Analysis = () => {
             </Text>
           </TouchableOpacity>
         ))}
+      </View>
+
+      {/* Date Range Display */}
+      <View style={styles.dateRangeContainer}>
+        <Text style={styles.dateRangeText}>{getDateRangeText()}</Text>
       </View>
 
       {/* Summary Container */}
@@ -528,6 +570,22 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: 80,
   },
+  dateRangeContainer: {
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+  },
+  dateRangeText: {
+    color: "white",
+    fontSize: 14,
+    fontWeight: "500",
+    textAlign: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    paddingVertical: 6,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
   summaryContainer: {
     backgroundColor: "white",
     borderRadius: 20,
@@ -581,6 +639,7 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     borderRadius: 10,
     margin: 16,
+    marginBottom: 8,
     padding: 7,
   },
   periodButton: {

@@ -28,6 +28,7 @@ const Category = () => {
   const [editingCategory, setEditingCategory] = useState(null);
   const [fadeAnim] = useState(new Animated.Value(0));
   const [successMessage, setSuccessMessage] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
   
   const { 
     expenseCategories, 
@@ -82,9 +83,12 @@ const Category = () => {
     setNameError("");
     setIconError("");
     setEditingCategory(null);
+    setIsSaving(false);
   };
 
   const handleSave = async () => {
+    setIsSaving(true);
+    
     // Validation
     let isValid = true;
 
@@ -102,25 +106,47 @@ const Category = () => {
       setIconError("");
     }
 
-    if (!isValid) return;
+    // Check for duplicate category (only for new categories, not when editing)
+    if (!editingCategory) {
+      const currentCategories = activeTab === "expense" ? expenseCategories : incomeCategories;
+      const duplicate = currentCategories.find(
+        cat => cat.name.toLowerCase() === categoryName.trim().toLowerCase()
+      );
+      
+      if (duplicate) {
+        setNameError("This category already exists");
+        isValid = false;
+      }
+    }
 
-    const categoryData = {
-      id: editingCategory ? editingCategory.id : null,
-      name: categoryName,
-      emoji: editingCategory?.emoji || "📝",
-      icon: selectedIcon,
-      type: editingCategory ? editingCategory.type : activeTab,
-    };
+    if (!isValid) {
+      setIsSaving(false);
+      return;
+    }
 
-    await addCategory(categoryData);
-    await refreshCategories();
+    try {
+      const categoryData = {
+        id: editingCategory ? editingCategory.id : null,
+        name: categoryName.trim(),
+        emoji: editingCategory?.emoji || "📝",
+        icon: selectedIcon,
+        type: editingCategory ? editingCategory.type : activeTab,
+      };
 
-    setSuccessMessage(
-      editingCategory 
-        ? "Category updated successfully!" 
-        : "Category saved successfully!"
-    );
-    showSuccessMessage();
+      await addCategory(categoryData);
+      await refreshCategories();
+
+      setSuccessMessage(
+        editingCategory 
+          ? "Category updated successfully!" 
+          : "Category saved successfully!"
+      );
+      showSuccessMessage();
+      closeModal(); // Close the modal after successful save
+    } catch (error) {
+      Alert.alert("Error", "Failed to save category");
+      setIsSaving(false);
+    }
   };
 
   const showSuccessMessage = () => {
@@ -139,7 +165,6 @@ const Category = () => {
       })
     ]).start(() => {
       setShowSuccess(false);
-      closeModal();
       fadeAnim.setValue(0);
     });
   };
@@ -157,26 +182,30 @@ const Category = () => {
           text: "Delete", 
           style: "destructive",
           onPress: async () => {
-            await deleteCategory(category.id);
-            await refreshCategories();
-            setSuccessMessage("Category deleted successfully!");
-            setShowSuccess(true);
-            Animated.sequence([
-              Animated.timing(fadeAnim, {
-                toValue: 1,
-                duration: 300,
-                useNativeDriver: true,
-              }),
-              Animated.delay(1500),
-              Animated.timing(fadeAnim, {
-                toValue: 0,
-                duration: 300,
-                useNativeDriver: true,
-              })
-            ]).start(() => {
-              setShowSuccess(false);
-              fadeAnim.setValue(0);
-            });
+            try {
+              await deleteCategory(category.id);
+              await refreshCategories();
+              setSuccessMessage("Category deleted successfully!");
+              setShowSuccess(true);
+              Animated.sequence([
+                Animated.timing(fadeAnim, {
+                  toValue: 1,
+                  duration: 300,
+                  useNativeDriver: true,
+                }),
+                Animated.delay(1500),
+                Animated.timing(fadeAnim, {
+                  toValue: 0,
+                  duration: 300,
+                  useNativeDriver: true,
+                })
+              ]).start(() => {
+                setShowSuccess(false);
+                fadeAnim.setValue(0);
+              });
+            } catch (error) {
+              Alert.alert("Error", "Failed to delete category");
+            }
           }
         }
       ]
@@ -342,11 +371,17 @@ const Category = () => {
 
             {/* Save Button */}
             <TouchableOpacity
-              style={[styles.saveButton, activeTab === "income" && styles.saveButtonIncome]}
+              style={[
+                styles.saveButton, 
+                activeTab === "income" && styles.saveButtonIncome,
+                isSaving && styles.disabledButton
+              ]}
               onPress={handleSave}
+              disabled={isSaving}
             >
               <Text style={styles.saveButtonText}>
-                {editingCategory ? "Update" : "Save"} {activeTab === "expense" ? "Expense" : "Income"} Category
+                {isSaving ? "Saving..." : 
+                 editingCategory ? "Update" : "Save"} {activeTab === "expense" ? "Expense" : "Income"} Category
               </Text>
             </TouchableOpacity>
           </View>
@@ -564,6 +599,9 @@ const styles = StyleSheet.create({
   },
   saveButtonIncome: {
     backgroundColor: "#00C49A",
+  },
+  disabledButton: {
+    backgroundColor: "#cccccc",
   },
   saveButtonText: {
     fontSize: 16,
