@@ -120,7 +120,7 @@ const Profile = ({ navigation }) => {
     }
   };
 
-  // Function to update user's avatar
+  // Function to update user's avatar - LOCAL ONLY VERSION
   const selectAvatar = async (avatarId) => {
     try {
       setLoading(true);
@@ -132,19 +132,8 @@ const Profile = ({ navigation }) => {
 
       const avatarKey = `avatar_${avatarId}`;
       
-      // Save avatar to local storage
+      // Save avatar to local storage only
       await AsyncStorage.setItem(AVATAR_STORAGE_KEY, avatarKey);
-
-      // Try to update on backend
-      try {
-        const response = await axios.put(
-          "http://192.168.1.13:5000/api/users/update-avatar",
-          { avatarId },
-          { headers: { "x-auth-token": token } }
-        );
-      } catch (err) {
-        console.warn("Avatar update failed on backend, saved locally only", err);
-      }
 
       // Update local state
       setUserDetails({
@@ -159,7 +148,7 @@ const Profile = ({ navigation }) => {
       }));
       
       setAvatarModalVisible(false);
-      Alert.alert("Success", "Avatar updated!");
+      Alert.alert("Success", "Avatar updated Succesfully!");
     } catch (error) {
       console.error("Error updating avatar:", error);
       Alert.alert("Error", "Failed to update avatar. Please try again.");
