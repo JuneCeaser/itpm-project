@@ -313,7 +313,7 @@ const Profile = ({ navigation }) => {
     try {
       setIsUpdating(true);
       const response = await axios.put(
-        "http://192.168.1.13:5000/api/update",
+        "http://192.168.1.13:5000/api/users/update",
         { name: newName },
         { headers: { "x-auth-token": token } }
       );
