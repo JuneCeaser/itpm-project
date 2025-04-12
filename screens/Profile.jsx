@@ -417,7 +417,7 @@ const Profile = ({ navigation }) => {
               style={styles.changeAvatarButton}
               onPress={() => setAvatarModalVisible(true)}
             >
-              <Ionicons name="image-outline" size={18} color="#DEDEDE" />
+              <Ionicons name="image-outline" size={18} color="#00D09E" />
             </TouchableOpacity>
           </View>
 
@@ -691,7 +691,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#DEDEDE',
+    borderColor: '#00D09E',
   },
   profileInfo: {
     alignItems: "center",
