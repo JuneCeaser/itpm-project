@@ -82,7 +82,7 @@ const Profile = ({ navigation }) => {
     try {
       // First try to get user data from API
       const response = await axios.get(
-        "http://192.168.8.101:5000/api/users/me",
+        "http://192.168.8.100:5000/api/users/me",
         { headers: { "x-auth-token": token } }
       );
       
@@ -200,7 +200,7 @@ const Profile = ({ navigation }) => {
       
       try {
         const response = await axios.delete(
-          "http://192.168.8.1015000/api/users/delete",
+          "http://192.168.8.100:5000/api/users/delete",
           {
             headers: { "x-auth-token": token },
           }
@@ -302,7 +302,7 @@ const Profile = ({ navigation }) => {
     try {
       setIsUpdating(true);
       const response = await axios.put(
-        "http://192.168.8.101:5000/api/users/update",
+        "http://192.168.8.100:5000/api/users/update",
         { name: newName },
         { headers: { "x-auth-token": token } }
       );
