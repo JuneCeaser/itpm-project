@@ -11,6 +11,8 @@ import { AuthProvider, AuthContext } from "./context/AuthContext";
 import { TransactionProvider } from "./context/TransactionContext";
 import { CategoryProvider } from "./context/CategoryContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import ForgotPasswordScreen from "./screens/ForgotPasswordScreen";
+import ResetPasswordScreen from "./screens/ResetPasswordScreen";
 
 const Stack = createStackNavigator();
 
@@ -104,6 +106,16 @@ function AppContent() {
         <Stack.Screen
           name="HomeTabs"
           component={BottomTabNavigator}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="ForgotPassword"
+          component={ForgotPasswordScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="ResetPassword"
+          component={ResetPasswordScreen}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>

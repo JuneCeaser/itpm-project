@@ -94,8 +94,7 @@ const AuthScreen = ({ navigation }) => {
   };
 
   const handleForgotPassword = () => {
-   
-    console.log("Forgot password pressed");
+    navigation.navigate("ForgotPassword");
   };
 
   const renderLoginForm = () => (
