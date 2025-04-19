@@ -29,12 +29,11 @@ const Home = () => {
   const [editNote, setEditNote] = useState("");
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
-
-  // Get date range based on active tab
+  
   const dateRange = useMemo(() => {
     const today = new Date();
     
-    // Format a date as "DD MMM" (e.g., "10 Apr")
+  
     const formatDateShort = (date) => {
       return date.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
     };
@@ -43,8 +42,8 @@ const Home = () => {
       case "Daily":
         return formatDateShort(today);
       case "Weekly": {
-        const currentDay = today.getDay(); // 0 is Sunday, 1 is Monday, etc.
-        const daysFromMonday = currentDay === 0 ? 6 : currentDay - 1; // Adjust if Sunday
+        const currentDay = today.getDay(); 
+        const daysFromMonday = currentDay === 0 ? 6 : currentDay - 1; 
         
         const monday = new Date(today);
         monday.setDate(today.getDate() - daysFromMonday);
