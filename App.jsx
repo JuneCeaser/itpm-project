@@ -77,7 +77,7 @@ function AppContent() {
   };
 
   if (isLoading) {
-    return null; // or a loading screen
+    return null; 
   }
 
   return (

@@ -276,9 +276,7 @@ const Home = () => {
         <View style={styles.balanceSection}>
           <View style={styles.summaryItem}>
             <View style={styles.labelContainer}>
-              <View style={styles.checkboxIcon}>
-                <Ionicons name="checkmark" size={16} color="white" />
-              </View>
+
               <Text style={styles.summaryLabel}>Total Balance</Text>
             </View>
             <Text style={styles.balanceAmount}>LKR {balance.toFixed(2)}</Text>
@@ -288,9 +286,6 @@ const Home = () => {
           
           <View style={styles.summaryItem}>
             <View style={styles.labelContainer}>
-              <View style={styles.checkboxIcon}>
-                <Ionicons name="checkmark" size={16} color="white" />
-              </View>
               <Text style={styles.summaryLabel}>
                 {activeTab === "Daily" ? "Today's Expense" : 
                  activeTab === "Weekly" ? "Weekly Expense" : "Monthly Expense"}
