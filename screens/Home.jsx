@@ -192,7 +192,7 @@ const Home = () => {
     setIsEditModalVisible(true);
   };
 
-  const handleUpdateTransaction = async () => {
+  const handleUpdateTransaction = async () => {  // this is the handleUpdate function
     if (!editAmount || isNaN(parseFloat(editAmount)) || parseFloat(editAmount) <= 0) {
       Alert.alert("Error", "Please enter a valid positive amount");
       return;
