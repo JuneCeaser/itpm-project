@@ -466,15 +466,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     width: "30%",
   },
-  categoryIcon: {
-    width: 60,
-    height: 60,
-    borderRadius: 16,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 8,
-    backgroundColor: '#00c89c', 
-  },
+ 
   categoryText: {
     fontSize: 14,
     color: "#333",
@@ -516,12 +508,7 @@ const styles = StyleSheet.create({
     padding: 20,
     maxHeight: '80%',
   },
-  modalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 20,
-  },
+
   modalTitle: {
     fontSize: 18,
     fontWeight: "bold",
