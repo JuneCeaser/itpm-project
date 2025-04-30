@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
+import { useContext } from "react";
 import {
   StyleSheet,
   Text,
@@ -6,63 +7,294 @@ import {
   SafeAreaView,
   StatusBar,
   TouchableOpacity,
+  ScrollView,
   Image,
+  ActivityIndicator,
+  Alert,
+  Modal,
+  TextInput
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { useTransactions } from '../context/TransactionContext';
+import { useCategories } from '../context/CategoryContext';
+import { AuthContext } from '../context/AuthContext';
 
 // Main Home component that renders the entire screen
 const Home = () => {
-  const [selectedPeriod, setSelectedPeriod] = useState("monthly");
-// Handle period selection change
-  const handlePeriodChange = (period) => {
-    setSelectedPeriod(period);
+  const [activeTab, setActiveTab] = useState("Daily");
+  const { transactions, balance, loading, updateTransaction, deleteTransaction } = useTransactions();
+  const { expenseCategories, incomeCategories } = useCategories();
+  const { user } = useContext(AuthContext);
+  const [editingTransaction, setEditingTransaction] = useState(null);
+  const [editAmount, setEditAmount] = useState("");
+  const [editNote, setEditNote] = useState("");
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  
+  const dateRange = useMemo(() => {
+    const today = new Date();
+    
+  
+    const formatDateShort = (date) => {
+      return date.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+    };
+    
+    switch(activeTab) {
+      case "Daily":
+        return formatDateShort(today);
+      case "Weekly": {
+        const currentDay = today.getDay(); 
+        const daysFromMonday = currentDay === 0 ? 6 : currentDay - 1; 
+        
+        const monday = new Date(today);
+        monday.setDate(today.getDate() - daysFromMonday);
+        
+        const sunday = new Date(monday);
+        sunday.setDate(monday.getDate() + 6);
+        
+        return `${formatDateShort(monday)} - ${formatDateShort(sunday)}`;
+      }
+      case "Monthly": {
+        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+        const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        
+        return `${formatDateShort(firstDay)} - ${formatDateShort(lastDay)}`;
+      }
+      default:
+        return "";
+    }
+  }, [activeTab]);
+
+  // Consistent color mapping for all categories
+  const categoryColors = {
+    // Expense Categories
+    "Food": "#FF6384",
+    "Transport": "#36A2EB",
+    "Shopping": "#FFCE56",
+    "Bills": "#4BC0C0",
+    "Entertainment": "#9966FF",
+    "Healthcare": "#FF5252",
+    "Education": "#FF4081",
+    "Travel": "#7C4DFF",
+    "Groceries": "#FFAB40",
+    
+    // Income Categories
+    "Salary": "#4CAF50",
+    "Freelance": "#2196F3",
+    "Investments": "#9C27B0",
+    "Gifts": "#FF9800",
+    "Bonus": "#FF5722",
+    "Rental": "#795548",
+    
+    // Default
+    "Other": "#607D8B"
+  };
+
+  // Get consistent color for category
+  const getCategoryColor = (category) => {
+    // Return predefined color if exists
+    if (categoryColors[category]) {
+      return categoryColors[category];
+    }
+    
+    // Generate consistent color for unknown categories
+    let hash = 0;
+    for (let i = 0; i < category.length; i++) {
+      hash = category.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    
+    // Convert hash to HSL color
+    const h = Math.abs(hash) % 360;
+    return `hsl(${h}, 70%, 60%)`;
+  };
+
+  // Filter transactions based on active tab
+  const getFilteredTransactions = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(today.getDate() - 7);
+    oneWeekAgo.setHours(0, 0, 0, 0);
+    
+    const oneMonthAgo = new Date();
+    oneMonthAgo.setDate(today.getDate() - 30);
+    oneMonthAgo.setHours(0, 0, 0, 0);
+    
+    switch(activeTab) {
+      case "Daily":
+        return transactions.filter(transaction => {
+          const transactionDate = new Date(transaction.date);
+          return transactionDate >= today;
+        });
+      case "Weekly": {
+        // Get current day (0 = Sunday, 1 = Monday, ...)
+        const currentDay = today.getDay(); 
+        // Calculate days since last Monday (if today is Sunday, go back 6 days)
+        const daysFromMonday = currentDay === 0 ? 6 : currentDay - 1;
+        
+        // Calculate Monday of current week
+        const monday = new Date(today);
+        monday.setDate(today.getDate() - daysFromMonday);
+        monday.setHours(0, 0, 0, 0);
+        
+        return transactions.filter(transaction => {
+          const transactionDate = new Date(transaction.date);
+          return transactionDate >= monday;
+        });
+      }
+      case "Monthly": {
+        // Get first day of current month
+        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+        firstDay.setHours(0, 0, 0, 0);
+        
+        return transactions.filter(transaction => {
+          const transactionDate = new Date(transaction.date);
+          return transactionDate >= firstDay;
+        });
+      }
+      default:
+        return transactions;
+    }
+  };
+
+  // Calculate filtered balance - memoize for performance
+  const filteredTransactions = useMemo(() => getFilteredTransactions(), [transactions, activeTab]);
+  
+  const filteredBalance = useMemo(() => {
+    return filteredTransactions.reduce((sum, t) => sum + t.amount, 0);
+  }, [filteredTransactions]);
+
+  // Calculate filtered expenses
+  const filteredExpenses = useMemo(() => {
+    return filteredTransactions
+      .filter(t => t.amount < 0)
+      .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+  }, [filteredTransactions]);
+
+  // Calculate filtered income
+  const filteredIncome = useMemo(() => {
+    return filteredTransactions
+      .filter(t => t.amount > 0)
+      .reduce((sum, t) => sum + t.amount, 0);
+  }, [filteredTransactions]);
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const time = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const day = date.toLocaleDateString([], { day: 'numeric', month: 'short' });
+    return `${time} • ${day}`;
+  };
+
+  const handleEditTransaction = (transaction) => {
+    setEditingTransaction(transaction);
+    setEditAmount(Math.abs(transaction.amount).toString());
+    setEditNote(transaction.note || "");
+    setIsEditModalVisible(true);
+  };
+
+  const handleUpdateTransaction = async () => {  // this is the handleUpdate function
+    if (!editAmount || isNaN(parseFloat(editAmount)) || parseFloat(editAmount) <= 0) {
+      Alert.alert("Error", "Please enter a valid positive amount");
+      return;
+    }
+
+    setIsUpdating(true);
+    
+    try {
+      const updatedTransaction = {
+        ...editingTransaction,
+        amount: parseFloat(editAmount) * (editingTransaction.amount < 0 ? -1 : 1),
+        note: editNote.trim() || undefined
+      };
+  
+      const result = await updateTransaction(editingTransaction.id, updatedTransaction);
+      if (result.success) {
+        setIsEditModalVisible(false);
+        Alert.alert("Success", "Transaction updated successfully");
+      } else {
+        Alert.alert("Error", result.error || "Failed to update transaction");
+      }
+    } catch (error) {
+      console.error("Update transaction error:", error);
+      Alert.alert("Error", "An unexpected error occurred");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleDeleteTransaction = async (id) => {
+    Alert.alert(
+      "Confirm Delete",
+      "Are you sure you want to delete this transaction?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        { 
+          text: "Delete", 
+          style: "destructive",
+          onPress: async () => {
+            const result = await deleteTransaction(id);
+            if (result.success) {
+              Alert.alert("Success", "Transaction deleted successfully");
+            } else {
+              Alert.alert("Error", "Failed to delete transaction");
+            }
+          }
+        }
+      ]
+    );
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" />
-
-      {/* Header with greeting and notification */}
+      <StatusBar barStyle="light-content" backgroundColor="#00c89c" />
+      
+      {/* Header Section */}
       <View style={styles.header}>
+        <Image
+          source={require('../assets/fin.png')}
+          style={styles.logo}
+          resizeMode="contain"
+        />
         <View>
-          <Text style={styles.welcomeText}>Hi, Welcome Back</Text>
-          <Text style={styles.greetingText}>Good Morning</Text>
+          <Text style={styles.welcomeText}>Hi, {user?.name || 'User'}</Text>
+          <Text style={styles.greetingText}>
+            {new Date().getHours() < 12 ? 'Good Morning' : 
+             new Date().getHours() < 18 ? 'Good Afternoon' : 'Good Evening'}
+          </Text>
         </View>
-        <TouchableOpacity style={styles.notificationIcon}>
-          <Text>🔔</Text>
+        <TouchableOpacity style={styles.notificationButton}>
+          <Ionicons name="notifications-outline" size={24} color="white"/>
         </TouchableOpacity>
       </View>
 
-      {/* Balance Section */}
-      <View style={styles.balanceContainer}>
+      {/* Summary Container */}
+      <View style={styles.summaryContainer}>
         <View style={styles.balanceSection}>
-          <View style={styles.balanceBox}>
-            <Text style={styles.balanceLabel}>Total Balance</Text>
-            <Text style={styles.balanceAmount}>$7,783.00</Text>
-          </View>
-          <View style={styles.divider} />
-          <View style={styles.balanceBox}>
-            <Text style={styles.balanceLabel}>Total Expense</Text>
-            <Text style={styles.expenseAmount}>-$1,187.40</Text>
-          </View>
-        </View>
+          <View style={styles.summaryItem}>
+            <View style={styles.labelContainer}>
 
-        {/* Progress Bar */}
-        <View style={styles.progressBarContainer}>
-          <View style={styles.progressBar}>
-            <View style={[styles.progress, { width: "30%" }]} />
+              <Text style={styles.summaryLabel}>Total Balance</Text>
+            </View>
+            <Text style={styles.balanceAmount}>LKR {balance.toFixed(2)}</Text>
           </View>
-          <View style={styles.progressLabels}>
-            <Text style={styles.progressPercentage}>30%</Text>
-            <Text style={styles.progressMax}>$20,000.00</Text>
+          
+          <View style={styles.divider}/>
+          
+          <View style={styles.summaryItem}>
+            <View style={styles.labelContainer}>
+              <Text style={styles.summaryLabel}>
+                {activeTab === "Daily" ? "Today's Expense" : 
+                 activeTab === "Weekly" ? "Weekly Expense" : "Monthly Expense"}
+              </Text>
+            </View>
+            <Text style={styles.expenseAmount}>
+              LKR {filteredExpenses.toFixed(2)}
+            </Text>
           </View>
-        </View>
-
-        <View style={styles.expenseNote}>
-          <Text style={styles.checkIcon}>✓</Text>
-          <Text style={styles.expenseNoteText}>
-            30% Of Your Expenses, Looks Good.
-          </Text>
         </View>
       </View>
 
@@ -71,132 +303,180 @@ const Home = () => {
         <TouchableOpacity
           style={[
             styles.timeOption,
-            selectedPeriod === "daily" && styles.activeTimeOption,
+            activeTab === "Daily" && styles.activeTimeOption
           ]}
-          onPress={() => handlePeriodChange("daily")}
+          onPress={() => setActiveTab("Daily")}
         >
-          <Text
-            style={
-              selectedPeriod === "daily"
-                ? styles.activeTimeOptionText
-                : styles.timeOptionText
-            }
-          >
+          <Text style={[
+            styles.timeOptionText,
+            activeTab === "Daily" && styles.activeTimeOptionText
+          ]}>
             Daily
           </Text>
         </TouchableOpacity>
-
+        
         <TouchableOpacity
           style={[
             styles.timeOption,
-            selectedPeriod === "weekly" && styles.activeTimeOption,
+            activeTab === "Weekly" && styles.activeTimeOption
           ]}
-          onPress={() => handlePeriodChange("weekly")}
+          onPress={() => setActiveTab("Weekly")}
         >
-          <Text
-            style={
-              selectedPeriod === "weekly"
-                ? styles.activeTimeOptionText
-                : styles.timeOptionText
-            }
-          >
+          <Text style={[
+            styles.timeOptionText,
+            activeTab === "Weekly" && styles.activeTimeOptionText
+          ]}>
             Weekly
           </Text>
         </TouchableOpacity>
-
+        
         <TouchableOpacity
           style={[
             styles.timeOption,
-            selectedPeriod === "monthly" && styles.activeTimeOption,
+            activeTab === "Monthly" && styles.activeTimeOption
           ]}
-          onPress={() => handlePeriodChange("monthly")}
+          onPress={() => setActiveTab("Monthly")}
         >
-          <Text
-            style={
-              selectedPeriod === "monthly"
-                ? styles.activeTimeOptionText
-                : styles.timeOptionText
-            }
-          >
+          <Text style={[
+            styles.timeOptionText,
+            activeTab === "Monthly" && styles.activeTimeOptionText
+          ]}>
             Monthly
           </Text>
         </TouchableOpacity>
       </View>
-
-      {/* Transactions */}
-      <View style={styles.transactionsContainer}>
-        {/* Display transactions based on selected period */}
-        {/* For now, we'll just show the same transactions for all periods */}
-        {/* In a real app, you would filter transactions based on selectedPeriod */}
-
-        {/* Salary Transaction */}
-        <View style={styles.transaction}>
-          <View style={[styles.transactionIcon, styles.salaryIcon]}>
-            <Text>💵</Text>
-          </View>
-          <View style={styles.transactionDetails}>
-            <Text style={styles.transactionTitle}>Salary</Text>
-            <Text style={styles.transactionTime}>18:27 - April 30</Text>
-          </View>
-          <View style={styles.transactionCategory}>
-            <Text style={styles.categoryText}>Monthly</Text>
-          </View>
-          <Text style={styles.transactionAmount}>$4,000,00</Text>
-        </View>
-
-        {/* Groceries Transaction */}
-        <View style={styles.transaction}>
-          <View style={[styles.transactionIcon, styles.groceryIcon]}>
-            <Text>🛒</Text>
-          </View>
-          <View style={styles.transactionDetails}>
-            <Text style={styles.transactionTitle}>Groceries</Text>
-            <Text style={styles.transactionTime}>17:00 - April 24</Text>
-          </View>
-          <View style={styles.transactionCategory}>
-            <Text style={styles.categoryText}>Pantry</Text>
-          </View>
-          <Text style={styles.transactionExpense}>-$100,00</Text>
-        </View>
-
-        {/* Rent Transaction */}
-        <View style={styles.transaction}>
-          <View style={[styles.transactionIcon, styles.rentIcon]}>
-            <Text>🏠</Text>
-          </View>
-          <View style={styles.transactionDetails}>
-            <Text style={styles.transactionTitle}>Rent</Text>
-            <Text style={styles.transactionTime}>8:30 - April 15</Text>
-          </View>
-          <View style={styles.transactionCategory}>
-            <Text style={styles.categoryText}>Rent</Text>
-          </View>
-          <Text style={styles.transactionExpense}>-$674,40</Text>
-        </View>
+      
+      {/* Date Range Display */}
+      <View style={styles.dateRangeContainer}>
+        <Ionicons name="calendar-outline" size={18} color="#666" />
+        <Text style={styles.dateRangeText}>{dateRange}</Text>
       </View>
 
-      {/* Bottom Navigation */}
-      <View style={styles.bottomNav}>
-        <TouchableOpacity style={[styles.navButton, styles.activeNavButton]}>
-          <Text style={styles.navIcon}>🏠</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navButton}>
-          <Text style={styles.navIcon}>📊</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.addButton}>
-          <Text style={styles.addIcon}>+</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navButton}>
-          <Text style={styles.navIcon}>💳</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navButton}>
-          <Text style={styles.navIcon}>👤</Text>
-        </TouchableOpacity>
-      </View>
+      {/* Transactions List */}
+      <ScrollView
+        style={styles.transactionsContainer}
+        showsVerticalScrollIndicator={false}
+      >
+        {loading ? (
+          <ActivityIndicator size="large" color="#00c89c" style={styles.loadingIndicator} />
+        ) : filteredTransactions.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Ionicons name="receipt-outline" size={48} color="#ccc" />
+            <Text style={styles.emptyStateText}>No transactions for this period</Text>
+            <Text style={styles.emptyStateSubtext}>
+              {activeTab === "Daily" ? "No transactions today" : 
+               activeTab === "Weekly" ? "No transactions in the last 7 days" : 
+               "No transactions in the last 30 days"}
+            </Text>
+          </View>
+        ) : (
+          filteredTransactions.map((transaction) => (
+            <TouchableOpacity
+              key={transaction.id}
+              style={styles.transaction}
+              onPress={() => handleEditTransaction(transaction)}
+              onLongPress={() => handleDeleteTransaction(transaction.id)}
+              delayLongPress={500}
+              accessible={true}
+              accessibilityLabel={`${transaction.category} transaction for ${Math.abs(transaction.amount)}`}
+              accessibilityHint="Tap to edit, press and hold to delete"
+            >
+              <View style={[
+                styles.transactionIcon,
+                { backgroundColor: getCategoryColor(transaction.category) }
+              ]}>
+                <Ionicons 
+                  name={transaction.categoryIcon || "pricetag-outline"} 
+                  size={24} 
+                  color="#fff" 
+                />
+              </View>
+              
+              <View style={styles.transactionDetails}>
+                <Text style={styles.transactionTitle}>{transaction.category}</Text>
+                {transaction.note && (
+                  <Text style={styles.transactionNote}>{transaction.note}</Text>
+                )}
+                <Text style={styles.transactionTime}>{formatDate(transaction.date)}</Text>
+              </View>
+              
+              <Text style={[
+                styles.transactionAmount,
+                transaction.amount < 0 ? styles.transactionExpense : styles.transactionIncome
+              ]}>
+                {transaction.amount < 0 
+                  ? `-Rs${Math.abs(transaction.amount).toFixed(2)}` 
+                  : `+Rs${transaction.amount.toFixed(2)}`}
+              </Text>
+            </TouchableOpacity>
+          ))
+        )}
+      </ScrollView>
+
+      {/* Edit Transaction Modal */}
+      <Modal
+        visible={isEditModalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setIsEditModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Edit Transaction</Text>
+              <TouchableOpacity onPress={() => setIsEditModalVisible(false)}>
+                <Ionicons name="close" size={24} color="#666" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Amount (Rs)</Text>
+              <TextInput
+                style={styles.input}
+                keyboardType="decimal-pad"
+                value={editAmount}
+                onChangeText={setEditAmount}
+                placeholder="Enter amount"
+              />
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Note (Optional)</Text>
+              <TextInput
+                style={[styles.input, styles.noteInput]}
+                value={editNote}
+                onChangeText={setEditNote}
+                placeholder="Add a note"
+                multiline
+              />
+            </View>
+
+            <TouchableOpacity
+              style={[styles.saveButton, isUpdating && styles.saveButtonDisabled]}
+              onPress={handleUpdateTransaction}
+              disabled={isUpdating}
+            >
+              {isUpdating ? (
+                <ActivityIndicator size="small" color="white" />
+              ) : (
+                <Text style={styles.saveButtonText}>Update Transaction</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Voice Input Floating Button */}
+      <TouchableOpacity
+        style={styles.voiceInputButton}
+        onPress={() => console.log("Voice input")}
+      >
+        <MaterialIcons name="keyboard-voice" size={28} color="white"/>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 };
-// Style definitions for all components
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -210,200 +490,149 @@ const styles = StyleSheet.create({
     paddingTop: 15,
     paddingBottom: 10,
   },
+  headerLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  logo: {
+    width: 40,
+    height: 40,
+    marginRight: -110,
+  },
   welcomeText: {
     fontSize: 20,
     fontWeight: "bold",
-    color: "#000",
+    color: "white",
   },
   greetingText: {
     fontSize: 14,
-    color: "#333",
+    color: "white",
   },
-  notificationIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "#fff",
-    justifyContent: "center",
-    alignItems: "center",
+  notificationButton: {
+    padding: 8,
   },
-  balanceContainer: {
-    paddingHorizontal: 20,
-    marginBottom: 20,
+  summaryContainer: {
+    backgroundColor: "white",
+    borderRadius: 20,
+    margin: 16,
+    padding: 16,
   },
   balanceSection: {
     flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 15,
-  },
-  balanceBox: {
-    flex: 1,
-  },
-  balanceLabel: {
-    fontSize: 12,
-    color: "#333",
-    marginBottom: 4,
-  },
-  balanceAmount: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#fff",
-  },
-  expenseAmount: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#f44336",
-  },
-  divider: {
-    width: 1,
-    height: 40,
-    backgroundColor: "#fff",
-    marginHorizontal: 10,
-  },
-  progressBarContainer: {
-    marginBottom: 8,
-  },
-  progressBar: {
-    height: 10,
-    backgroundColor: "#ffffff80",
-    borderRadius: 5,
-    marginBottom: 4,
-  },
-  progress: {
-    height: "100%",
-    backgroundColor: "#fff",
-    borderRadius: 5,
-  },
-  progressLabels: {
-    flexDirection: "row",
     justifyContent: "space-between",
-  },
-  progressPercentage: {
-    fontSize: 12,
-    color: "#333",
-  },
-  progressMax: {
-    fontSize: 12,
-    color: "#333",
-  },
-  expenseNote: {
-    flexDirection: "row",
     alignItems: "center",
-  },
-  checkIcon: {
-    fontSize: 16,
-    color: "#00796b",
-    marginRight: 5,
-  },
-  expenseNoteText: {
-    fontSize: 14,
-    color: "#333",
-  },
-  summaryCard: {
-    backgroundColor: "#ffffff",
-    borderRadius: 20,
-    padding: 20,
-    marginHorizontal: 20,
-    marginBottom: 20,
-  },
-  summaryRow: {
-    flexDirection: "row",
-  },
-  savingsGoal: {
-    justifyContent: "center",
-    alignItems: "center",
-    paddingRight: 20,
-  },
-  savingsCircle: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    borderWidth: 2,
-    borderColor: "#4286f4",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  carIcon: {
-    fontSize: 24,
-  },
-  savingsText: {
-    fontSize: 14,
-    fontWeight: "bold",
-    color: "#000",
-  },
-  goalText: {
-    fontSize: 12,
-    color: "#333",
-  },
-  verticalDivider: {
-    width: 1,
-    height: "100%",
-    backgroundColor: "#fff",
-    marginHorizontal: 10,
-  },
-  summaryDetails: {
-    flex: 1,
-    paddingLeft: 10,
   },
   summaryItem: {
-    marginBottom: 10,
+    flex: 1,
+  },
+  labelContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  checkboxIcon: {
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    backgroundColor: "#00c89c",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 8,
   },
   summaryLabel: {
     fontSize: 14,
-    color: "#333",
+    color: "#666",
   },
-  summaryAmount: {
-    fontSize: 20,
+  balanceAmount: {
+    fontSize: 22,
     fontWeight: "bold",
-    color: "#000",
+    color: "#00c89c",
   },
-  summaryExpense: {
-    fontSize: 20,
+  expenseAmount: {
+    fontSize: 22,
     fontWeight: "bold",
-    color: "#f44336",
+    color: "#F44336",
   },
-  summaryDivider: {
-    height: 1,
-    backgroundColor: "#ffffff80",
-    marginVertical: 10,
+  divider: {
+    width: 1,
+    height: "80%",
+    backgroundColor: "#eee",
+    marginHorizontal: 8,
   },
   timeSelector: {
     flexDirection: "row",
-    backgroundColor: "#f0f7f4",
-    borderRadius: 20,
+    backgroundColor: "white",
+    borderRadius: 10,
     marginHorizontal: 20,
-    marginBottom: 15,
+    marginBottom: 10,
     padding: 6,
   },
   timeOption: {
     flex: 1,
     paddingVertical: 10,
     alignItems: "center",
-    borderRadius: 15,
+    borderRadius: 10,
   },
   activeTimeOption: {
     backgroundColor: "#00c89c",
   },
   timeOptionText: {
-    color: "#555",
+    color: "#666",
   },
   activeTimeOptionText: {
-    color: "#fff",
+    color: "white",
     fontWeight: "bold",
+  },
+  dateRangeContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "white",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    marginHorizontal: 20,
+    marginBottom: 15,
+    borderRadius: 10,
+  },
+  dateRangeText: {
+    marginLeft: 6,
+    fontSize: 14,
+    color: "#333",
+    fontWeight: "600",
   },
   transactionsContainer: {
     flex: 1,
-    backgroundColor: "#f0f7f4",
+    backgroundColor: "white",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingHorizontal: 20,
     paddingTop: 20,
   },
+  loadingIndicator: {
+    marginTop: 40,
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+  },
+  emptyStateText: {
+    fontSize: 18,
+    color: '#666',
+    marginTop: 16,
+  },
+  emptyStateSubtext: {
+    fontSize: 14,
+    color: '#999',
+    marginTop: 8,
+  },
   transaction: {
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 20,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
   },
   transactionIcon: {
     width: 40,
@@ -411,87 +640,109 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 15,
-  },
-  salaryIcon: {
-    backgroundColor: "#90caf9",
-  },
-  groceryIcon: {
-    backgroundColor: "#90caf9",
-  },
-  rentIcon: {
-    backgroundColor: "#2979ff",
+    marginRight: 12,
   },
   transactionDetails: {
     flex: 1,
+    marginRight: 10,
   },
   transactionTitle: {
     fontSize: 16,
-    fontWeight: "bold",
-    color: "#333",
+    fontWeight: '600',
+    color: '#333',
   },
   transactionTime: {
     fontSize: 12,
-    color: "#888",
+    color: '#888',
+    marginTop: 2,
   },
-  transactionCategory: {
-    backgroundColor: "#f5f5f5",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 10,
-    marginRight: 10,
-  },
-  categoryText: {
-    fontSize: 12,
-    color: "#555",
+  transactionNote: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 4,
+    fontStyle: 'italic',
   },
   transactionAmount: {
     fontSize: 16,
-    fontWeight: "bold",
-    color: "#333",
+    fontWeight: 'bold',
+  },
+  transactionIncome: {
+    color: '#4CAF50',
   },
   transactionExpense: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#f44336",
+    color: '#F44336',
   },
-  bottomNav: {
-    flexDirection: "row",
-    height: 70,
-    backgroundColor: "#f0f7f4",
-    alignItems: "center",
-    paddingHorizontal: 20,
-  },
-  navButton: {
-    flex: 1,
-    alignItems: "center",
-  },
-  activeNavButton: {
-    backgroundColor: "#00c89c",
-    borderRadius: 20,
-    paddingVertical: 8,
-    margin: 5,
-  },
-  navIcon: {
-    fontSize: 24,
-  },
-  addButton: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: "#00c89c",
-    justifyContent: "center",
-    alignItems: "center",
+  voiceInputButton: {
+    position: 'absolute',
+    bottom: 90,
+    right: 20,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#00c89c',
+    justifyContent: 'center',
+    alignItems: 'center',
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 3,
-    elevation: 4,
+    elevation: 5,
   },
-  addIcon: {
-    fontSize: 28,
-    color: "#fff",
-    fontWeight: "bold",
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 20,
+    width: '90%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  inputContainer: {
+    marginBottom: 15,
+  },
+  inputLabel: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 8,
+  },
+  input: {
+    backgroundColor: '#f5f5f5',
+    borderRadius: 10,
+    padding: 15,
+    fontSize: 16,
+  },
+  noteInput: {
+    minHeight: 100,
+    textAlignVertical: 'top',
+  },
+  saveButton: {
+    backgroundColor: '#00c89c',
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  saveButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  saveButtonDisabled: {
+    backgroundColor: '#b0e0d6',
   },
 });
 
