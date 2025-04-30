@@ -16,23 +16,23 @@ import { AuthContext } from "../AuthContext";
 import { Ionicons } from "@expo/vector-icons";
 
 const Profile = ({ navigation }) => {
-  const [userDetails, setUserDetails] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const { token, logout } = useContext(AuthContext);
+  const [userDetails, setUserDetails] = useState(null); //store the user data
+  const [loading, setLoading] = useState(true);     //track loading state
+  const { token, logout } = useContext(AuthContext); //get token  and logout from context
 
   const fetchUserDetails = async () => {
     try {
       const response = await axios.get(
         "https://mobile-backend-news.vercel.app/api/users/me",
         {
-          headers: { "x-auth-token": token },
+          headers: { "x-auth-token": token },  //send auth token in headers
         }
       );
-      setUserDetails(response.data);
+      setUserDetails(response.data); //save fetched data
     } catch (error) {
       console.error("Error fetching user details:", error);
     } finally {
-      setLoading(false);
+      setLoading(false); //stop loading spinner
     }
   };
 
@@ -42,7 +42,7 @@ const Profile = ({ navigation }) => {
       const response = await axios.delete(
         "https://mobile-backend-news.vercel.app/api/users/delete",
         {
-          headers: { "x-auth-token": token },
+          headers: { "x-auth-token": token }, //send token in delete request
         }
       );
 
