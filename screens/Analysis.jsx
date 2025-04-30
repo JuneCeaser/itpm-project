@@ -12,7 +12,7 @@ import {
   MaterialCommunityIcons,
   FontAwesome5,
   Feather,
-} from "@expo/vector-icons";
+} from "@expo/vector-icons"; //import icons
 
 const BarChart = ({ period }) => {
   const chartData = {
@@ -41,7 +41,7 @@ const BarChart = ({ period }) => {
   // Get the appropriate data for the selected period
   const { labels, income, expense } = chartData[period];
 
-  // Find max value to calculate relative heights
+  // Find max value to calculate relative heights 
   const maxValue = Math.max(...income, ...expense);
 
   return (
