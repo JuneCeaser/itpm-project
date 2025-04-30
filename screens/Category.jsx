@@ -508,12 +508,7 @@ const styles = StyleSheet.create({
     padding: 20,
     maxHeight: '80%',
   },
-  modalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 20,
-  },
+
   modalTitle: {
     fontSize: 18,
     fontWeight: "bold",
@@ -582,13 +577,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 4,
   },
-  saveButton: {
-    backgroundColor: "#00C49A",
-    paddingVertical: 12,
-    borderRadius: 12,
-    alignItems: "center",
-    marginTop: 10,
-  },
+ 
   saveButtonIncome: {
     backgroundColor: "#00C49A",
   },
