@@ -467,7 +467,12 @@ const styles = StyleSheet.create({
     width: "30%",
   },
  
- 
+  categoryText: {
+    fontSize: 14,
+    color: "#333",
+    fontWeight: "500",
+    textAlign: "center",
+  },
   addButton: {
     flexDirection: "row",
     alignItems: "center",
