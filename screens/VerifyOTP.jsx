@@ -13,21 +13,21 @@ import AsyncStorage from "@react-native-async-storage/async-storage";// For stor
 const VerifyOTP = ({ navigation }) => {
   const [otp, setOtp] = useState("");
 
-  const handleVerify = async () => {
+  const handleVerify = async () => {// Function to handle OTP verification
     try {
-      const email = await AsyncStorage.getItem("email");
+      const email = await AsyncStorage.getItem("email"); // Retrieve stored email
 
-      if (!email) {
-        Alert.alert("Error", "Email not found. Please sign up again.");
+      if (!email) {// If email is not found in local storage
+        Alert.alert("Error", "Email not found. Please sign up again.");// Show error alert
         return;
       }
 
-      if (!otp || otp.length !== 6 || isNaN(otp)) {
-        Alert.alert("Error", "Please enter a valid 6-digit OTP.");
+      if (!otp || otp.length !== 6 || isNaN(otp)) {// Validate OTP format (must be 6 digits)
+        Alert.alert("Error", "Please enter a valid 6-digit OTP.");// Show error alert for invalid OTP
         return;
       }
 
-      const response = await axios.post(
+      const response = await axios.post(// Send OTP and email to backend for verificationchan
         "https://mobile-backend-news.vercel.app/api/users/verify",
         { email, otp }
       );
