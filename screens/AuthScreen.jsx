@@ -32,17 +32,20 @@ const AuthScreen = ({ navigation }) => {
 
   const handleLogin = async () => {
     setLoading(true); // Disable the button
-    try {
+    try { // Make a POST request to the login API with the entered email and password
       const response = await axios.post(
         "https://mobile-backend-news.vercel.app/api/users/login",
         { email, password }
       );
-
+ // If login is successful, save user data and token (assumed to be handled by the login function)
       login(response.data.user, response.data.token);
+       // Notify the user of successful login
       Alert.alert("Login Successful", "You have logged in successfully!");
+       // Navigate to the main/home screen
       navigation.navigate("HomeTabs");
     } catch (err) {
       Alert.alert(
+         // If there's an error, display the specific error message if available, otherwise show a generic message
         "Login Failed",
         err.response ? err.response.data.error : "Invalid credentials"
       );
