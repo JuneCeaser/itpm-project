@@ -58,16 +58,7 @@ const Category = () => {
           <Text style={styles.maxAmount}>$20,000.00</Text>
         </View>
 
-        {/* Status Message */}
-        <View style={styles.statusContainer}>
-          <View style={styles.statusIconContainer}>
-            <Ionicons name="checkbox-outline" size={16} color="#00C49A" />
-          </View>
-          <Text style={styles.statusText}>
-            30% Of Your Expenses, Looks Good.
-          </Text>
-        </View>
-      </View>
+        
 
       {/* Categories Grid */}
       <View style={styles.categoriesContainer}>
