@@ -35,15 +35,7 @@ const BottomTabNavigator = () => {
             </View>
           );
         },
-        tabBarActiveTintColor: "#00c89c",
-        tabBarInactiveTintColor: "#95a5a6",
-        headerShown: false,
-        tabBarShowLabel: true,
-        tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: "500",
-          marginBottom: 5,
-        },
+       
         tabBarStyle: {
           height: 70,
           paddingTop: 5,
