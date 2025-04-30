@@ -19,6 +19,7 @@ import { useTransactions } from '../context/TransactionContext';
 import { useCategories } from '../context/CategoryContext';
 import { AuthContext } from '../context/AuthContext';
 
+// Main Home component that renders the entire screen
 const Home = () => {
   const [activeTab, setActiveTab] = useState("Daily");
   const { transactions, balance, loading, updateTransaction, deleteTransaction } = useTransactions();
