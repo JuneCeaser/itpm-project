@@ -127,9 +127,10 @@ const Analysis = () => {
                 <View style={styles.checkboxIcon}>
                   <Ionicons name="checkmark" size={16} color="white" />
                 </View>
+                 {/* Display the label for the total balance */}
                 <Text style={styles.summaryLabel}>Total Balance</Text>
               </View>
-              <Text style={styles.balanceAmount}>$7,783.00</Text>
+              <Text style={styles.balanceAmount}>$7,783.00</Text>  {/* Display the actual total balance amount */}
             </View>
 
             <View style={styles.divider} />
