@@ -457,7 +457,11 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingHorizontal: 16,
   },
- 
+  categoriesRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 20,
+  },
   categoryItem: {
     alignItems: "center",
     width: "30%",
