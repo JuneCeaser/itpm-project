@@ -304,7 +304,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 20,
   },
-
+  card: {
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    padding: 25,
+    width: "100%",
+    maxWidth: 400,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 15,
+    elevation: 2,
+  },
   iconContainer: {
     alignItems: "center",
     marginBottom: 10,
