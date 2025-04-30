@@ -328,7 +328,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
- 
+  title: {
+    fontSize: 20,
+    fontWeight: "600",
+    color: "#111827",
+    textAlign: "center",
+    marginBottom: 15,
+  },
   tabContainer: {
     flexDirection: "row",
     marginBottom: 20,
