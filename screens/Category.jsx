@@ -1,7 +1,7 @@
 import React from "react";
 import {
   View,
-  Text,
+  
   StyleSheet,
   TouchableOpacity,
   SafeAreaView,
