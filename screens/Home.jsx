@@ -12,8 +12,9 @@ import { LinearGradient } from "expo-linear-gradient";
 
 // Main Home component that renders the entire screen
 const Home = () => {
+  // Track selected time period for transactions
   const [selectedPeriod, setSelectedPeriod] = useState("monthly");
-
+// Handle period selection change
   const handlePeriodChange = (period) => {
     setSelectedPeriod(period);
   };
@@ -22,7 +23,7 @@ const Home = () => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" />
 
-      {/* Header Section */}
+      {/* Header with greeting and notification */}
       <View style={styles.header}>
         <View>
           <Text style={styles.welcomeText}>Hi, Welcome Back</Text>
@@ -196,7 +197,7 @@ const Home = () => {
     </SafeAreaView>
   );
 };
-
+// Style definitions for all components
 const styles = StyleSheet.create({
   container: {
     flex: 1,

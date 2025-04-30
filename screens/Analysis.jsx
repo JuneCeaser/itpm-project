@@ -7,6 +7,7 @@ import {
   ScrollView,
   StatusBar,
 } from "react-native";
+
 import {
   Ionicons,
   MaterialCommunityIcons,

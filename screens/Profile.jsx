@@ -15,7 +15,7 @@ import axios from "axios";
 import { AuthContext } from "../AuthContext";
 import { Ionicons } from "@expo/vector-icons";
 
-// Profile screen component showing user details and account actions
+// Profile screen component showing user details and account
 
 const Profile = ({ navigation }) => {
 
