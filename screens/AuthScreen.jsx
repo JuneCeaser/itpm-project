@@ -32,7 +32,7 @@ const AuthScreen = ({ navigation }) => {
 
   const handleLogin = async () => {
     setLoading(true); // Disable the button
-    try {
+    try { // Make a POST request to the login API with the entered email and password
       const response = await axios.post(
         "https://mobile-backend-news.vercel.app/api/users/login",
         { email, password }
