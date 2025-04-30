@@ -298,7 +298,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#00cba0",
   },
-  
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 8,
+  },
   backButton: {
     padding: 8,
   },
