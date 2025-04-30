@@ -39,6 +39,7 @@ const AuthScreen = ({ navigation }) => {
       );
  // If login is successful, save user data and token (assumed to be handled by the login function)
       login(response.data.user, response.data.token);
+       // Notify the user of successful login
       Alert.alert("Login Successful", "You have logged in successfully!");
       navigation.navigate("HomeTabs");
     } catch (err) {
