@@ -10,17 +10,24 @@ import {
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+// OTP Verification Screen Component
 const VerifyOTP = ({ navigation }) => {
+    // State for storing OTP input
   const [otp, setOtp] = useState("");
 
-  const handleVerify = async () => {
+    // Function to handle OTP verification
+ const handleVerify = async () => {
     try {
+            // Get email from AsyncStorage that was stored during signup
       const email = await AsyncStorage.getItem("email");
 
+       // Check if email exists 
       if (!email) {
         Alert.alert("Error", "Email not found. Please sign up again.");
         return;
       }
+
+            // Validate OTP format (6 digits)
 
       if (!otp || otp.length !== 6 || isNaN(otp)) {
         Alert.alert("Error", "Please enter a valid 6-digit OTP.");
