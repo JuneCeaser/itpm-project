@@ -41,6 +41,7 @@ const AuthScreen = ({ navigation }) => {
       login(response.data.user, response.data.token);
        // Notify the user of successful login
       Alert.alert("Login Successful", "You have logged in successfully!");
+       // Navigate to the main/home screen
       navigation.navigate("HomeTabs");
     } catch (err) {
       Alert.alert(
