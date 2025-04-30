@@ -577,7 +577,13 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 4,
   },
- 
+  saveButton: {
+    backgroundColor: "#00C49A",
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: "center",
+    marginTop: 10,
+  },
   saveButtonIncome: {
     backgroundColor: "#00C49A",
   },
