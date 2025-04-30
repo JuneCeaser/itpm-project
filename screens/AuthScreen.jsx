@@ -45,6 +45,7 @@ const AuthScreen = ({ navigation }) => {
       navigation.navigate("HomeTabs");
     } catch (err) {
       Alert.alert(
+         // If there's an error, display the specific error message if available, otherwise show a generic message
         "Login Failed",
         err.response ? err.response.data.error : "Invalid credentials"
       );
