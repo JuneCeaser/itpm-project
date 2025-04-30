@@ -14,16 +14,7 @@ const Category = () => {
     <SafeAreaView style={styles.container}>
       <StatusBar backgroundColor="#00C49A" barStyle="light-content" />
 
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity>
-          <Ionicons name="arrow-back" size={24} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Categories</Text>
-        <TouchableOpacity>
-          <Ionicons name="notifications-outline" size={24} color="#fff" />
-        </TouchableOpacity>
-      </View>
+      
 
       {/* Balance Section */}
       <View style={styles.balanceContainer}>
