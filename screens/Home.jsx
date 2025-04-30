@@ -352,7 +352,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#333",
   },
- 
+  summaryAmount: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#000",
+  },
   summaryExpense: {
     fontSize: 20,
     fontWeight: "bold",
