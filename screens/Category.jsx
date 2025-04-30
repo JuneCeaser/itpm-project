@@ -69,30 +69,7 @@ const Category = () => {
         </View>
       </View>
 
-      {/* Categories Grid */}
-      <View style={styles.categoriesContainer}>
-        <View style={styles.categoriesRow}>
-          <TouchableOpacity style={styles.categoryItem}>
-            <View style={[styles.categoryIcon, styles.foodIcon]}>
-              <Ionicons name="restaurant-outline" size={24} color="#fff" />
-            </View>
-            <Text style={styles.categoryText}>Food</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.categoryItem}>
-            <View style={[styles.categoryIcon, styles.transportIcon]}>
-              <Ionicons name="bus-outline" size={24} color="#fff" />
-            </View>
-            <Text style={styles.categoryText}>Transport</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.categoryItem}>
-            <View style={[styles.categoryIcon, styles.medicineIcon]}>
-              <Ionicons name="medkit-outline" size={24} color="#fff" />
-            </View>
-            <Text style={styles.categoryText}>Medicine</Text>
-          </TouchableOpacity>
-        </View>
+     
 
         <View style={styles.categoriesRow}>
           <TouchableOpacity style={styles.categoryItem}>
