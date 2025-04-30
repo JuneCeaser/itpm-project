@@ -25,6 +25,29 @@ const Category = () => {
         </TouchableOpacity>
       </View>
 
+      {/* Balance Section */}
+      <View style={styles.balanceContainer}>
+        <View style={styles.balanceRow}>
+          <View style={styles.balanceItem}>
+            <View style={styles.balanceIconContainer}>
+              <Ionicons name="checkbox-outline" size={16} color="#00C49A" />
+            </View>
+            <Text style={styles.balanceLabel}>Total Balance</Text>
+            <Text style={styles.balanceValue}>$7,783.00</Text>
+          </View>
+
+          <View style={styles.divider} />
+
+          <View style={styles.balanceItem}>
+            <View style={styles.balanceIconContainer}>
+              <Ionicons name="checkbox-outline" size={16} color="#00C49A" />
+            </View>
+            <Text style={styles.balanceLabel}>Total Expense</Text>
+            <Text style={[styles.balanceValue, styles.expenseValue]}>
+              -$1,187.40
+            </Text>
+          </View>
+        </View>
 
         {/* Progress Bar */}
         <View style={styles.progressContainer}>
