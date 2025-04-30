@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 
+// Main Home component that renders the entire screen
 const Home = () => {
   const [selectedPeriod, setSelectedPeriod] = useState("monthly");
 
