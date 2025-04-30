@@ -473,7 +473,17 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     textAlign: "center",
   },
- 
+  addButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#fff",
+    paddingVertical: 12,
+    borderRadius: 12,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: "#00C49A",
+  },
   addButtonIncome: {
     borderColor: "#00C49A",
   },
