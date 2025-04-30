@@ -13,6 +13,7 @@ import {
   BackHandler,
   Modal,
   FlatList,
+  TextInput,
 } from "react-native";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -42,6 +43,9 @@ const Profile = ({ navigation }) => {
   const [avatarModalVisible, setAvatarModalVisible] = useState(false);
   const { token, logout, hasPin, removePin } = useContext(AuthContext);
   const { resetAllData } = useTransactions();
+  const [isEditing, setIsEditing] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [isUpdating, setIsUpdating] = useState(false);
 
   // Sample avatars using local images
   const sampleAvatars = [
@@ -64,17 +68,21 @@ const Profile = ({ navigation }) => {
         if (isLoggingOut) {
           return true;
         }
+        if (isEditing) {
+          handleCancelEdit();
+          return true;
+        }
         return false;
       }
     );
     return () => backHandler.remove();
-  }, [isLoggingOut]);
+  }, [isLoggingOut, isEditing]);
 
   const fetchUserDetails = async () => {
     try {
       // First try to get user data from API
       const response = await axios.get(
-        "https://mobile-backend-news.vercel.app/api/users/me",
+        "http://192.168.8.100:5000/api/users/me",
         { headers: { "x-auth-token": token } }
       );
       
@@ -87,6 +95,7 @@ const Profile = ({ navigation }) => {
       }
       
       setUserDetails(response.data);
+      setNewName(response.data.name || "");
     } catch (error) {
       console.error("Error fetching user details:", error);
       
@@ -101,6 +110,7 @@ const Profile = ({ navigation }) => {
             userData.avatar = savedAvatar;
           }
           setUserDetails(userData);
+          setNewName(userData.name || "");
         }
       } catch (storageError) {
         console.error("Error retrieving from storage:", storageError);
@@ -110,7 +120,7 @@ const Profile = ({ navigation }) => {
     }
   };
 
-  // Function to update user's avatar
+  // Function to update user's avatar - LOCAL ONLY VERSION
   const selectAvatar = async (avatarId) => {
     try {
       setLoading(true);
@@ -122,19 +132,8 @@ const Profile = ({ navigation }) => {
 
       const avatarKey = `avatar_${avatarId}`;
       
-      // Save avatar to local storage
+      // Save avatar to local storage only
       await AsyncStorage.setItem(AVATAR_STORAGE_KEY, avatarKey);
-
-      // Try to update on backend
-      try {
-        const response = await axios.put(
-          "https://mobile-backend-news.vercel.app/api/users/update-avatar",
-          { avatarId },
-          { headers: { "x-auth-token": token } }
-        );
-      } catch (err) {
-        console.warn("Avatar update failed on backend, saved locally only", err);
-      }
 
       // Update local state
       setUserDetails({
@@ -149,7 +148,7 @@ const Profile = ({ navigation }) => {
       }));
       
       setAvatarModalVisible(false);
-      Alert.alert("Success", "Avatar updated!");
+      Alert.alert("Success", "Avatar updated Succesfully!");
     } catch (error) {
       console.error("Error updating avatar:", error);
       Alert.alert("Error", "Failed to update avatar. Please try again.");
@@ -201,7 +200,7 @@ const Profile = ({ navigation }) => {
       
       try {
         const response = await axios.delete(
-          "https://mobile-backend-news.vercel.app/api/users/delete",
+          "http://192.168.8.100:5000/api/users/delete",
           {
             headers: { "x-auth-token": token },
           }
@@ -294,6 +293,56 @@ const Profile = ({ navigation }) => {
     );
   };
 
+  const handleUpdateProfile = async () => {
+    if (!newName.trim()) {
+      Alert.alert("Error", "Name cannot be empty");
+      return;
+    }
+
+    try {
+      setIsUpdating(true);
+      const response = await axios.put(
+        "http://192.168.8.100:5000/api/users/update",
+        { name: newName },
+        { headers: { "x-auth-token": token } }
+      );
+
+      // Update local state
+      setUserDetails({
+        ...userDetails,
+        name: newName
+      });
+
+      // Update local storage
+      await AsyncStorage.setItem("user_data", JSON.stringify({
+        ...userDetails,
+        name: newName
+      }));
+
+      setIsEditing(false);
+      Alert.alert("Success", "Profile updated successfully");
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      Alert.alert("Error", "Failed to update profile. Please try again.");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleEditPress = () => {
+    if (isEditing) {
+      handleUpdateProfile();
+    } else {
+      setNewName(userDetails?.name || "");
+      setIsEditing(true);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setNewName(userDetails?.name || "");
+    setIsEditing(false);
+  };
+
   useEffect(() => {
     const loadProfileData = async () => {
       // Check for locally saved avatar first
@@ -336,9 +385,18 @@ const Profile = ({ navigation }) => {
         <Text style={styles.headerTitle}>My Profile</Text>
         <TouchableOpacity
           style={styles.editButton}
-          onPress={() => console.log("Edit profile")}
+          onPress={handleEditPress}
+          disabled={isUpdating}
         >
-          <Ionicons name="create-outline" size={22} color="#fff" />
+          {isUpdating ? (
+            <ActivityIndicator size="small" color="#ffffff" />
+          ) : (
+            <Ionicons 
+              name={isEditing ? "checkmark-outline" : "create-outline"} 
+              size={22} 
+              color="#fff" 
+            />
+          )}
         </TouchableOpacity>
       </View>
 
@@ -359,12 +417,33 @@ const Profile = ({ navigation }) => {
               style={styles.changeAvatarButton}
               onPress={() => setAvatarModalVisible(true)}
             >
-              <Ionicons name="image-outline" size={18} color="#DEDEDE" />
+              <Ionicons name="image-outline" size={18} color="#00D09E" />
             </TouchableOpacity>
           </View>
 
           <View style={styles.profileInfo}>
-            <Text style={styles.name}>{userDetails?.name || "User Name"}</Text>
+            {isEditing ? (
+              <View style={styles.editingContainer}>
+                <TextInput
+                  style={styles.nameInput}
+                  value={newName}
+                  onChangeText={setNewName}
+                  autoFocus={true}
+                  maxLength={50}
+                  placeholder="Enter your name"
+                />
+                {isEditing && (
+                  <TouchableOpacity
+                    style={styles.cancelButton}
+                    onPress={handleCancelEdit}
+                  >
+                    <Text style={styles.cancelButtonText}>Cancel</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            ) : (
+              <Text style={styles.name}>{userDetails?.name || "User Name"}</Text>
+            )}
             <View style={styles.emailContainer}>
               <Ionicons
                 name="mail-outline"
@@ -392,16 +471,27 @@ const Profile = ({ navigation }) => {
           <View style={styles.buttonContainer}>
             <TouchableOpacity
               style={styles.actionButton}
-              onPress={() => console.log("Edit profile")}
+              onPress={handleEditPress}
+              disabled={isUpdating}
             >
-              <Ionicons
-                name="person-outline"
-                size={22}
-                color="#6366f1"
-                style={styles.buttonIcon}
+              {isUpdating ? (
+                <ActivityIndicator size="small" color="#6366f1" style={styles.buttonIcon} />
+              ) : (
+                <Ionicons
+                  name="person-outline"
+                  size={22}
+                  color="#6366f1"
+                  style={styles.buttonIcon}
+                />
+              )}
+              <Text style={styles.actionButtonText}>
+                {isEditing ? "Save Profile" : "Edit Profile"}
+              </Text>
+              <Ionicons 
+                name={isEditing ? "checkmark-outline" : "chevron-forward"} 
+                size={20} 
+                color={isEditing ? "#6366f1" : "#c7c7c7"} 
               />
-              <Text style={styles.actionButtonText}>Edit Profile</Text>
-              <Ionicons name="chevron-forward" size={20} color="#c7c7c7" />
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -510,7 +600,6 @@ const Profile = ({ navigation }) => {
   );
 };
 
-// Keep all your existing styles
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -602,17 +691,44 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#DEDEDE',
+    borderColor: '#00D09E',
   },
   profileInfo: {
     alignItems: "center",
     marginTop: 16,
     width: "100%",
   },
+  editingContainer: {
+    width: '100%',
+    alignItems: 'center',
+  },
   name: {
     fontSize: 22,
     fontWeight: "700",
     color: "#0f172a",
+  },
+  nameInput: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: "#0f172a",
+    borderBottomWidth: 1,
+    borderBottomColor: "#00c89c",
+    padding: 4,
+    textAlign: "center",
+    width: "80%",
+    marginBottom: 10,
+  },
+  cancelButton: {
+    marginTop: 5,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    backgroundColor: "#f1f5f9",
+    borderRadius: 10,
+  },
+  cancelButtonText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#64748b",
   },
   emailContainer: {
     flexDirection: "row",

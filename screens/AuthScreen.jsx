@@ -36,7 +36,7 @@ const AuthScreen = ({ navigation }) => {
     setLoading(true);
     try {
       const response = await axios.post(
-        "https://mobile-backend-news.vercel.app/api/users/login",
+        "http://192.168.8.100:5000/api/users/login",
         { email, password }
       );
 
@@ -67,7 +67,7 @@ const AuthScreen = ({ navigation }) => {
       }
 
       const response = await axios.post(
-        "https://mobile-backend-news.vercel.app/api/users/signup",
+        "http://192.168.8.100:5000/api/users/signup",
         { name, email, password }
       );
 
@@ -94,8 +94,7 @@ const AuthScreen = ({ navigation }) => {
   };
 
   const handleForgotPassword = () => {
-   
-    console.log("Forgot password pressed");
+    navigation.navigate("ForgotPassword");
   };
 
   const renderLoginForm = () => (

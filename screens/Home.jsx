@@ -29,12 +29,11 @@ const Home = () => {
   const [editNote, setEditNote] = useState("");
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
-
-  // Get date range based on active tab
+  
   const dateRange = useMemo(() => {
     const today = new Date();
     
-    // Format a date as "DD MMM" (e.g., "10 Apr")
+  
     const formatDateShort = (date) => {
       return date.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
     };
@@ -43,8 +42,8 @@ const Home = () => {
       case "Daily":
         return formatDateShort(today);
       case "Weekly": {
-        const currentDay = today.getDay(); // 0 is Sunday, 1 is Monday, etc.
-        const daysFromMonday = currentDay === 0 ? 6 : currentDay - 1; // Adjust if Sunday
+        const currentDay = today.getDay(); 
+        const daysFromMonday = currentDay === 0 ? 6 : currentDay - 1; 
         
         const monday = new Date(today);
         monday.setDate(today.getDate() - daysFromMonday);
@@ -193,7 +192,7 @@ const Home = () => {
     setIsEditModalVisible(true);
   };
 
-  const handleUpdateTransaction = async () => {
+  const handleUpdateTransaction = async () => {  // this is the handleUpdate function
     if (!editAmount || isNaN(parseFloat(editAmount)) || parseFloat(editAmount) <= 0) {
       Alert.alert("Error", "Please enter a valid positive amount");
       return;
@@ -276,9 +275,7 @@ const Home = () => {
         <View style={styles.balanceSection}>
           <View style={styles.summaryItem}>
             <View style={styles.labelContainer}>
-              <View style={styles.checkboxIcon}>
-                <Ionicons name="checkmark" size={16} color="white" />
-              </View>
+
               <Text style={styles.summaryLabel}>Total Balance</Text>
             </View>
             <Text style={styles.balanceAmount}>LKR {balance.toFixed(2)}</Text>
@@ -288,9 +285,6 @@ const Home = () => {
           
           <View style={styles.summaryItem}>
             <View style={styles.labelContainer}>
-              <View style={styles.checkboxIcon}>
-                <Ionicons name="checkmark" size={16} color="white" />
-              </View>
               <Text style={styles.summaryLabel}>
                 {activeTab === "Daily" ? "Today's Expense" : 
                  activeTab === "Weekly" ? "Weekly Expense" : "Monthly Expense"}
