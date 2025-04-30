@@ -341,7 +341,12 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     overflow: "hidden",
   },
-
+  tabButton: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: "center",
+    backgroundColor: "#f3f4f6",
+  },
   activeTab: {
     backgroundColor: "#fff",
     borderBottomWidth: 2,
