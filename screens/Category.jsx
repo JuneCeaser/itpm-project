@@ -413,7 +413,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#00C49A",
   },
-  
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
   headerTitle: {
     fontSize: 18,
     fontWeight: "bold",
