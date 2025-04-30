@@ -49,7 +49,15 @@ const Category = () => {
           </View>
         </View>
 
-        
+        {/* Progress Bar */}
+        <View style={styles.progressContainer}>
+          <Text style={styles.progressText}>30%</Text>
+          <View style={styles.progressBar}>
+            <View style={styles.progressFill} />
+          </View>
+          <Text style={styles.maxAmount}>$20,000.00</Text>
+        </View>
+
         {/* Status Message */}
         <View style={styles.statusContainer}>
           <View style={styles.statusIconContainer}>
