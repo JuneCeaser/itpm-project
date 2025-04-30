@@ -8,10 +8,12 @@ import {
   Alert,
   SafeAreaView,
   ScrollView,
+  Image,
+  StatusBar,
 } from "react-native";
 import axios from "axios";
 import { AntDesign, Feather } from "@expo/vector-icons";
-import { AuthContext } from "../AuthContext";
+import { AuthContext } from "../context/AuthContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const AuthScreen = ({ navigation }) => {
@@ -20,7 +22,7 @@ const AuthScreen = ({ navigation }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false); // New loading state
+  const [loading, setLoading] = useState(false);
 
   // Signup specific states
   const [name, setName] = useState("");
@@ -31,31 +33,28 @@ const AuthScreen = ({ navigation }) => {
   const { login } = useContext(AuthContext);
 
   const handleLogin = async () => {
-    setLoading(true); // Disable the button
-    try { // Make a POST request to the login API with the entered email and password
+    setLoading(true);
+    try {
       const response = await axios.post(
-        "https://mobile-backend-news.vercel.app/api/users/login",
+        "http://192.168.8.100:5000/api/users/login",
         { email, password }
       );
- // If login is successful, save user data and token (assumed to be handled by the login function)
+
       login(response.data.user, response.data.token);
-       // Notify the user of successful login
       Alert.alert("Login Successful", "You have logged in successfully!");
-       // Navigate to the main/home screen
       navigation.navigate("HomeTabs");
     } catch (err) {
       Alert.alert(
-         // If there's an error, display the specific error message if available, otherwise show a generic message
         "Login Failed",
         err.response ? err.response.data.error : "Invalid credentials"
       );
     } finally {
-      setLoading(false); // Re-enable the button
+      setLoading(false);
     }
   };
 
   const handleSignup = async () => {
-    setLoading(true); // Disable the button
+    setLoading(true);
     try {
       if (password !== confirmPassword) {
         Alert.alert("Error", "Passwords do not match");
@@ -68,7 +67,7 @@ const AuthScreen = ({ navigation }) => {
       }
 
       const response = await axios.post(
-        "https://mobile-backend-news.vercel.app/api/users/signup",
+        "http://192.168.8.100:5000/api/users/signup",
         { name, email, password }
       );
 
@@ -82,7 +81,7 @@ const AuthScreen = ({ navigation }) => {
         err.response ? err.response.data.error : "Signup failed"
       );
     } finally {
-      setLoading(false); // Re-enable the button
+      setLoading(false);
     }
   };
 
@@ -92,6 +91,10 @@ const AuthScreen = ({ navigation }) => {
 
   const toggleConfirmPasswordVisibility = () => {
     setShowConfirmPassword(!showConfirmPassword);
+  };
+
+  const handleForgotPassword = () => {
+    navigation.navigate("ForgotPassword");
   };
 
   const renderLoginForm = () => (
@@ -125,10 +128,17 @@ const AuthScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
+      <TouchableOpacity 
+        style={styles.forgotPassword} 
+        onPress={handleForgotPassword}
+      >
+        <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+      </TouchableOpacity>
+
       <TouchableOpacity
         style={[styles.button, loading && styles.disabledButton]}
         onPress={handleLogin}
-        disabled={loading} // Disable the button when loading
+        disabled={loading}
       >
         <Text style={styles.buttonText}>
           {loading ? "Signing in..." : "Sign in"}
@@ -139,13 +149,13 @@ const AuthScreen = ({ navigation }) => {
 
       <View style={styles.socialContainer}>
         <TouchableOpacity style={styles.socialButton}>
-          <AntDesign name="google" size={20} color="black" />
+          <AntDesign name="google" size={20} color="white" />
         </TouchableOpacity>
         <TouchableOpacity style={styles.socialButton}>
-          <AntDesign name="facebook-square" size={20} color="black" />
+          <AntDesign name="facebook-square" size={20} color="white" />
         </TouchableOpacity>
         <TouchableOpacity style={styles.socialButton}>
-          <AntDesign name="windows" size={20} color="black" />
+          <AntDesign name="windows" size={20} color="white" />
         </TouchableOpacity>
       </View>
     </>
@@ -225,7 +235,7 @@ const AuthScreen = ({ navigation }) => {
       <TouchableOpacity
         style={[styles.button, loading && styles.disabledButton]}
         onPress={handleSignup}
-        disabled={loading} // Disable the button when loading
+        disabled={loading}
       >
         <Text style={styles.buttonText}>
           {loading ? "Creating account..." : "Create account"}
@@ -235,58 +245,57 @@ const AuthScreen = ({ navigation }) => {
   );
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#00c89c" />
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={styles.container}>
-          <View style={styles.card}>
-            <View style={styles.iconContainer}>
-              <View style={styles.iconCircle}>
-                <AntDesign name="lock" size={24} color="#3b82f6" />
-              </View>
-            </View>
+        <View style={styles.header}>
+          <Image 
+            source={require('../assets/icon.png')} 
+            style={styles.logo}
+            resizeMode="contain"
+          />
+          <Text style={styles.welcomeText}>
+            {activeTab === "login" ? "Welcome Back" : "Create Account"}
+          </Text>
+        </View>
 
-            <Text style={styles.title}>
-              {activeTab === "login" ? "Welcome Back" : "Create Account"}
-            </Text>
-
-            {/* Top Buttons for Navigation */}
-            <View style={styles.tabContainer}>
-              <TouchableOpacity
+        <View style={styles.card}>
+          <View style={styles.tabContainer}>
+            <TouchableOpacity
+              style={[
+                styles.tabButton,
+                activeTab === "login" && styles.activeTab,
+              ]}
+              onPress={() => setActiveTab("login")}
+            >
+              <Text
                 style={[
-                  styles.tabButton,
-                  activeTab === "login" && styles.activeTab,
+                  styles.tabText,
+                  activeTab === "login" && styles.activeTabText,
                 ]}
-                onPress={() => setActiveTab("login")}
               >
-                <Text
-                  style={[
-                    styles.tabText,
-                    activeTab === "login" && styles.activeTabText,
-                  ]}
-                >
-                  Login
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
+                Login
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.tabButton,
+                activeTab === "signup" && styles.activeTab,
+              ]}
+              onPress={() => setActiveTab("signup")}
+            >
+              <Text
                 style={[
-                  styles.tabButton,
-                  activeTab === "signup" && styles.activeTab,
+                  styles.tabText,
+                  activeTab === "signup" && styles.activeTabText,
                 ]}
-                onPress={() => setActiveTab("signup")}
               >
-                <Text
-                  style={[
-                    styles.tabText,
-                    activeTab === "signup" && styles.activeTabText,
-                  ]}
-                >
-                  Sign Up
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            {activeTab === "login" ? renderLoginForm() : renderSignupForm()}
+                Sign Up
+              </Text>
+            </TouchableOpacity>
           </View>
+
+          {activeTab === "login" ? renderLoginForm() : renderSignupForm()}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -294,121 +303,123 @@ const AuthScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
-    backgroundColor: "#f3f4f6",
+    backgroundColor: "#00c89c",
   },
   scrollContainer: {
     flexGrow: 1,
+    paddingBottom: 20,
   },
-  container: {
-    flex: 1,
-    justifyContent: "center",
+  header: {
     alignItems: "center",
-    padding: 20,
+    paddingTop: 20,
+    paddingBottom: 10,
   },
-  card: {
-    backgroundColor: "#fff",
-    borderRadius: 8,
-    padding: 25,
-    width: "100%",
-    maxWidth: 400,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 15,
-    elevation: 2,
-  },
-  iconContainer: {
-    alignItems: "center",
+  logo: {
+    width: 240,
+    height: 240,
     marginBottom: 10,
   },
-  iconCircle: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: "#e0e7ff",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: "#111827",
+  welcomeText: {
+    fontSize: 30,
+    fontWeight: "bold",
+    color: "white",
     textAlign: "center",
-    marginBottom: 15,
+  },
+  card: {
+    backgroundColor: "white",
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    paddingHorizontal: 25,
+    paddingTop: 25,
+    paddingBottom: 30,
+    width: "100%",
+    flex: 1,
   },
   tabContainer: {
     flexDirection: "row",
+    backgroundColor: "white",
+    borderRadius: 10,
     marginBottom: 20,
-    borderRadius: 5,
-    overflow: "hidden",
+    padding: 6,
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
   },
   tabButton: {
     flex: 1,
     paddingVertical: 10,
     alignItems: "center",
-    backgroundColor: "#f3f4f6",
+    borderRadius: 10,
   },
   activeTab: {
-    backgroundColor: "#fff",
-    borderBottomWidth: 2,
-    borderBottomColor: "#3b82f6",
+    backgroundColor: "#00c89c",
   },
   tabText: {
-    color: "#6b7280",
+    color: "#666",
     fontWeight: "500",
+    fontSize: 16,
   },
   activeTabText: {
-    color: "#3b82f6",
+    color: "white",
     fontWeight: "600",
   },
   input: {
     backgroundColor: "#f9fafb",
-    padding: 12,
-    borderRadius: 6,
+    padding: 14,
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: "#e5e7eb",
     marginBottom: 15,
-    fontSize: 15,
+    fontSize: 16,
+    height: 50,
   },
   passwordContainer: {
     flexDirection: "row",
     backgroundColor: "#f9fafb",
-    borderRadius: 6,
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: "#e5e7eb",
     marginBottom: 15,
+    alignItems: "center",
+    height: 50,
   },
   passwordInput: {
     flex: 1,
-    padding: 12,
-    fontSize: 15,
+    padding: 14,
+    fontSize: 16,
   },
   eyeIcon: {
-    justifyContent: "center",
-    paddingHorizontal: 12,
+    paddingRight: 15,
+  },
+  forgotPassword: {
+    alignSelf: "flex-end",
+    marginBottom: 15,
+  },
+  forgotPasswordText: {
+    color: "#00c89c",
+    fontSize: 14,
+    fontWeight: "500",
   },
   termsContainer: {
     flexDirection: "row",
-    alignItems: "flex-start",
-    marginBottom: 20,
+    alignItems: "center",
+    marginBottom: 15,
   },
   checkBox: {
-    width: 18,
-    height: 18,
+    width: 20,
+    height: 20,
     borderWidth: 1,
     borderColor: "#d1d5db",
     borderRadius: 4,
-    marginRight: 8,
-    marginTop: 2,
+    marginRight: 10,
     justifyContent: "center",
     alignItems: "center",
   },
   checkmark: {
-    width: 10,
-    height: 10,
-    backgroundColor: "#3b82f6",
+    width: 12,
+    height: 12,
+    backgroundColor: "#00c89c",
     borderRadius: 2,
   },
   termsText: {
@@ -418,45 +429,50 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   linkText: {
-    color: "#3b82f6",
+    color: "#00c89c",
     fontWeight: "500",
   },
   button: {
-    backgroundColor: "#00D09E",
+    backgroundColor: "#00c89c",
     padding: 14,
-    borderRadius: 6,
+    borderRadius: 10,
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: 15,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    height: 50,
+    justifyContent: 'center',
   },
   disabledButton: {
     backgroundColor: "#9ca3af",
   },
   buttonText: {
-    color: "#fff",
+    color: "white",
     fontSize: 16,
     fontWeight: "600",
   },
   dividerText: {
     textAlign: "center",
     color: "#6b7280",
-    marginBottom: 20,
+    marginBottom: 15,
     fontSize: 14,
-    position: "relative",
     fontWeight: "500",
   },
   socialContainer: {
     flexDirection: "row",
     justifyContent: "center",
+    gap: 15,
   },
   socialButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
+    width: 45,
+    height: 45,
+    borderRadius: 22.5,
+    backgroundColor: "#00c89c",
     justifyContent: "center",
     alignItems: "center",
-    marginHorizontal: 8,
   },
 });
 
