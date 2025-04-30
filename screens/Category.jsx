@@ -420,11 +420,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#fff",
-  },
+
   tabContainer: {
     flexDirection: "row",
     marginBottom: 16,
