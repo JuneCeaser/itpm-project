@@ -584,7 +584,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 10,
   },
-
+  saveButtonIncome: {
+    backgroundColor: "#00C49A",
+  },
+  disabledButton: {
+    backgroundColor: "#cccccc",
+  },
+  saveButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#fff",
+  },
   successMessage: {
     position: "absolute",
     top: 50,
