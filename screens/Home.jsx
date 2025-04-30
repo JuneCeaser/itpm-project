@@ -8,7 +8,8 @@ import {
   TouchableOpacity,
   Image,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
+import { LinearGradient } from "expo-linear-gradient";// Importing gradient background component from Expo
+
 
 const Home = () => {
   const [selectedPeriod, setSelectedPeriod] = useState("monthly");
