@@ -15,10 +15,18 @@ import axios from "axios";
 import { AuthContext } from "../AuthContext";
 import { Ionicons } from "@expo/vector-icons";
 
+// Profile screen component showing user details and account actions
+
 const Profile = ({ navigation }) => {
+
+  // State for storing user details and loading status
   const [userDetails, setUserDetails] = useState(null);
   const [loading, setLoading] = useState(true);
+
+   // Get auth token and logout function from context
   const { token, logout } = useContext(AuthContext);
+
+  // Function to fetch user details from API
 
   const fetchUserDetails = async () => {
     try {
@@ -35,6 +43,8 @@ const Profile = ({ navigation }) => {
       setLoading(false);
     }
   };
+
+    // Function to handle account deletion
 
   const handleDeleteAccount = async () => {
     try {
@@ -61,6 +71,8 @@ const Profile = ({ navigation }) => {
     }
   };
 
+  // Confirmation dialog for account deletion
+
   const confirmDeleteAccount = () => {
     Alert.alert(
       "Delete Account",
@@ -79,11 +91,15 @@ const Profile = ({ navigation }) => {
     );
   };
 
+  // Fetch user details when component mounts or token changes
+
   useEffect(() => {
     if (token) {
       fetchUserDetails();
     }
   }, [token]);
+
+    // Show loading indicator while fetching data
 
   if (loading) {
     return (
