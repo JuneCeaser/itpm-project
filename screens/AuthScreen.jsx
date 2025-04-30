@@ -37,7 +37,7 @@ const AuthScreen = ({ navigation }) => {
         "https://mobile-backend-news.vercel.app/api/users/login",
         { email, password }
       );
-
+ // If login is successful, save user data and token (assumed to be handled by the login function)
       login(response.data.user, response.data.token);
       Alert.alert("Login Successful", "You have logged in successfully!");
       navigation.navigate("HomeTabs");
