@@ -12,7 +12,6 @@ import { LinearGradient } from "expo-linear-gradient";
 
 // Main Home component that renders the entire screen
 const Home = () => {
-  // Track selected time period for transactions
   const [selectedPeriod, setSelectedPeriod] = useState("monthly");
 // Handle period selection change
   const handlePeriodChange = (period) => {
