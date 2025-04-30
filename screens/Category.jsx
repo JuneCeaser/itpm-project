@@ -111,7 +111,7 @@ const Category = () => {
 
           <TouchableOpacity style={styles.categoryItem}>
             <View style={[styles.categoryIcon, styles.giftsIcon]}>
-              <Ionicons name="gift-outline" size={24} color="#fff" />
+              <Ionicons name="" size={24} color="#fff" />
             </View>
             <Text style={styles.categoryText}>Gifts</Text>
           </TouchableOpacity>
