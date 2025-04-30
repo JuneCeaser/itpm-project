@@ -10,15 +10,17 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";// Importing gradient background component from Expo
 
-
+// Main Home component
 const Home = () => {
+  // State to keep track of the selected period (e.g., 'monthly' or 'weekly')
   const [selectedPeriod, setSelectedPeriod] = useState("monthly");
-
+// Function to update selected period based on user input
   const handlePeriodChange = (period) => {
     setSelectedPeriod(period);
   };
 
   return (
+    // SafeAreaView ensures content stays within safe boundaries on iOS/Android devices
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" />
 
