@@ -8,7 +8,7 @@ import {
   Alert,
 } from "react-native";
 import axios from "axios";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import AsyncStorage from "@react-native-async-storage/async-storage";// For storing and retrieving data locally
 
 const VerifyOTP = ({ navigation }) => {
   const [otp, setOtp] = useState("");
