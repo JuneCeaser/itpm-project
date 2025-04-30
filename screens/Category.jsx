@@ -449,7 +449,14 @@ const styles = StyleSheet.create({
   activeTabText: {
     color: "#fff",
   },
-
+  categoriesContainer: {
+    flex: 1,
+    backgroundColor: "#f5f5f7",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingTop: 20,
+    paddingHorizontal: 16,
+  },
   categoriesRow: {
     flexDirection: "row",
     justifyContent: "space-between",
