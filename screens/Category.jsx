@@ -37,7 +37,7 @@ const Category = () => {
           </View>
 
           <View style={styles.divider} />
-
+          
           <View style={styles.balanceItem}>
             <View style={styles.balanceIconContainer}>
               <Ionicons name="checkbox-outline" size={16} color="#00C49A" />
@@ -104,7 +104,7 @@ const Category = () => {
 
           <TouchableOpacity style={styles.categoryItem}>
             <View style={[styles.categoryIcon, styles.rentIcon]}>
-              <Ionicons name="key-outline" size={24} color="#fff" />
+              <Ionicons name="key-outline" size={24} color="#fff" />   {/* rent icon */}
             </View>
             <Text style={styles.categoryText}>Rent</Text>
           </TouchableOpacity>
