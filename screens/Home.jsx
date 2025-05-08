@@ -504,11 +504,7 @@ const styles = StyleSheet.create({
     height: 40,
     marginRight: -110,
   },
-  welcomeText: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "white",
-  },
+
   greetingText: {
     fontSize: 14,
     color: "white",
