@@ -21,6 +21,16 @@ import { AuthContext } from '../context/AuthContext';
 
 // Main Home component that renders the entire screen
 const Home = () => {
+<<<<<<< HEAD
+<<<<<<< HEAD
+  // Track selected time period for transactions
+  const [selectedPeriod, setSelectedPeriod] = useState("monthly");
+// Handle period selection change
+  const handlePeriodChange = (period) => {
+    setSelectedPeriod(period);
+=======
+=======
+>>>>>>> 345c3f9f08686b32e66f92c0e3bd9655565aae35
   const [activeTab, setActiveTab] = useState("Daily");
   const { transactions, balance, loading, updateTransaction, deleteTransaction } = useTransactions();
   const { expenseCategories, incomeCategories } = useCategories();
@@ -246,6 +256,10 @@ const Home = () => {
         }
       ]
     );
+<<<<<<< HEAD
+>>>>>>> 345c3f9f08686b32e66f92c0e3bd9655565aae35
+=======
+>>>>>>> 345c3f9f08686b32e66f92c0e3bd9655565aae35
   };
 
   return (
@@ -345,11 +359,71 @@ const Home = () => {
           </Text>
         </TouchableOpacity>
       </View>
+<<<<<<< HEAD
+<<<<<<< HEAD
+
+      {/* Transactions */}
+      <View style={styles.transactionsContainer}>
+        {/* Display transactions based on selected period */}
+        {/* For now, we'll just show the same transactions for all periods */}
+        {/* In a real app, you would filter transactions based on selectedPeriod */}
+
+        {/* Salary Transaction */}
+        <View style={styles.transaction}>
+          <View style={[styles.transactionIcon, styles.salaryIcon]}>
+            <Text>💵</Text>
+          </View>
+          <View style={styles.transactionDetails}>
+            <Text style={styles.transactionTitle}>Salary</Text>
+            <Text style={styles.transactionTime}>18:27 - April 30</Text>
+          </View>
+          <View style={styles.transactionCategory}>
+            <Text style={styles.categoryText}>Monthly</Text>
+          </View>
+          <Text style={styles.transactionAmount}>$4,000,00</Text>
+        </View>
+
+        {/* Groceries Transaction */}
+        <View style={styles.transaction}>
+          <View style={[styles.transactionIcon, styles.groceryIcon]}>
+            <Text>🛒</Text>
+          </View>
+          <View style={styles.transactionDetails}>
+            <Text style={styles.transactionTitle}>Groceries</Text>
+            <Text style={styles.transactionTime}>17:00 - April 24</Text>
+          </View>
+          <View style={styles.transactionCategory}>
+            <Text style={styles.categoryText}>Pantry</Text>
+          </View>
+          <Text style={styles.transactionExpense}>-$100,00</Text>
+        </View>
+
+        {/* Rent Transactional */}
+        <View style={styles.transaction}>
+          <View style={[styles.transactionIcon, styles.rentIcon]}>
+            <Text>🏠</Text>
+          </View>
+          <View style={styles.transactionDetails}>
+            <Text style={styles.transactionTitle}>Rent</Text>
+            <Text style={styles.transactionTime}>8:30 - April 15</Text>
+          </View>
+          <View style={styles.transactionCategory}>
+            <Text style={styles.categoryText}>Rent</Text>
+          </View>
+          <Text style={styles.transactionExpense}>-$674,40</Text>
+        </View>
+=======
+=======
+>>>>>>> 345c3f9f08686b32e66f92c0e3bd9655565aae35
       
       {/* Date Range Display */}
       <View style={styles.dateRangeContainer}>
         <Ionicons name="calendar-outline" size={18} color="#666" />
         <Text style={styles.dateRangeText}>{dateRange}</Text>
+<<<<<<< HEAD
+>>>>>>> 345c3f9f08686b32e66f92c0e3bd9655565aae35
+=======
+>>>>>>> 345c3f9f08686b32e66f92c0e3bd9655565aae35
       </View>
 
       {/* Transactions List */}
