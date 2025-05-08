@@ -1,6 +1,8 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 
+// Simple placeholder component for the Add screen
+
 const Add = () => {
   return (
     <View style={styles.container}>
@@ -8,6 +10,7 @@ const Add = () => {
     </View>
   );
 };
+// StyleSheet for the component
 
 const styles = StyleSheet.create({
   container: {
