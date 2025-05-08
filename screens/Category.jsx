@@ -617,12 +617,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 5,
   },
-  successText: {
-    color: "#00C49A",
-    fontSize: 16,
-    fontWeight: "600",
-    marginLeft: 8,
-  },
+
 });
 
 export default Category;
