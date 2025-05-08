@@ -461,10 +461,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 20,
   },
-  navButton: {
-    flex: 1,
-    alignItems: "center",
-  },
+
   activeNavButton: {
     backgroundColor: "#00c89c",
     borderRadius: 20,
