@@ -12,6 +12,7 @@ import { LinearGradient } from "expo-linear-gradient";
 
 // Main Home component that renders the entire screen
 const Home = () => {
+  // Track selected time period for transactions
   const [selectedPeriod, setSelectedPeriod] = useState("monthly");
 // Handle period selection change
   const handlePeriodChange = (period) => {
@@ -159,7 +160,7 @@ const Home = () => {
           <Text style={styles.transactionExpense}>-$100,00</Text>
         </View>
 
-        {/* Rent Transaction */}
+        {/* Rent Transactional */}
         <View style={styles.transaction}>
           <View style={[styles.transactionIcon, styles.rentIcon]}>
             <Text>🏠</Text>
