@@ -262,12 +262,7 @@ const styles = StyleSheet.create({
   progressBarContainer: {
     marginBottom: 8,
   },
-  progressBar: {
-    height: 10,
-    backgroundColor: "#ffffff80",
-    borderRadius: 5,
-    marginBottom: 4,
-  },
+
   progress: {
     height: "100%",
     backgroundColor: "#fff",
