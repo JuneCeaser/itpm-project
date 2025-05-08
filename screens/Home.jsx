@@ -22,12 +22,15 @@ import { AuthContext } from '../context/AuthContext';
 // Main Home component that renders the entire screen
 const Home = () => {
 <<<<<<< HEAD
+<<<<<<< HEAD
   // Track selected time period for transactions
   const [selectedPeriod, setSelectedPeriod] = useState("monthly");
 // Handle period selection change
   const handlePeriodChange = (period) => {
     setSelectedPeriod(period);
 =======
+=======
+>>>>>>> 345c3f9f08686b32e66f92c0e3bd9655565aae35
   const [activeTab, setActiveTab] = useState("Daily");
   const { transactions, balance, loading, updateTransaction, deleteTransaction } = useTransactions();
   const { expenseCategories, incomeCategories } = useCategories();
@@ -253,6 +256,9 @@ const Home = () => {
         }
       ]
     );
+<<<<<<< HEAD
+>>>>>>> 345c3f9f08686b32e66f92c0e3bd9655565aae35
+=======
 >>>>>>> 345c3f9f08686b32e66f92c0e3bd9655565aae35
   };
 
@@ -354,6 +360,7 @@ const Home = () => {
         </TouchableOpacity>
       </View>
 <<<<<<< HEAD
+<<<<<<< HEAD
 
       {/* Transactions */}
       <View style={styles.transactionsContainer}>
@@ -406,11 +413,16 @@ const Home = () => {
           <Text style={styles.transactionExpense}>-$674,40</Text>
         </View>
 =======
+=======
+>>>>>>> 345c3f9f08686b32e66f92c0e3bd9655565aae35
       
       {/* Date Range Display */}
       <View style={styles.dateRangeContainer}>
         <Ionicons name="calendar-outline" size={18} color="#666" />
         <Text style={styles.dateRangeText}>{dateRange}</Text>
+<<<<<<< HEAD
+>>>>>>> 345c3f9f08686b32e66f92c0e3bd9655565aae35
+=======
 >>>>>>> 345c3f9f08686b32e66f92c0e3bd9655565aae35
       </View>
 
