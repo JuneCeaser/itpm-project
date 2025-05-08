@@ -14,6 +14,7 @@ import { AntDesign, Feather } from "@expo/vector-icons";
 import { AuthContext } from "../AuthContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+// Authentication screen with login and signup tabs
 const AuthScreen = ({ navigation }) => {
   // State for both login and signup
   const [activeTab, setActiveTab] = useState("login");
@@ -29,6 +30,8 @@ const AuthScreen = ({ navigation }) => {
   const [acceptTerms, setAcceptTerms] = useState(false);
 
   const { login } = useContext(AuthContext);
+
+    // Handle user login
 
   const handleLogin = async () => {
     setLoading(true); // Disable the button
@@ -51,9 +54,12 @@ const AuthScreen = ({ navigation }) => {
     }
   };
 
+    // Handle user signup
+
   const handleSignup = async () => {
     setLoading(true); // Disable the button
     try {
+            // Validation checks
       if (password !== confirmPassword) {
         Alert.alert("Error", "Passwords do not match");
         return;
@@ -82,15 +88,15 @@ const AuthScreen = ({ navigation }) => {
       setLoading(false); // Re-enable the button
     }
   };
-
+  // Toggle password visibility
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
-
+  // Toggle confirm password visibility
   const toggleConfirmPasswordVisibility = () => {
     setShowConfirmPassword(!showConfirmPassword);
   };
-
+  // Render login form components
   const renderLoginForm = () => (
     <>
       <TextInput
@@ -147,7 +153,7 @@ const AuthScreen = ({ navigation }) => {
       </View>
     </>
   );
-
+  // Render signup form components
   const renderSignupForm = () => (
     <>
       <TextInput
@@ -230,7 +236,7 @@ const AuthScreen = ({ navigation }) => {
       </TouchableOpacity>
     </>
   );
-
+  // Main component render
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
@@ -289,7 +295,7 @@ const AuthScreen = ({ navigation }) => {
     </SafeAreaView>
   );
 };
-
+// Style definitions
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
@@ -456,5 +462,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 8,
   },
 });
+  // ... (existing styles remain exactly the same) ...
 
 export default AuthScreen;
