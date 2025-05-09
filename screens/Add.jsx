@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 
-// Simple placeholder component for the Add screen
+// Simple placeholder component for the  screen
 
 const Add = () => {
   return (
