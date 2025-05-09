@@ -1,5 +1,5 @@
 
-// Profile screen to show user details and account options
+// Profile screen to show useres details and account options
 
 import React, { useState, useEffect, useContext } from "react"
 import {
